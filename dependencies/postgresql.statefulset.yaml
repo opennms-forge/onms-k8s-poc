@@ -29,11 +29,11 @@ spec:
         imagePullPolicy: IfNotPresent
         env:
         - name: TZ
-          value: America/New_York # Should match app-settings k8s/kustomization.yaml
+          value: America/New_York # Should match app-settings from k8s/kustomization.yaml
         - name: POSTGRES_USER
-          value: postgres # Must match app-credentials k8s/kustomization.yaml
+          value: postgres # Must match app-credentials from k8s/kustomization.yaml
         - name: POSTGRES_PASSWORD
-          value: postgres # Must match app-credentials k8s/kustomization.yaml
+          value: P0stgr3s # Must match app-credentials from k8s/kustomization.yaml
         - name: PGDATA
           value: /var/lib/postgresql/data/pgdata
         ports:

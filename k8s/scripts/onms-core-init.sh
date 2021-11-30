@@ -3,8 +3,14 @@
 #
 # External environment variables:
 # KAFKA_BOOTSTRAP_SERVER
-# KAFKA_SASL_USERNAME (for SASL in plain text)
-# KAFKA_SASL_PASSWORD (for SASL in plain text)
+# KAFKA_SASL_USERNAME
+# KAFKA_SASL_PASSWORD
+# KAFKA_SASL_MECHANISM
+# KAFKA_SECURITY_PROTOCOL
+# KAFKA_SSL_TRUSTSTORE_LOCATION
+# KAFKA_SSL_TRUSTSTORE_PASSWORD
+
+umask 002
 
 function wait_for {
   echo "Waiting for $1:$2"
@@ -16,7 +22,8 @@ function wait_for {
 
 echo "OpenNMS Core Configuration Script..."
 
-umask 002
+KAFKA_SASL_MECHANISM=${KAFKA_SASL_MECHANISM-PLAIN}
+KAFKA_SECURITY_PROTOCOL=${KAFKA_SECURITY_PROTOCOL-SASL_PLAINTEXT}
 
 command -v rsync >/dev/null 2>&1 || { echo >&2 "rsync is required but it's not installed. Aborting."; exit 1; }
 
@@ -120,16 +127,16 @@ EOF
   cat <<EOF > ${CONFIG_DIR}/opennms.properties.d/kafka.properties
 org.opennms.core.ipc.strategy=kafka
 
-# Twin
+# TWIN
 org.opennms.core.ipc.twin.kafka.bootstrap.servers=${KAFKA_BOOTSTRAP_SERVER}:9092
 org.opennms.core.ipc.twin.kafka.group.id=OpenNMS-Core-Twin
 
-# Sink
+# SINK
 org.opennms.core.ipc.sink.initialSleepTime=60000
 org.opennms.core.ipc.sink.kafka.bootstrap.servers=${KAFKA_BOOTSTRAP_SERVER}:9092
 org.opennms.core.ipc.sink.kafka.group.id=OpenNMS-Core-Sink
 
-# Sink Consumer (verify Kafka broker configuration)
+# SINK Consumer (verify Kafka broker configuration)
 org.opennms.core.ipc.sink.kafka.session.timeout.ms=30000
 org.opennms.core.ipc.sink.kafka.max.poll.records=50
 
@@ -152,14 +159,28 @@ org.opennms.core.ipc.rpc.kafka.compression.type=zstd
 EOF
 
   if [[ ${KAFKA_SASL_USERNAME} && ${KAFKA_SASL_PASSWORD} ]]; then
+    JAAS_CLASS="org.apache.kafka.common.security.plain.PlainLoginModule"
+    if [[ "${KAFKA_SASL_MECHANISM}" == *"SCRAM"* ]]; then
+      JAAS_CLASS="=org.apache.kafka.common.security.scram.ScramLoginModule"
+    fi
     for module in rpc sink twin; do
       cat <<EOF >> ${CONFIG_DIR}/opennms.properties.d/kafka.properties
 
-# Authentication for $module
-org.opennms.core.ipc.$module.kafka.security.protocol=SASL_PLAINTEXT
-org.opennms.core.ipc.$module.kafka.sasl.mechanism=PLAIN
-org.opennms.core.ipc.$module.kafka.sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="${KAFKA_SASL_USERNAME}" password="${KAFKA_SASL_PASSWORD}";
+# ${module^^} Security
+org.opennms.core.ipc.$module.kafka.security.protocol=${KAFKA_SECURITY_PROTOCOL}
+org.opennms.core.ipc.$module.kafka.sasl.mechanism=${KAFKA_SASL_MECHANISM}
+org.opennms.core.ipc.$module.kafka.sasl.jaas.config=${JAAS_CLASS} required username="${KAFKA_SASL_USERNAME}" password="${KAFKA_SASL_PASSWORD}";
 EOF
+    if [[ ${KAFKA_SSL_TRUSTSTORE_LOCATION} ]]; then
+      cat <<EOF >> ${CONFIG_DIR}/opennms.properties.d/kafka.properties
+org.opennms.core.ipc.$module.kafka.ssl.truststore.location=${KAFKA_SSL_TRUSTSTORE_LOCATION}
+EOF
+    fi
+    if [[ ${KAFKA_SSL_TRUSTSTORE_PASSWORD} ]]; then
+      cat <<EOF >> ${CONFIG_DIR}/opennms.properties.d/kafka.properties
+org.opennms.core.ipc.$module.kafka.ssl.truststore.password=${KAFKA_SSL_TRUSTSTORE_PASSWORD}
+EOF
+    fi
     done
   fi
 fi

@@ -9,6 +9,7 @@ metadata:
   name: minion-config
   namespace: opennms
 data:
+  # Must match Must match app-settings and app-credentials from k8s/kustomization.yaml
   minion-config.yaml: |
     id: minion-0
     location: Minikube
@@ -16,12 +17,21 @@ data:
       twin:
         kafka:
           bootstrap.servers: 'kafka.opennms.svc.cluster.local:9092'
+          security.protocol: 'SASL_PLAINTEXT'
+          sasl.mechanism: 'PLAIN'
+          sasl.jaas.config: 'org.apache.kafka.common.security.plain.PlainLoginModule required username="opennms" password="0p3nNM5";'
       rpc:
         kafka:
           bootstrap.servers: 'kafka.opennms.svc.cluster.local:9092'
+          security.protocol: 'SASL_PLAINTEXT'
+          sasl.mechanism: 'PLAIN'
+          sasl.jaas.config: 'org.apache.kafka.common.security.plain.PlainLoginModule required username="opennms" password="0p3nNM5";'
       sink:
         kafka:
           bootstrap.servers: 'kafka.opennms.svc.cluster.local:9092'
+          security.protocol: 'SASL_PLAINTEXT'
+          sasl.mechanism: 'PLAIN'
+          sasl.jaas.config: 'org.apache.kafka.common.security.plain.PlainLoginModule required username="opennms" password="0p3nNM5";'
 
 ---
 apiVersion: v1

@@ -44,15 +44,33 @@ spec:
           name: jmx
         env:
         - name: TZ
-          value: America/New_York # Should match app-settings k8s/kustomization.yaml
+          value: America/New_York # Should match TIMEZONE from app-settings in k8s/kustomization.yaml
         - name: BROKER_ID_COMMAND # Extracts ID from Pod name, guaranteed to be constant thanks to the StatefulSet
           value: echo ${HOSTNAME##*-}
         - name: ALLOW_PLAINTEXT_LISTENER
           value: 'yes'
+        - name: KAFKA_CLIENT_USERS
+          value: opennms # Should match KAFKA_SASL_USERNAME from app-credentials in k8s/kustomization.yaml
+        - name: KAFKA_CLIENT_PASSWORDS
+          value: 0p3nNM5 # Should match KAFKA_SASL_PASSWORD from app-credentials in k8s/kustomization.yaml
+        - name: KAFKA_INTER_BROKER_USER
+          value: admin
+        - name: KAFKA_INTER_BROKER_PASSWORD
+          value: '@dm1n'
         - name: KAFKA_CFG_LISTENERS
-          value: PLAINTEXT://:9092
+          value: CLIENT://:9092,INTERNAL://:9093
         - name: KAFKA_CFG_ADVERTISED_LISTENERS # Kafka available only inside K8s
-          value: PLAINTEXT://:9092
+          value: CLIENT://:9092,INTERNAL://:9093
+        - name: KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP
+          value: CLIENT:SASL_PLAINTEXT,INTERNAL:SASL_PLAINTEXT # INTERNAL should match KAFKA_SECURITY_PROTOCOL from app-settings in k8s/kustomization.yaml
+        - name: KAFKA_CFG_INTER_BROKER_LISTENER_NAME
+          value: INTERNAL
+        - name: KAFKA_CFG_SASL_MECHANISM_INTER_BROKER_PROTOCOL
+          value: PLAIN
+        - name: KAFKA_CFG_SASL_ENABLED_MECHANISMS
+          value: PLAIN # Should match KAFKA_SASL_MECHANISM from app-settings in k8s/kustomization.yaml
+        - name: KAFKA_CFG_ZOOKEEPER_CONNECTION_TIMEOUT_MS
+          value: '30000'
         - name: KAFKA_CFG_ZOOKEEPER_CONNECT
           value: zookeeper:2181/kafka
         - name: KAFKA_CFG_DEFAULT_REPLICATION_FACTOR

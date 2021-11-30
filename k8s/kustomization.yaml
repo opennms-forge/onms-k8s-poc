@@ -43,6 +43,8 @@ configMapGenerator:
   - OPENNMS_SERVER=onms-core.opennms.svc.cluster.local
   - OPENNMS_DBNAME=opennms_k8s
   - KAFKA_BOOTSTRAP_SERVER=kafka.opennms.svc.cluster.local
+  - KAFKA_SASL_MECHANISM=PLAIN
+  - KAFKA_SECURITY_PROTOCOL=SASL_PLAINTEXT
   - GF_SERVER_DOMAIN=grafana.k8s.agalue.net # Must match ingress.yaml
   - GF_SERVER_ROOT_URL=/
   - GF_DATABASE_TYPE=postgres
@@ -54,12 +56,14 @@ secretGenerator:
 - name: app-credentials
   literals:
   - POSTGRES_USER=postgres
-  - POSTGRES_PASSWORD=postgres
+  - POSTGRES_PASSWORD=P0stgr3s
   - OPENNMS_DBUSER=opennms
-  - OPENNMS_DBPASS=opennms
+  - OPENNMS_DBPASS=0p3nNM5
+  - KAFKA_SASL_USERNAME=opennms
+  - KAFKA_SASL_PASSWORD=0p3nNM5
   - GF_DATABASE_USER=grafana
-  - GF_DATABASE_PASSWORD=grafana
-  - GF_SECURITY_ADMIN_PASSWORD=opennms
+  - GF_DATABASE_PASSWORD=Gr@f@n@
+  - GF_SECURITY_ADMIN_PASSWORD=0p3nNM5
 
 generatorOptions:
   disableNameSuffixHash: true
