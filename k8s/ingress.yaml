@@ -1,4 +1,6 @@
 # @author Alejandro Galue <agalue@opennms.com>
+#
+# WARNING: Ensure to use the correct host domains.
 
 ---
 apiVersion: networking.k8s.io/v1

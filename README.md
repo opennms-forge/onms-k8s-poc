@@ -71,7 +71,7 @@ kubectl apply -k dependencies
 
 Ensure that [k8s/postgresql.service.yaml](k8s/postgresql.service.yaml) and [k8s/kafka.service.yaml](k8s/kafka.service.yaml) point to the correct external resources. By default, they point to the test resources in the `shared` namespace.
 
-Ensure that [k8s/ingress.yaml](k8s/ingress.yaml) uses the correct domain for the hostnames.
+Ensure that [k8s/ingress.yaml](k8s/ingress.yaml) and `GF_SERVER_DOMAIN` within [k8s/kustomization.yaml](k8s/kustomization.yaml) use the correct domain for the hostnames.
 
 Start the cluster in Azure:
 

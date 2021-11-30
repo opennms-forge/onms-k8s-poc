@@ -43,7 +43,7 @@ configMapGenerator:
   - OPENNMS_SERVER=onms-core.opennms.svc.cluster.local
   - OPENNMS_DBNAME=opennms_k8s
   - KAFKA_BOOTSTRAP_SERVER=kafka.opennms.svc.cluster.local
-  - GF_SERVER_DOMAIN=grafana.local
+  - GF_SERVER_DOMAIN=grafana.k8s.agalue.net # Must match ingress.yaml
   - GF_SERVER_ROOT_URL=/
   - GF_DATABASE_TYPE=postgres
   - GF_DATABASE_SSL_MODE=disable
