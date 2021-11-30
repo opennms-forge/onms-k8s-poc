@@ -51,8 +51,7 @@ We expect that Kafka and PostgreSQL running externally (and maintained separatel
 
 ## Deployment
 
-* Use` Terraform` to deploy the infrastructure in Google Cloud or Azure
-  That is for testing purposes. The customer must have this running and provide access to it.
+* Use` Terraform` or your preferred methodology to deploy the Kubernetes Cluster and the shared infrastructure in Google Cloud or Azure.
 
 * Use `kubectl` to deploy the Kubernetes components (applications).
   We could offer to create a `Helm` chart in the future to simplify the deployment.
@@ -62,6 +61,8 @@ We expect that Kafka and PostgreSQL running externally (and maintained separatel
   WebUI servers are stateless, so they don't need configuration life-cycle management.
 
 ## Run in the cloud
+
+The following assumes that you already have an AKS or GKE cluster up and running, and `kubectl` is correctly configured on your machine to access the cluster. At a minimum, it should have three instances with 4 Cores and 16GB of RAM.
 
 For testing purposes, initialize the test dependencies:
 
