@@ -1,0 +1,130 @@
+# @author Alejandro Galue <agalue@opennms.org>
+#
+# WARNING: For testing purposes only
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: minion-config
+  namespace: opennms
+data:
+  minion-config.yaml: |
+    id: minion-0
+    location: Minikube
+    ipc:
+      twin:
+        kafka:
+          bootstrap.servers: 'kafka.opennms.svc.cluster.local:9092'
+      rpc:
+        kafka:
+          bootstrap.servers: 'kafka.opennms.svc.cluster.local:9092'
+      sink:
+        kafka:
+          bootstrap.servers: 'kafka.opennms.svc.cluster.local:9092'
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: minion
+  namespace: opennms
+  labels:
+    app: minion
+spec:
+  clusterIP: None
+  ports:
+  - name: karaf
+    protocol: TCP
+    port: 8201
+    targetPort: karaf
+  - name: http
+    protocol: TCP
+    port: 8181
+    targetPort: http
+  - name: traps
+    protocol: UDP
+    port: 1162
+    targetPort: traps
+  - name: syslog
+    protocol: UDP
+    port: 1514
+    targetPort: syslog
+  selector:
+    app: minion
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: minion
+  namespace: opennms
+  labels:
+    app: minion
+spec:
+  serviceName: minion
+  replicas: 1 # Do not change
+  selector:
+    matchLabels:
+      app: minion
+  template:
+    metadata:
+      labels:
+        app: minion
+    spec:
+      terminationGracePeriodSeconds: 60
+      initContainers:
+      - name: dependencies
+        image: waisbrot/wait
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: TARGETS
+          value: onms-core.opennms.svc.cluster.local:8980
+        - name: TIMEOUT
+          value: '900'
+      containers:
+      - name: minion
+        image: opennms/minion:29.0.1
+        imagePullPolicy: IfNotPresent
+        args:
+        - -c
+        env:
+        - name: TZ
+          valueFrom:
+            configMapKeyRef:
+              key: TIMEZONE
+              name: app-settings
+        ports:
+        - containerPort: 1162
+          protocol: UDP
+          name: traps
+        - containerPort: 1514
+          protocol: UDP
+          name: syslog
+        - containerPort: 8181
+          protocol: TCP
+          name: http
+        - containerPort: 8201
+          protocol: TCP
+          name: karaf
+        volumeMounts:
+        - name: config
+          mountPath: /opt/minion/minion-config.yaml
+          subPath: minion-config.yaml
+        readinessProbe:
+          exec:
+            command:
+            - /health.sh
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        livenessProbe: # WARNING: The health-check checks dependencies, which is not suitable for liveness probes
+          exec:
+            command:
+            - /health.sh
+          initialDelaySeconds: 60
+          periodSeconds: 60
+          timeoutSeconds: 15
+      volumes:
+      - name: config
+        configMap:
+          name: minion-config
