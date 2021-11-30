@@ -101,7 +101,7 @@ EOF
 
 # Required changes in order to use HTTPS through Ingress
 cat <<EOF > ${CONFIG_DIR}/opennms.properties.d/webui.properties
-opennms.web.base-url=https://%x%c/
+opennms.web.base-url=http://%x%c/
 org.opennms.security.disableLoginSuccessEvent=true
 org.opennms.web.defaultGraphPeriod=last_2_hour
 EOF
@@ -154,6 +154,7 @@ EOF
   if [[ ${KAFKA_SASL_USERNAME} && ${KAFKA_SASL_PASSWORD} ]]; then
     for module in rpc sink twin; do
       cat <<EOF >> ${CONFIG_DIR}/opennms.properties.d/kafka.properties
+
 # Authentication for $module
 org.opennms.core.ipc.$module.kafka.security.protocol=SASL_PLAINTEXT
 org.opennms.core.ipc.$module.kafka.sasl.mechanism=PLAIN
@@ -169,8 +170,3 @@ rm -f ${CONFIG_DIR}/foreign-sources/pending/*.xml.*
 
 # Force to execute runjava and the install script
 touch ${CONFIG_DIR}/do-upgrade
-
-# Fix permissions when executing the script as root
-if [[ "$(id -u)" == "0" ]]; then
-  chown -R opennms:opennms ${CONFIG_DIR}
-fi
