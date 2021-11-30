@@ -1,0 +1,21 @@
+# @author Alejandro Galue <agalue@opennms.com>
+
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: onms-share
+  labels:
+    tier: storage
+provisioner: filestore.csi.storage.gke.io
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
+mountOptions:
+- dir_mode=0755
+- file_mode=0644
+- uid=10001 # OpenNMS User
+- gid=10001 # OpenNMS Group
+parameters:
+  tier: standard # standard, premium, or enterprise
+  network: default
+  

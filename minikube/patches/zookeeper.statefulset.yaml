@@ -1,0 +1,21 @@
+# @author Alejandro Galue <agalue@opennms.com>
+# Kustomize patch manifest
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: zk
+  namespace: shared
+spec:
+  template:
+    spec:
+      containers:
+      - name: zk
+        env:
+        - name: MEM_TOTAL_MB
+          $patch: delete
+        - name: JVMFLAGS
+          $patch: delete
+        resources:
+          $patch: delete

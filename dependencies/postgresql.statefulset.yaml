@@ -1,0 +1,76 @@
+# @author Alejandro Galue <agalue@opennms.org>
+#
+# WARNING: For testing purposes only
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: shared
+  labels:
+    app: postgres
+    role: master
+spec:
+  serviceName: postgresql
+  replicas: 1 # The solution only allows 1 instance
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+        role: master
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:13
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: TZ
+          value: America/New_York # Should match app-settings k8s/kustomization.yaml
+        - name: POSTGRES_USER
+          value: postgres # Must match app-credentials k8s/kustomization.yaml
+        - name: POSTGRES_PASSWORD
+          value: postgres # Must match app-credentials k8s/kustomization.yaml
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+        ports:
+        - containerPort: 5432
+          name: client
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/postgresql/data
+        resources:
+          limits:
+            cpu: 400m
+            memory: 2Gi
+          requests:
+            cpu: 200m
+            memory: 1Gi
+        readinessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - exec pg_isready --host $HOSTNAME -U $POSTGRES_USER
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        livenessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - exec pg_isready --host $HOSTNAME -U $POSTGRES_USER
+          initialDelaySeconds: 30
+          periodSeconds: 60
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 100Gi

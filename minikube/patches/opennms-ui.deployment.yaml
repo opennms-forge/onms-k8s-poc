@@ -1,0 +1,22 @@
+# @author Alejandro Galue <agalue@opennms.com>
+# Kustomize patch manifest
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: onms-ui
+  namespace: opennms
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+      - name: onms
+        env:
+        - name: MEM_TOTAL_MB
+          value: '2048'
+          valueFrom:
+            $patch: delete
+        resources:
+          $patch: delete

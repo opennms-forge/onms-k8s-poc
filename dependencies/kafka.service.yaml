@@ -1,0 +1,21 @@
+# @author Alejandro Galue <agalue@opennms.org>
+#
+# WARNING: For testing purposes only
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka
+  namespace: shared
+  labels:
+    app: kafka
+spec:
+  clusterIP: None
+  ports:
+  - port: 9092
+    name: client
+  - port: 9999
+    name: jmx
+  selector:
+    app: kafka

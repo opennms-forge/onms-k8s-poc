@@ -1,0 +1,18 @@
+# @author Alejandro Galue <agalue@opennms.org>
+#
+# WARNING: For testing purposes only
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgresql
+  namespace: shared
+  labels:
+    app: postgres
+spec:
+  clusterIP: None
+  ports:
+  - port: 5432
+  selector:
+    app: postgres

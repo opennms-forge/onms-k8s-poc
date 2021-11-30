@@ -1,0 +1,65 @@
+# @author Alejandro Galue <agalue@opennms.com>
+
+---
+namespace: opennms
+
+resources:
+
+- namespace.yaml
+
+- postgresql.service.yaml
+- kafka.service.yaml
+
+- opennms.rrd.pvc.yaml
+- opennms.etc.pvc.yaml
+
+- opennms-core.service.yaml
+- opennms-core.statefulset.yaml
+
+- opennms-ui.service.yaml
+- opennms-ui.deployment.yaml
+
+- grafana-renderer.service.yaml
+- grafana-renderer.deployment.yaml
+- grafana.configmap.yaml
+- grafana.service.yaml
+- grafana.deployment.yaml
+
+- ingress.yaml
+
+configMapGenerator:
+
+- name: app-scripts
+  files:
+  - scripts/onms-core-init.sh
+  - scripts/onms-ui-init.sh
+  - scripts/grafana-init.sh
+
+- name: app-settings
+  literals:
+  - TIMEZONE=America/New_York
+  - POSTGRES_HOST=postgresql.opennms.svc.cluster.local
+  - POSTGRES_PORT=5432
+  - OPENNMS_SERVER=onms-core.opennms.svc.cluster.local
+  - OPENNMS_DBNAME=opennms_k8s
+  - KAFKA_BOOTSTRAP_SERVER=kafka.opennms.svc.cluster.local
+  - GF_SERVER_DOMAIN=grafana.local
+  - GF_SERVER_ROOT_URL=/
+  - GF_DATABASE_TYPE=postgres
+  - GF_DATABASE_SSL_MODE=disable
+  - GF_DATABASE_NAME=grafana_k8s
+  - GF_SESSION_PROVIDER=postgres
+
+secretGenerator:
+- name: app-credentials
+  literals:
+  - POSTGRES_USER=postgres
+  - POSTGRES_PASSWORD=postgres
+  - OPENNMS_DBUSER=opennms
+  - OPENNMS_DBPASS=opennms
+  - GF_DATABASE_USER=grafana
+  - GF_DATABASE_PASSWORD=grafana
+  - GF_SECURITY_ADMIN_PASSWORD=opennms
+
+generatorOptions:
+  disableNameSuffixHash: true

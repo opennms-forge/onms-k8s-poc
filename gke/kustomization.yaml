@@ -1,0 +1,8 @@
+# @author Alejandro Galue <agalue@opennms.com>
+
+---
+resources:
+- opennms.storageclass.yaml
+
+bases:
+- ../k8s

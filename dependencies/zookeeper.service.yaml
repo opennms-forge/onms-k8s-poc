@@ -1,0 +1,25 @@
+# @author Alejandro Galue <agalue@opennms.org>
+#
+# WARNING: For testing purposes only
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zookeeper
+  namespace: shared
+  labels:
+    app: zk
+spec:
+  ports:
+  - port: 2181
+    name: client
+  - port: 2888
+    name: server
+  - port: 3888
+    name: leader-election
+  - port: 9998
+    name: jmx
+  clusterIP: None
+  selector:
+    app: zk

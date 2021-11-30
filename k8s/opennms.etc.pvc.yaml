@@ -1,0 +1,18 @@
+# @author Alejandro Galue <agalue@opennms.com>
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: onms-etc-pvc
+  namespace: opennms
+  labels:
+    app: onms-core
+    tier: storage
+spec:
+  storageClassName: onms-share
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi

@@ -1,0 +1,45 @@
+# @author Alejandro Galue <agalue@opennms.com>
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: helm-config
+  namespace: opennms
+data:
+  plugins.helm.yaml: |
+    apiVersion: 1
+    apps:
+    - type: opennms-helm-app
+      disabled: false
+  datasources.helm.yaml: |
+    apiVersion: 1
+    datasources:
+    - name: OpenNMS-Performance
+      type: opennms-helm-performance-datasource
+      isDefault: true
+      editable: true
+      access: proxy
+      url: http://onms-ui:8980/opennms
+      basicAuth: true
+      basicAuthUser: admin
+      secureJsonData:
+        basicAuthPassword: admin
+    - name: OpenNMS-Entity
+      type: opennms-helm-entity-datasource
+      editable: true
+      access: proxy
+      url: http://onms-ui:8980/opennms
+      basicAuth: true
+      basicAuthUser: admin
+      secureJsonData:
+        basicAuthPassword: admin
+    - name: OpenNMS-Flow
+      type: opennms-helm-flow-datasource
+      editable: true
+      access: proxy
+      url: http://onms-ui:8980/opennms
+      basicAuth: true
+      basicAuthUser: admin
+      secureJsonData:
+        basicAuthPassword: admin

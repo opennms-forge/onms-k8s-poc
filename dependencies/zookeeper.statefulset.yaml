@@ -1,0 +1,103 @@
+# @author Alejandro Galue <agalue@opennms.org>
+#
+# WARNING: For testing purposes only
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: zk
+  namespace: shared
+  labels:
+    app: zk
+spec:
+  serviceName: zookeeper
+  replicas: 1 # The solution is designed for a single-instance for testing purposes
+  updateStrategy:
+    type: RollingUpdate
+  podManagementPolicy: OrderedReady
+  selector:
+    matchLabels:
+      app: zk
+  template:
+    metadata:
+      labels:
+        app: zk
+    spec:
+      terminationGracePeriodSeconds: 300
+      securityContext:
+        runAsUser: 1000
+        fsGroup: 1000
+      initContainers:
+      - name: init
+        image: busybox
+        command:
+        - sh
+        - -c
+        - ORD=${HOSTNAME##*-}; MYID=$((ORD+1)); echo $MYID > /data/myid
+        volumeMounts:
+        - name: data
+          mountPath: /data
+      containers:
+      - name: zk
+        image: zookeeper:3.5
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: TZ
+          value: America/New_York # Should match app-settings k8s/kustomization.yaml
+        - name: ZOO_SERVERS # Must be consistent with the replicas
+          value: server.1=zk-0.zookeeper.opennms.svc.cluster.local:2888:3888;2181
+        - name: ZOO_STANDALONE_ENABLED
+          value: 'true'
+        - name: ZOO_4LW_COMMANDS_WHITELIST
+          value: '*'
+        - name: MEM_TOTAL_MB
+          valueFrom:
+            resourceFieldRef:
+              resource: requests.memory
+              divisor: 1Mi
+        - name: JVMFLAGS
+          value: -Xms$(MEM_TOTAL_MB)m -Xmx$(MEM_TOTAL_MB)m
+        ports:
+        - containerPort: 2181
+          name: client
+        - containerPort: 2888
+          name: server
+        - containerPort: 3888
+          name: leader-election
+        - containerPort: 8080
+          name: admin
+        - containerPort: 9998
+          name: jmx
+        volumeMounts:
+        - name: data
+          mountPath: /data
+        resources:
+          limits:
+            memory: 512Mi
+            cpu: 200m
+          requests:
+            memory: 256Mi
+            cpu: 100m
+        readinessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - '[ "imok" = "$(echo ruok | nc 127.0.0.1 2181)" ]'
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        livenessProbe:
+          tcpSocket:
+            port: client
+          initialDelaySeconds: 30
+          periodSeconds: 60
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 10Gi

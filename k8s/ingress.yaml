@@ -1,0 +1,52 @@
+# @author Alejandro Galue <agalue@opennms.com>
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: onms-ingress
+  namespace: opennms
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    ingress.kubernetes.io/affinity: cookie
+    ingress.kubernetes.io/session-cookie-name: route
+    ingress.kubernetes.io/session-cookie-hash: sha1
+spec:
+  rules:
+    - host: onms.k8s.agalue.net
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: onms-ui
+                port:
+                  number: 8980
+          - path: /opennms/nrt
+            pathType: Prefix
+            backend:
+              service:
+                name: onms-core
+                port:
+                  number: 8980
+    - host: onms-core.k8s.agalue.net
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: onms-core
+                port:
+                  number: 8980
+    - host: grafana.k8s.agalue.net
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: grafana
+                port:
+                  number: 3000

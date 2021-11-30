@@ -1,0 +1,117 @@
+# @author Alejandro Galue <agalue@opennms.com>
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: onms-ui
+  namespace: opennms
+  labels:
+    app: onms-ui
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: onms-ui
+  template:
+    metadata:
+      labels:
+        app: onms-ui
+    spec:
+      affinity: # Avoid scheduling the pod in the same host as the Core OpenNMS when possible
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              topologyKey: kubernetes.io/hostname
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - onms-core
+      terminationGracePeriodSeconds: 120
+      securityContext:
+        fsGroup: 10001 # Default opennms user
+      initContainers:
+      # Initializes OpenNMS Configuration
+      # Requires the same image/version used at runtime
+      - name: init
+        image: opennms/horizon:29.0.1
+        imagePullPolicy: IfNotPresent
+        command: [ bash, /init.sh ]
+        envFrom:
+        - configMapRef:
+            name: app-settings
+        - secretRef:
+            name: app-credentials
+        volumeMounts:
+        - name: overlay
+          mountPath: /opt/opennms-overlay
+        - name: scripts
+          mountPath: /init.sh
+          subPath: onms-ui-init.sh
+      containers:
+      - name: onms
+        image: opennms/horizon:29.0.1
+        imagePullPolicy: IfNotPresent
+        args:
+        - -s
+        ports:
+        - containerPort: 8101
+          name: karaf
+        - containerPort: 8980
+          name: http
+        envFrom:
+        - configMapRef:
+            name: app-settings
+        - secretRef:
+            name: app-credentials
+        env:
+        - name: MEM_TOTAL_MB
+          valueFrom:
+            resourceFieldRef:
+              resource: requests.memory
+              divisor: 1Mi
+        - name: JAVA_OPTS # Alternative to opennms.conf
+          value: -Xms$(MEM_TOTAL_MB)m -Xmx$(MEM_TOTAL_MB)m -XX:+AlwaysPreTouch -XX:+UseG1GC -XX:+UseStringDeduplication
+        volumeMounts:
+        - name: rrd-core
+          mountPath: /opennms-data/rrd
+        - name: etc-core
+          mountPath: /opennms-core/etc # Must match CORE_CONFIG_DIR from onms-ui-init.sh
+        - name: overlay
+          mountPath: /opt/opennms-overlay
+        resources:
+          limits:
+            cpu: '2'
+            memory: 8Gi
+          requests:
+            cpu: '2'
+            memory: 4Gi
+        readinessProbe:
+          httpGet:
+            path: /opennms/login.jsp
+            port: http
+          initialDelaySeconds: 60
+          periodSeconds: 60
+        livenessProbe:
+          httpGet:
+            path: /opennms/login.jsp
+            port: http
+          initialDelaySeconds: 60
+          periodSeconds: 60
+      volumes:
+      - name: overlay
+        emptyDir: {}
+      - name: scripts
+        configMap:
+          name: app-scripts
+      - name: etc-core
+        persistentVolumeClaim:
+          claimName: onms-etc-pvc
+          readOnly: true
+      - name: rrd-core
+        persistentVolumeClaim:
+          claimName: onms-rrd-pvc
+          readOnly: true

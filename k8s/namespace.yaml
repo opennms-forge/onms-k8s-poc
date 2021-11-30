@@ -1,0 +1,7 @@
+# @author Alejandro Galue <agalue@opennms.com>
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: opennms
