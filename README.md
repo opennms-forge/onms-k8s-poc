@@ -93,6 +93,21 @@ minikube start --cpus=4 --memory=24g --addons=ingress --addons=ingress-dns --add
 kubectl apply -k minikube
 ```
 
+Take a look at the documentation of [ingress-dns](https://github.com/kubernetes/minikube/tree/master/deploy/addons/ingress-dns) for more information about how to use it, to avoid messing with `/etc/hosts`.
+
+For instance, for macOS:
+
+```bash
+DOMAIN="k8s.agalue.net" # Please use your own, and ensure it matches k8s/ingress.yaml
+
+cat <<EOF | sudo tee /etc/resolver/minikube-default-test
+domain $DOMAIN
+nameserver $(minikube ip)
+search_order 1
+timeout 5
+EOF
+```
+
 ## Manual configuration changes
 
 * Access the OpenNMS container via a remote shell.
