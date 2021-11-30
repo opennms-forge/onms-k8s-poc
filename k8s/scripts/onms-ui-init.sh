@@ -22,9 +22,10 @@ CORE_CONFIG_DIR=/opennms-core/etc
 DATA_DIR=/opt/opennms-overlay
 
 CONFIG_DIR=${DATA_DIR}/etc
-WEB_DIR=${DATA_DIR}/webapps/opennms/WEB-INF
+WEB_DIR=${DATA_DIR}/jetty-webapps/opennms/WEB-INF
+TEMPLATES_DIR=${WEB_DIR}/templates
 
-mkdir -p ${WEB_DIR}
+mkdir -p ${TEMPLATES_DIR}
 mkdir -p ${CONFIG_DIR}/opennms.properties.d/
 
 # Ensure the install script won't be executed
@@ -113,6 +114,15 @@ cp /opt/opennms/jetty-webapps/opennms/WEB-INF/applicationContext-spring-security
 sed -r -i 's/ROLE_ADMIN/ROLE_DISABLED/' ${SECURITY_CONFIG}
 sed -r -i 's/ROLE_PROVISION/ROLE_DISABLED/' ${SECURITY_CONFIG}
 sed -r -i -e '/intercept-url.*measurements/a\' -e '    <intercept-url pattern="/rest/resources/generateId" method="POST" access="ROLE_REST,ROLE_DISABLED,ROLE_USER"/>' ${SECURITY_CONFIG}
+
+# Remove link to the admin pages
+NAVBAR=${TEMPLATES_DIR}/navbar.ftl
+cp /opt/opennms/jetty-webapps/opennms/WEB-INF/templates/navbar.ftl ${NAVBAR}
+for title in 'Flow Management' 'Quick-Add Node'; do
+  sed -r -i "/$title/,+2d" ${NAVBAR}
+  sed -r -i "/$title/d" ${NAVBAR}
+done
+sed -r -i "/Configure OpenNMS/d" ${NAVBAR}
 
 # Enabling CORS
 WEB_CONFIG=${WEB_DIR}/web.xml
