@@ -94,8 +94,24 @@ To access the cluster from external Minions, make sure to configure the DNS serv
 
 ## Run locally
 
+Start Minikube:
+
 ```bash
 minikube start --cpus=4 --memory=24g --addons=ingress --addons=ingress-dns --addons=metrics-server
+```
+
+Enable SSL Passthrough to use Ingress with Strimzi:
+
+```bash
+kubectl patch deployment ingress-nginx-controller -n ingress-nginx --type json -p \
+  '[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--enable-ssl-passthrough"}]'
+pod=$(kubectl get pod -n ingress-nginx -l app.kubernetes.io/component=controller | grep Running | awk '{print $1}')
+kubectl delete pod/$pod -n ingress-nginx
+```
+
+Start dependencies and manifests:
+
+```bash
 ./start-dependencies.sh
 kubectl apply -k minikube
 ```

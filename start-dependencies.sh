@@ -31,7 +31,7 @@ CERT_FILE_PATH="$TARGET_DIR/kafka-ca.crt"
 kubectl get secret $CLUSTER_NAME-cluster-ca-cert -n $NAMESPACE -o jsonpath='{.data.ca\.crt}' | base64 --decode > $CERT_FILE_PATH
 
 TEMP_TRUSTSTORE="/tmp/ca.truststore.$(date +%s)"
-echo "yes" | keytool -importcert -alias ca-kafka -file $CERT_FILE_PATH -storepass "$TRUSTSTORE_PASSWORD" -keystore $TEMP_TRUSTSTORE
+keytool -import -trustcacerts -alias root -file $CERT_FILE_PATH -keystore $TEMP_TRUSTSTORE -storepass "$TRUSTSTORE_PASSWORD" -noprompt
 mv -f $TEMP_TRUSTSTORE $TARGET_DIR/$TRUSTSTORE_FILE
 
 kubectl apply -f $PG_YAML -n $NAMESPACE
