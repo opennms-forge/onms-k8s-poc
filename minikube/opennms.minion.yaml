@@ -130,19 +130,6 @@ spec:
         - name: jks
           mountPath: /opt/minion/etc/kafka-truststore.jks
           subPath: kafka-truststore.jks
-        readinessProbe:
-          exec:
-            command:
-            - /health.sh
-          initialDelaySeconds: 30
-          periodSeconds: 10
-        livenessProbe: # WARNING: The health-check checks dependencies, which is not suitable for liveness probes
-          exec:
-            command:
-            - /health.sh
-          initialDelaySeconds: 60
-          periodSeconds: 60
-          timeoutSeconds: 15
       volumes:
       - name: config
         configMap:
