@@ -156,7 +156,6 @@ org.opennms.core.ipc.rpc.kafka.auto.offset.reset=latest
 # RPC Producer (verify Kafka broker configuration)
 org.opennms.core.ipc.rpc.kafka.acks=0
 org.opennms.core.ipc.rpc.kafka.linger.ms=5
-org.opennms.core.ipc.rpc.kafka.compression.type=zstd
 EOF
 
   if [[ ${KAFKA_SASL_USERNAME} && ${KAFKA_SASL_PASSWORD} ]]; then

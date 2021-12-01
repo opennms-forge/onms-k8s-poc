@@ -25,6 +25,11 @@ data:
       rpc:
         kafka:
           bootstrap.servers: 'kafka.opennms.svc.cluster.local:9093'
+          single-topic: true
+          request.timeout.ms: 30000
+          max.concurrent.calls: 10000
+          acks: 0
+          linger.ms: 5
           security.protocol: 'SASL_SSL'
           sasl.mechanism: 'SCRAM-SHA-512'
           sasl.jaas.config: 'org.apache.kafka.common.security.scram.ScramLoginModule required username="opennms" password="0p3nNM5";'
