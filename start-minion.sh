@@ -1,13 +1,14 @@
 #!/bin/bash
+# @author Alejandro Galue <agalue@opennms.com>
 
-minion_version="29.0.1"
+minion_version="29.0.1" # Must match the version chosen for OpenNMS
 minion_location="Apex"
 minion_id="minion-1"
-kafka_boostrap="kafka.k8s.agalue.net:443"
-kafka_user="opennms"
-kafka_passwd="0p3nNM5"
-jks_passwd="0p3nNM5"
-jks_file="kafka-truststore.jks"
+kafka_boostrap="kafka.k8s.agalue.net:443" # Ensure it points to the same Kafka cluster used by OpenNMS
+kafka_user="opennms" # Must match KAFKA_SASL_USERNAME from app-credentials
+kafka_passwd="0p3nNM5" # Must match KAFKA_SASL_PASSWORD from app-credentials
+jks_passwd="0p3nNM5" # Must match KAFKA_SSL_TRUSTSTORE_PASSWORD from app-credentials
+jks_file="kafka-truststore.jks" # Must be consistent with KAFKA_SSL_TRUSTSTORE_LOCATION from app-settings
 
 # Build Minion Configuration
 cat <<EOF > minion.yaml

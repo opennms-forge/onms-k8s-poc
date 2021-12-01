@@ -8,7 +8,7 @@ PG_YAML="dependencies/postgresql.yaml"
 KAFKA_YAML="dependencies/kafka.yaml"
 TARGET_DIR="k8s/pki"
 ONMS_USER_PASSWORD="0p3nNM5" # Must match KAFKA_SASL_PASSWORD from app-credentials
-TRUSTSTORE_FILE="kafka-truststore.jks" # Must be consistent witj KAFKA_SSL_TRUSTSTORE_LOCATION from app-settings
+TRUSTSTORE_FILE="kafka-truststore.jks" # Must be consistent with KAFKA_SSL_TRUSTSTORE_LOCATION from app-settings
 TRUSTSTORE_PASSWORD="0p3nNM5" # Must match KAFKA_SSL_TRUSTSTORE_PASSWORD from app-credentials
 CLUSTER_NAME="onms" # Must match the name of the cluster inside KAFKA_YAML
 

@@ -109,10 +109,15 @@ pod=$(kubectl get pod -n ingress-nginx -l app.kubernetes.io/component=controller
 kubectl delete pod/$pod -n ingress-nginx
 ```
 
-Start dependencies and manifests:
+Start the test dependencies:
 
 ```bash
 ./start-dependencies.sh
+```
+
+Start OpenNMS:
+
+```bash
 kubectl apply -k minikube
 ```
 
@@ -130,6 +135,10 @@ search_order 1
 timeout 5
 EOF
 ```
+
+## Start an external Minion
+
+Adjust the [start-minion.sh](start-minion.sh) script accordingly and run it. By default, it connects to the Kafka cluster managed by Strimzi for testing purposes.
 
 ## Pending
 
