@@ -53,6 +53,7 @@ spec:
       authentication:
         type: scram-sha-512
       configuration:
+        class: nginx
         bootstrap:
           host: kafka.k8s.agalue.net
         brokers:
