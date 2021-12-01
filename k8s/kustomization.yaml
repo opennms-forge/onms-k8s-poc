@@ -42,9 +42,10 @@ configMapGenerator:
   - POSTGRES_PORT=5432
   - OPENNMS_SERVER=onms-core.opennms.svc.cluster.local
   - OPENNMS_DBNAME=opennms_k8s
-  - KAFKA_BOOTSTRAP_SERVER=kafka.opennms.svc.cluster.local
-  - KAFKA_SASL_MECHANISM=PLAIN
-  - KAFKA_SECURITY_PROTOCOL=SASL_PLAINTEXT
+  - KAFKA_BOOTSTRAP_SERVER=kafka.opennms.svc.cluster.local:9093
+  - KAFKA_SASL_MECHANISM=SCRAM-SHA-512
+  - KAFKA_SECURITY_PROTOCOL=SASL_SSL
+  - KAFKA_SSL_TRUSTSTORE_LOCATION=/opt/opennms/etc/kafka-truststore.jks
   - GF_SERVER_DOMAIN=grafana.k8s.agalue.net # Must match ingress.yaml
   - GF_SERVER_ROOT_URL=/
   - GF_DATABASE_TYPE=postgres
@@ -52,7 +53,12 @@ configMapGenerator:
   - GF_DATABASE_NAME=grafana_k8s
   - GF_SESSION_PROVIDER=postgres
 
+- name: kafka-certs
+  files:
+  - pki/kafka-truststore.jks
+
 secretGenerator:
+
 - name: app-credentials
   literals:
   - POSTGRES_USER=postgres
@@ -61,6 +67,7 @@ secretGenerator:
   - OPENNMS_DBPASS=0p3nNM5
   - KAFKA_SASL_USERNAME=opennms
   - KAFKA_SASL_PASSWORD=0p3nNM5
+  - KAFKA_SSL_TRUSTSTORE_PASSWORD=0p3nNM5
   - GF_DATABASE_USER=grafana
   - GF_DATABASE_PASSWORD=Gr@f@n@
   - GF_SECURITY_ADMIN_PASSWORD=0p3nNM5

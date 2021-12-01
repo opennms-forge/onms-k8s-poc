@@ -31,8 +31,6 @@ spec:
                   values:
                   - onms-core
       terminationGracePeriodSeconds: 120
-      securityContext:
-        fsGroup: 10001 # Default opennms user
       initContainers:
       # Initializes OpenNMS Configuration
       # Requires the same image/version used at runtime

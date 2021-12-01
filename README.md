@@ -4,6 +4,8 @@ This project aims to serve as a reference implementation of OpenNMS in the cloud
 
 We expect that Kafka and PostgreSQL running externally (and maintained separately from the solution), so a pair of special services of type `ExternalName` would be created for them. That facilitates using local shared resources within Kubernetes for testing purposes without changing the workload manifests.
 
+We expect `SASL_SSL` configured in Kafka using `SCRAM-SHA-512` for authentication.
+
 ## Requirements
 
 ### For Kubernetes
@@ -62,17 +64,19 @@ We expect that Kafka and PostgreSQL running externally (and maintained separatel
 
 ## Run in the cloud
 
-The following assumes that you already have an AKS or GKE cluster up and running, and `kubectl` is correctly configured on your machine to access the cluster. At a minimum, it should have three instances with 4 Cores and 16GB of RAM.
+The following assumes that you already have an AKS or GKE cluster up and running, and `kubectl` is correctly configured on your machine to access the cluster. At a minimum, it should have three instances with 4 Cores and 16GB of RAM on each of them.
 
-For testing purposes, initialize the test dependencies:
-
-```bash
-kubectl apply -k dependencies
-```
+Place the Java Truststore with the CA Certificate Chain of your Kafka cluster on a JKS file located at `k8s/pki/kafka-truststore.jks`. Otherwise, the deployment will fail.
 
 Ensure that [k8s/postgresql.service.yaml](k8s/postgresql.service.yaml) and [k8s/kafka.service.yaml](k8s/kafka.service.yaml) point to the correct external resources. By default, they point to the test resources in the `shared` namespace.
 
 Ensure that [k8s/ingress.yaml](k8s/ingress.yaml) and `GF_SERVER_DOMAIN` within [k8s/kustomization.yaml](k8s/kustomization.yaml) use the correct domain for the hostnames.
+
+For testing purposes, use the following script to initialize the dependencies within Kubernetes (no need to update the `ExternalName` services, and the script generates the Truststore for you):
+
+```bash
+./start-dependencies.sh
+```
 
 Start the cluster in Azure:
 
@@ -86,10 +90,13 @@ Start the cluster in Google Cloud:
 kubectl apply -k gke
 ```
 
+To access the cluster from external Minions, make sure to configure the DNS service correctly on your cloud provider.
+
 ## Run locally
 
 ```bash
 minikube start --cpus=4 --memory=24g --addons=ingress --addons=ingress-dns --addons=metrics-server
+./start-dependencies.sh
 kubectl apply -k minikube
 ```
 
@@ -107,6 +114,10 @@ search_order 1
 timeout 5
 EOF
 ```
+
+## Pending
+
+* Find a way to use the Graph Templates from the Core Server within the UI servers.
 
 ## Manual configuration changes
 

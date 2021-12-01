@@ -3,15 +3,12 @@
 ---
 resources:
 - opennms.storageclass.yaml
+- opennms.minion.yaml
 
 bases:
-- ../dependencies
 - ../k8s
 
 patchesStrategicMerge:
-- patches/zookeeper.statefulset.yaml
-- patches/kafka.statefulset.yaml
-- patches/postgresql.statefulset.yaml
 - patches/opennms-core.statefulset.yaml
 - patches/opennms-ui.deployment.yaml
 - patches/grafana.deployment.yaml

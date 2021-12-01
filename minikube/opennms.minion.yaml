@@ -16,22 +16,28 @@ data:
     ipc:
       twin:
         kafka:
-          bootstrap.servers: 'kafka.opennms.svc.cluster.local:9092'
-          security.protocol: 'SASL_PLAINTEXT'
-          sasl.mechanism: 'PLAIN'
-          sasl.jaas.config: 'org.apache.kafka.common.security.plain.PlainLoginModule required username="opennms" password="0p3nNM5";'
+          bootstrap.servers: 'kafka.opennms.svc.cluster.local:9093'
+          security.protocol: 'SASL_SSL'
+          sasl.mechanism: 'SCRAM-SHA-512'
+          sasl.jaas.config: 'org.apache.kafka.common.security.scram.ScramLoginModule required username="opennms" password="0p3nNM5";'
+          ssl.truststore.location: /opt/minion/etc/kafka-truststore.jks
+          ssl.truststore.password: 0p3nNM5
       rpc:
         kafka:
-          bootstrap.servers: 'kafka.opennms.svc.cluster.local:9092'
-          security.protocol: 'SASL_PLAINTEXT'
-          sasl.mechanism: 'PLAIN'
-          sasl.jaas.config: 'org.apache.kafka.common.security.plain.PlainLoginModule required username="opennms" password="0p3nNM5";'
+          bootstrap.servers: 'kafka.opennms.svc.cluster.local:9093'
+          security.protocol: 'SASL_SSL'
+          sasl.mechanism: 'SCRAM-SHA-512'
+          sasl.jaas.config: 'org.apache.kafka.common.security.scram.ScramLoginModule required username="opennms" password="0p3nNM5";'
+          ssl.truststore.location: /opt/minion/etc/kafka-truststore.jks
+          ssl.truststore.password: 0p3nNM5
       sink:
         kafka:
-          bootstrap.servers: 'kafka.opennms.svc.cluster.local:9092'
-          security.protocol: 'SASL_PLAINTEXT'
-          sasl.mechanism: 'PLAIN'
-          sasl.jaas.config: 'org.apache.kafka.common.security.plain.PlainLoginModule required username="opennms" password="0p3nNM5";'
+          bootstrap.servers: 'kafka.opennms.svc.cluster.local:9093'
+          security.protocol: 'SASL_SSL'
+          sasl.mechanism: 'SCRAM-SHA-512'
+          sasl.jaas.config: 'org.apache.kafka.common.security.scram.ScramLoginModule required username="opennms" password="0p3nNM5";'
+          ssl.truststore.location: /opt/minion/etc/kafka-truststore.jks
+          ssl.truststore.password: 0p3nNM5
 
 ---
 apiVersion: v1
@@ -121,6 +127,9 @@ spec:
         - name: config
           mountPath: /opt/minion/minion-config.yaml
           subPath: minion-config.yaml
+        - name: jks
+          mountPath: /opt/minion/etc/kafka-truststore.jks
+          subPath: kafka-truststore.jks
         readinessProbe:
           exec:
             command:
@@ -138,3 +147,6 @@ spec:
       - name: config
         configMap:
           name: minion-config
+      - name: jks
+        configMap:
+          name: kafka-certs

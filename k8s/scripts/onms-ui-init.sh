@@ -105,8 +105,26 @@ org.opennms.rrd.storeByGroup=true
 EOF
 
 # Create links to files from Core server
-ln -s ${CORE_CONFIG_DIR}/users.xml ${CONFIG_DIR}/users.xml
-ln -s ${CORE_CONFIG_DIR}/groups.xml ${CONFIG_DIR}/groups.xml
+CORE_FILES=(
+  'categories.xml' \
+  'groups.xml' \
+  'notifd-configuration.xml' \
+  'org.opennms.features.topology.app.icons.application.cfg' \
+  'org.opennms.features.topology.app.icons.bsm.cfg' \
+  'org.opennms.features.topology.app.icons.default.cfg' \
+  'org.opennms.features.topology.app.icons.linkd.cfg' \
+  'org.opennms.features.topology.app.icons.list' \
+  'org.opennms.features.topology.app.icons.pathoutage.cfg' \
+  'org.opennms.features.topology.app.icons.sfree.cfg' \
+  'org.opennms.features.topology.app.icons.vmware.cfg' \
+  'org.opennms.features.topology.app.menu.cfg' \
+  'surveillance-views.xml' \
+  'users.xml' \
+  'viewsdisplay.xml' \
+)
+for file in "${CORE_FILES[@]}"; do
+  ln -s ${CORE_CONFIG_DIR}/${file} ${CONFIG_DIR}/${file}
+done
 
 # Guard against allowing administration changes through the WebUI
 SECURITY_CONFIG=${WEB_DIR}/applicationContext-spring-security.xml
@@ -115,7 +133,7 @@ sed -r -i 's/ROLE_ADMIN/ROLE_DISABLED/' ${SECURITY_CONFIG}
 sed -r -i 's/ROLE_PROVISION/ROLE_DISABLED/' ${SECURITY_CONFIG}
 sed -r -i -e '/intercept-url.*measurements/a\' -e '    <intercept-url pattern="/rest/resources/generateId" method="POST" access="ROLE_REST,ROLE_DISABLED,ROLE_USER"/>' ${SECURITY_CONFIG}
 
-# Remove link to the admin pages
+# Remove links to the admin pages
 NAVBAR=${TEMPLATES_DIR}/navbar.ftl
 cp /opt/opennms/jetty-webapps/opennms/WEB-INF/templates/navbar.ftl ${NAVBAR}
 for title in 'Flow Management' 'Quick-Add Node'; do

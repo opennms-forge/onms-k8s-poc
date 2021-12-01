@@ -10,6 +10,9 @@ metadata:
   namespace: opennms
 spec:
   type: ExternalName
-  externalName: kafka.shared.svc.cluster.local
+  externalName: onms-kafka-bootstrap.shared.svc.cluster.local
   ports:
-  - port: 9092
+  - name: plain
+    port: 9092
+  - name: tls
+    port: 9093

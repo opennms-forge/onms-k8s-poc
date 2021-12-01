@@ -13,8 +13,9 @@
 umask 002
 
 function wait_for {
-  echo "Waiting for $1:$2"
-  until echo -n >/dev/tcp/$1/$2 2>/dev/null; do
+  echo "Waiting for $1"
+  IFS=':' read -a data <<< $1
+  until echo -n >/dev/tcp/${data[0]}/${data[1]} 2>/dev/null; do
     sleep 5
   done
   echo "done"
@@ -27,8 +28,8 @@ KAFKA_SECURITY_PROTOCOL=${KAFKA_SECURITY_PROTOCOL-SASL_PLAINTEXT}
 
 command -v rsync >/dev/null 2>&1 || { echo >&2 "rsync is required but it's not installed. Aborting."; exit 1; }
 
-wait_for ${POSTGRES_HOST} ${POSTGRES_PORT}
-wait_for ${KAFKA_BOOTSTRAP_SERVER} 9092
+wait_for ${POSTGRES_HOST}:${POSTGRES_PORT}
+wait_for ${KAFKA_BOOTSTRAP_SERVER}
 
 CONFIG_DIR=/opennms-etc
 BACKUP_ETC=/opt/opennms/etc
@@ -128,12 +129,12 @@ EOF
 org.opennms.core.ipc.strategy=kafka
 
 # TWIN
-org.opennms.core.ipc.twin.kafka.bootstrap.servers=${KAFKA_BOOTSTRAP_SERVER}:9092
+org.opennms.core.ipc.twin.kafka.bootstrap.servers=${KAFKA_BOOTSTRAP_SERVER}
 org.opennms.core.ipc.twin.kafka.group.id=OpenNMS-Core-Twin
 
 # SINK
 org.opennms.core.ipc.sink.initialSleepTime=60000
-org.opennms.core.ipc.sink.kafka.bootstrap.servers=${KAFKA_BOOTSTRAP_SERVER}:9092
+org.opennms.core.ipc.sink.kafka.bootstrap.servers=${KAFKA_BOOTSTRAP_SERVER}
 org.opennms.core.ipc.sink.kafka.group.id=OpenNMS-Core-Sink
 
 # SINK Consumer (verify Kafka broker configuration)
@@ -141,7 +142,7 @@ org.opennms.core.ipc.sink.kafka.session.timeout.ms=30000
 org.opennms.core.ipc.sink.kafka.max.poll.records=50
 
 # RPC
-org.opennms.core.ipc.rpc.kafka.bootstrap.servers=${KAFKA_BOOTSTRAP_SERVER}:9092
+org.opennms.core.ipc.rpc.kafka.bootstrap.servers=${KAFKA_BOOTSTRAP_SERVER}
 org.opennms.core.ipc.rpc.kafka.ttl=30000
 org.opennms.core.ipc.rpc.kafka.single-topic=true
 org.opennms.core.ipc.rpc.kafka.group.id=OpenNMS-Core-RPC
@@ -161,7 +162,7 @@ EOF
   if [[ ${KAFKA_SASL_USERNAME} && ${KAFKA_SASL_PASSWORD} ]]; then
     JAAS_CLASS="org.apache.kafka.common.security.plain.PlainLoginModule"
     if [[ "${KAFKA_SASL_MECHANISM}" == *"SCRAM"* ]]; then
-      JAAS_CLASS="=org.apache.kafka.common.security.scram.ScramLoginModule"
+      JAAS_CLASS="org.apache.kafka.common.security.scram.ScramLoginModule"
     fi
     for module in rpc sink twin; do
       cat <<EOF >> ${CONFIG_DIR}/opennms.properties.d/kafka.properties
