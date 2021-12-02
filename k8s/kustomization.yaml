@@ -44,17 +44,17 @@ configMapGenerator:
   literals:
   - TZ=America/New_York
   - POSTGRES_DB=opennms_k8s # Must match OPENNMS_DBNAME
-  - POSTGRES_HOST=postgresql.opennms.svc.cluster.local
+  - POSTGRES_HOST=postgresql.opennms
   - POSTGRES_PORT=5432
   - ENABLE_ALEC=true
   - OPENNMS_INSTANCE_ID=onms
-  - OPENNMS_SERVER=onms-core.opennms.svc.cluster.local
+  - OPENNMS_SERVER=onms-core.opennms
   - OPENNMS_DBNAME=opennms_k8s # Must match POSTGRES_DB
-  - ELASTICSEARCH_SERVER=elasticsearch.opennms.svc.cluster.local:9200
+  - ELASTICSEARCH_SERVER=elasticsearch.opennms:9200
   - ELASTICSEARCH_INDEX_STRATEGY_FLOWS=daily
   - ELASTICSEARCH_REPLICATION_FACTOR=1
   - ELASTICSEARCH_NUM_SHARDS=1
-  - KAFKA_BOOTSTRAP_SERVER=kafka.opennms.svc.cluster.local:9093
+  - KAFKA_BOOTSTRAP_SERVER=kafka.opennms:9093
   - KAFKA_SASL_MECHANISM=SCRAM-SHA-512
   - KAFKA_SECURITY_PROTOCOL=SASL_SSL
   - KAFKA_SSL_TRUSTSTORE=kafka-truststore.jks

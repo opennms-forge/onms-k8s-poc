@@ -71,7 +71,7 @@ spec:
             name: app-credentials
         env:
         - name: OPENNMS_HTTP_URL
-          value: http://onms-ui.opennms.svc:8980/opennms
+          value: http://onms-ui.opennms:8980/opennms
         - name: SENTINEL_ID # Required when using tracing through Jaeger
           valueFrom:
             fieldRef:

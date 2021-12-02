@@ -20,7 +20,7 @@ data:
       isDefault: true
       editable: true
       access: proxy
-      url: http://onms-ui:8980/opennms
+      url: http://onms-ui.opennms:8980/opennms
       basicAuth: true
       basicAuthUser: admin
       secureJsonData:
@@ -29,7 +29,7 @@ data:
       type: opennms-helm-entity-datasource
       editable: true
       access: proxy
-      url: http://onms-ui:8980/opennms
+      url: http://onms-ui.opennms:8980/opennms
       basicAuth: true
       basicAuthUser: admin
       secureJsonData:
@@ -38,7 +38,7 @@ data:
       type: opennms-helm-flow-datasource
       editable: true
       access: proxy
-      url: http://onms-ui:8980/opennms
+      url: http://onms-ui.opennms:8980/opennms
       basicAuth: true
       basicAuthUser: admin
       secureJsonData:

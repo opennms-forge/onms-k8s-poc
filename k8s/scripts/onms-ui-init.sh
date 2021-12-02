@@ -9,8 +9,9 @@
 # ELASTICSEARCH_PASSWORD
 
 function wait_for {
-  echo "Waiting for $1:$2"
-  until echo -n >/dev/tcp/$1/$2 2>/dev/null; do
+  echo "Waiting for $1"
+  IFS=':' read -a data <<< $1
+  until echo -n >/dev/tcp/${data[0]}/${data[1]} 2>/dev/null; do
     sleep 5
   done
   echo "done"

@@ -19,7 +19,7 @@ data:
     ipc:
       twin:
         kafka:
-          bootstrap.servers: kafka.opennms.svc.cluster.local:9093
+          bootstrap.servers: kafka.opennms:9093
           security.protocol: SASL_SSL
           sasl.mechanism: SCRAM-SHA-512
           sasl.jaas.config: org.apache.kafka.common.security.scram.ScramLoginModule required username="opennms" password="0p3nNM5";
@@ -27,7 +27,7 @@ data:
           ssl.truststore.password: 0p3nNM5
       rpc:
         kafka:
-          bootstrap.servers: kafka.opennms.svc.cluster.local:9093
+          bootstrap.servers: kafka.opennms:9093
           single-topic: true
           request.timeout.ms: 30000
           max.concurrent.calls: 10000
@@ -40,7 +40,7 @@ data:
           ssl.truststore.password: 0p3nNM5
       sink:
         kafka:
-          bootstrap.servers: kafka.opennms.svc.cluster.local:9093
+          bootstrap.servers: kafka.opennms:9093
           security.protocol: SASL_SSL
           sasl.mechanism: SCRAM-SHA-512
           sasl.jaas.config: org.apache.kafka.common.security.scram.ScramLoginModule required username="opennms" password="0p3nNM5";
@@ -103,7 +103,7 @@ spec:
         imagePullPolicy: IfNotPresent
         env:
         - name: TARGETS
-          value: onms-core.opennms.svc.cluster.local:8980
+          value: onms-core.opennms:8980
         - name: TIMEOUT
           value: '900'
       containers:
@@ -116,7 +116,7 @@ spec:
         - name: TZ
           valueFrom:
             configMapKeyRef:
-              key: TIMEZONE
+              key: TZ
               name: app-settings
         ports:
         - containerPort: 1162
