@@ -2,6 +2,7 @@
 # @author Alejandro Galue <agalue@opennms.com>
 #
 # External environment variables:
+# OPENNMS_SERVER
 # OPENNMS_INSTANCE_ID
 # ELASTICSEARCH_SERVER
 # ELASTICSEARCH_USER

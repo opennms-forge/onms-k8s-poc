@@ -2,6 +2,8 @@
 # @author Alejandro Galue <agalue@opennms.com>
 #
 # External environment variables:
+# POSTGRES_HOST
+# POSTGRES_PORT
 # OPENNMS_INSTANCE_ID
 # KAFKA_BOOTSTRAP_SERVER
 # KAFKA_SASL_USERNAME
