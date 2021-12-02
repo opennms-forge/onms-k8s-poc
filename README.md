@@ -1,4 +1,4 @@
-# OpenNMS PoC
+# OpenNMS K8s PoC
 
 This project aims to serve as a reference implementation of OpenNMS in the cloud, having a single Core Server and multiple read-only UI servers, sharing the RRD files and some configuration files running in Kubernetes.
 
