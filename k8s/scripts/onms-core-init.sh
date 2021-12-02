@@ -136,6 +136,15 @@ sed -r -i '/enabled="false"/{$!{N;s/ enabled="false"[>]\n(.*OpenNMS:Name=Syslogd
 sed -i -r '/opennms-flows/d' ${CONFIG_DIR}/org.apache.karaf.features.cfg
 sed -i 'N;s/service.*\n\(.*Telemetryd\)/service enabled="false">\n\1/;P;D' ${CONFIG_DIR}/service-configuration.xml
 
+# Enable ALEC standalone
+if [[ ${ENABLE_ALEC} ]]; then
+  KAR_URL="https://github.com/OpenNMS/alec/releases/download/v1.1.1/opennms-alec-plugin.kar"
+  curl -LJ -o /opennms-deploy/opennms-alec-plugin.kar $KAR_URL 2>/dev/null
+  cat <<EOF > ${CONFIG_DIR}/featuresBoot.d/alec.boot
+alec-opennms-standalone wait-for-kar=opennms-alec-plugin
+EOF
+fi
+
 # Configure Sink and RPC to use Kafka, and the Kafka Producer.
 if [[ ${KAFKA_BOOTSTRAP_SERVER} ]]; then
   echo "Configuring Kafka..."

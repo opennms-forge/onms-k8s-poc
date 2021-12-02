@@ -46,6 +46,7 @@ configMapGenerator:
   - POSTGRES_DB=opennms_k8s # Must match OPENNMS_DBNAME
   - POSTGRES_HOST=postgresql.opennms.svc.cluster.local
   - POSTGRES_PORT=5432
+  - ENABLE_ALEC=true
   - OPENNMS_INSTANCE_ID=onms
   - OPENNMS_SERVER=onms-core.opennms.svc.cluster.local
   - OPENNMS_DBNAME=opennms_k8s # Must match POSTGRES_DB

@@ -34,7 +34,9 @@ spec:
             name: app-credentials
         volumeMounts:
         - name: etc
-          mountPath: /opennms-etc
+          mountPath: /opennms-etc # Required by the script
+        - name: deploy
+          mountPath: /opennms-deploy # Required by the script
         - name: scripts
           mountPath: /init.sh
           subPath: onms-core-init.sh
@@ -65,6 +67,8 @@ spec:
         volumeMounts:
         - name: etc
           mountPath: /opt/opennms/etc
+        - name: deploy
+          mountPath: /opt/opennms/deploy
         - name: rrd
           mountPath: /opennms-data/rrd
         - name: jks
@@ -90,6 +94,8 @@ spec:
           initialDelaySeconds: 60
           periodSeconds: 60
       volumes:
+      - name: deploy
+        emptyDir: {}
       - name: scripts
         configMap:
           name: app-scripts

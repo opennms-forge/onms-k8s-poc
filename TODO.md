@@ -2,8 +2,6 @@
 
 * Learn how the GKE Ingress works (in case the Nginx Ingress is not an option).
 
-* Configure ALEC on the Core server.
-
 * Enable TLS in PostgreSQL for the test dependencies.
 
 * Describe a vendor-independent procedure to manage the wildcard DNS entry for the Ingress.
