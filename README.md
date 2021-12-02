@@ -72,9 +72,9 @@ We expect `SASL_SSL` configured in Kafka using `SCRAM-SHA-512` for authenticatio
 
 The following assumes that you already have an AKS or GKE cluster up and running with Nginx Ingress Controller and `cert-manager`, and `kubectl` is correctly configured on your machine to access the cluster. At a minimum, it should have three instances with 4 Cores and 16GB of RAM on each of them.
 
-Place the Java Truststore with the CA Certificate Chain of your Kafka cluster on a JKS file located at `k8s/pki/kafka-truststore.jks`. Otherwise, the deployment will fail.
+**Place the Java Truststore with the CA Certificate Chain of your Kafka cluster on a JKS file located at `k8s/pki/kafka-truststore.jks`. Otherwise, the deployment will fail.**
 
-Ensure that [k8s/postgresql.service.yaml](k8s/postgresql.service.yaml) and [k8s/kafka.service.yaml](k8s/kafka.service.yaml) point to the correct external resources. By default, they point to the test resources in the `shared` namespace.
+Ensure that [k8s/external.postgresql.service.yaml](k8s/external.postgresql.service.yaml), [k8s/external.kafka.service.yaml](k8s/external.kafka.service.yaml) and [k8s/external.elasticsearch.service.yaml](k8s/external.elasticsearch.service.yaml) point to the correct external resources. By default, they point to the test resources in the `shared` namespace.
 
 Ensure that [k8s/ingress.yaml](k8s/ingress.yaml) and `GF_SERVER_DOMAIN` within [k8s/kustomization.yaml](k8s/kustomization.yaml) use the correct domain for the hostnames.
 
@@ -151,6 +151,11 @@ Adjust the [start-minion.sh](start-minion.sh) script accordingly and run it. By 
 ## Pending
 
 * Find a way to use the Graph Templates from the Core Server within the UI servers.
+
+## Problems/Limitations
+
+* The WebUI sends events handled by Queued to promote updating RRD files to ensure data is available. That won't work with dedicated UI servers (as Queued is not running there).
+* When using Newts, the resource cache won't exist on the UI servers (maintained by Collectd), meaning all requests will hit Cassandra, slowing down the graph generation. The same applies when using Grafana via the UI servers.
 
 ## Manual configuration changes
 
