@@ -2,13 +2,17 @@
 # @author Alejandro Galue <agalue@opennms.com>
 #
 # External environment variables:
+# OPENNMS_INSTANCE_ID
 # KAFKA_BOOTSTRAP_SERVER
 # KAFKA_SASL_USERNAME
 # KAFKA_SASL_PASSWORD
 # KAFKA_SASL_MECHANISM
 # KAFKA_SECURITY_PROTOCOL
-# KAFKA_SSL_TRUSTSTORE_LOCATION
+# KAFKA_SSL_TRUSTSTORE
 # KAFKA_SSL_TRUSTSTORE_PASSWORD
+# ELASTICSEARCH_SERVER
+# ELASTICSEARCH_USER
+# ELASTICSEARCH_PASSWORD
 
 umask 002
 
@@ -97,6 +101,17 @@ done
 echo "Overriding mandatory files from ${MANDATORY}..."
 rsync -aO --no-perms ${MANDATORY}/ ${CONFIG_DIR}/
 
+# Configure the instance ID
+# Required when having multiple OpenNMS backends sharing a Kafka cluster or an Elasticsearch cluster.
+if [[ ${OPENNMS_INSTANCE_ID} ]]; then
+  cat <<EOF > ${CONFIG_DIR}/opennms.properties.d/instanceid.properties
+# Used for Kafka Topics and Elasticsearch Index Prefixes
+org.opennms.instance.id=${OPENNMS_INSTANCE_ID}
+EOF
+else
+  OPENNMS_INSTANCE_ID="OpenNMS"
+fi
+
 # RRD Strategy is enabled by default
 cat <<EOF > ${CONFIG_DIR}/opennms.properties.d/rrd.properties
 org.opennms.rrd.storeByGroup=true
@@ -109,13 +124,17 @@ EOF
 
 # Required changes in order to use HTTPS through Ingress
 cat <<EOF > ${CONFIG_DIR}/opennms.properties.d/webui.properties
-opennms.web.base-url=http://%x%c/
+opennms.web.base-url=https://%x%c/
 org.opennms.security.disableLoginSuccessEvent=true
 org.opennms.web.defaultGraphPeriod=last_2_hour
 EOF
 
 # Enable Syslogd
 sed -r -i '/enabled="false"/{$!{N;s/ enabled="false"[>]\n(.*OpenNMS:Name=Syslogd.*)/>\n\1/}}' ${CONFIG_DIR}/service-configuration.xml
+
+# Disable Telemetryd as BMP, flows, and streaming telemetry data will be managed by sentinels
+sed -i -r '/opennms-flows/d' ${CONFIG_DIR}/org.apache.karaf.features.cfg
+sed -i 'N;s/service.*\n\(.*Telemetryd\)/service enabled="false">\n\1/;P;D' ${CONFIG_DIR}/service-configuration.xml
 
 # Configure Sink and RPC to use Kafka, and the Kafka Producer.
 if [[ ${KAFKA_BOOTSTRAP_SERVER} ]]; then
@@ -130,12 +149,12 @@ org.opennms.core.ipc.strategy=kafka
 
 # TWIN
 org.opennms.core.ipc.twin.kafka.bootstrap.servers=${KAFKA_BOOTSTRAP_SERVER}
-org.opennms.core.ipc.twin.kafka.group.id=OpenNMS-Core-Twin
+org.opennms.core.ipc.twin.kafka.group.id=${OPENNMS_INSTANCE_ID}-Core-Twin
 
 # SINK
 org.opennms.core.ipc.sink.initialSleepTime=60000
 org.opennms.core.ipc.sink.kafka.bootstrap.servers=${KAFKA_BOOTSTRAP_SERVER}
-org.opennms.core.ipc.sink.kafka.group.id=OpenNMS-Core-Sink
+org.opennms.core.ipc.sink.kafka.group.id=${OPENNMS_INSTANCE_ID}-Core-Sink
 
 # SINK Consumer (verify Kafka broker configuration)
 org.opennms.core.ipc.sink.kafka.session.timeout.ms=30000
@@ -145,7 +164,7 @@ org.opennms.core.ipc.sink.kafka.max.poll.records=50
 org.opennms.core.ipc.rpc.kafka.bootstrap.servers=${KAFKA_BOOTSTRAP_SERVER}
 org.opennms.core.ipc.rpc.kafka.ttl=30000
 org.opennms.core.ipc.rpc.kafka.single-topic=true
-org.opennms.core.ipc.rpc.kafka.group.id=OpenNMS-Core-RPC
+org.opennms.core.ipc.rpc.kafka.group.id=${OPENNMS_INSTANCE_ID}-Core-RPC
 
 # RPC Consumer (verify Kafka broker configuration)
 org.opennms.core.ipc.rpc.kafka.request.timeout.ms=30000
@@ -171,9 +190,9 @@ org.opennms.core.ipc.$module.kafka.security.protocol=${KAFKA_SECURITY_PROTOCOL}
 org.opennms.core.ipc.$module.kafka.sasl.mechanism=${KAFKA_SASL_MECHANISM}
 org.opennms.core.ipc.$module.kafka.sasl.jaas.config=${JAAS_CLASS} required username="${KAFKA_SASL_USERNAME}" password="${KAFKA_SASL_PASSWORD}";
 EOF
-    if [[ ${KAFKA_SSL_TRUSTSTORE_LOCATION} ]]; then
+    if [[ ${KAFKA_SSL_TRUSTSTORE} ]]; then
       cat <<EOF >> ${CONFIG_DIR}/opennms.properties.d/kafka.properties
-org.opennms.core.ipc.$module.kafka.ssl.truststore.location=${KAFKA_SSL_TRUSTSTORE_LOCATION}
+org.opennms.core.ipc.$module.kafka.ssl.truststore.location=/opt/opennms/etc/${KAFKA_SSL_TRUSTSTORE}
 EOF
     fi
     if [[ ${KAFKA_SSL_TRUSTSTORE_PASSWORD} ]]; then
@@ -183,6 +202,19 @@ EOF
     fi
     done
   fi
+fi
+
+# Configure Elasticsearch to allow Helm/Grafana to access Flow data
+if [[ ${ELASTICSEARCH_SERVER} ]]; then
+  PREFIX=$(echo ${OPENNMS_INSTANCE_ID} | tr '[:upper:]' '[:lower:]')-
+  cat <<EOF > ${CONFIG_DIR}/org.opennms.features.flows.persistence.elastic.cfg
+# Common Settings
+elasticUrl=http://${ELASTICSEARCH_SERVER}
+globalElasticUser=${ELASTICSEARCH_USER}
+globalElasticPassword=${ELASTICSEARCH_PASSWORD}
+elasticIndexStrategy=${ELASTICSEARCH_INDEX_STRATEGY_FLOWS}
+indexPrefix=${PREFIX}
+EOF
 fi
 
 # Cleanup temporary requisition files:

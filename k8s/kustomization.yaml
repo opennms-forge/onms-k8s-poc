@@ -7,14 +7,18 @@ resources:
 
 - namespace.yaml
 
-- postgresql.service.yaml
-- kafka.service.yaml
+- external.elasticsearch.service.yaml
+- external.postgresql.service.yaml
+- external.kafka.service.yaml
 
 - opennms.rrd.pvc.yaml
 - opennms.etc.pvc.yaml
 
 - opennms-core.service.yaml
 - opennms-core.statefulset.yaml
+
+- opennms-sentinel.service.yaml
+- opennms-sentinel.statefulset.yaml
 
 - opennms-ui.service.yaml
 - opennms-ui.deployment.yaml
@@ -33,19 +37,26 @@ configMapGenerator:
   files:
   - scripts/onms-core-init.sh
   - scripts/onms-ui-init.sh
+  - scripts/onms-sentinel-init.sh
   - scripts/grafana-init.sh
 
 - name: app-settings
   literals:
-  - TIMEZONE=America/New_York
+  - TZ=America/New_York
+  - POSTGRES_DB=opennms_k8s # Must match OPENNMS_DBNAME
   - POSTGRES_HOST=postgresql.opennms.svc.cluster.local
   - POSTGRES_PORT=5432
+  - OPENNMS_INSTANCE_ID=onms
   - OPENNMS_SERVER=onms-core.opennms.svc.cluster.local
-  - OPENNMS_DBNAME=opennms_k8s
+  - OPENNMS_DBNAME=opennms_k8s # Must match POSTGRES_DB
+  - ELASTICSEARCH_SERVER=elasticsearch.opennms.svc.cluster.local:9200
+  - ELASTICSEARCH_INDEX_STRATEGY_FLOWS=daily
+  - ELASTICSEARCH_REPLICATION_FACTOR=1
+  - ELASTICSEARCH_NUM_SHARDS=1
   - KAFKA_BOOTSTRAP_SERVER=kafka.opennms.svc.cluster.local:9093
   - KAFKA_SASL_MECHANISM=SCRAM-SHA-512
   - KAFKA_SECURITY_PROTOCOL=SASL_SSL
-  - KAFKA_SSL_TRUSTSTORE_LOCATION=/opt/opennms/etc/kafka-truststore.jks
+  - KAFKA_SSL_TRUSTSTORE=kafka-truststore.jks
   - GF_SERVER_DOMAIN=grafana.k8s.agalue.net # Must match ingress.yaml
   - GF_SERVER_ROOT_URL=/
   - GF_DATABASE_TYPE=postgres
@@ -65,9 +76,13 @@ secretGenerator:
   - POSTGRES_PASSWORD=P0stgr3s
   - OPENNMS_DBUSER=opennms
   - OPENNMS_DBPASS=0p3nNM5
+  - OPENNMS_HTTP_USER=admin
+  - OPENNMS_HTTP_PASS=admin
   - KAFKA_SASL_USERNAME=opennms
   - KAFKA_SASL_PASSWORD=0p3nNM5
   - KAFKA_SSL_TRUSTSTORE_PASSWORD=0p3nNM5
+  - ELASTICSEARCH_USER=elastic
+  - ELASTICSEARCH_PASSWORD=31@st1c
   - GF_DATABASE_USER=grafana
   - GF_DATABASE_PASSWORD=Gr@f@n@
   - GF_SECURITY_ADMIN_PASSWORD=0p3nNM5

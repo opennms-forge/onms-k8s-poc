@@ -1,6 +1,6 @@
 # @author Alejandro Galue <agalue@opennms.com>
 #
-# WARNING: Ensure to use the correct host domains.
+# WARNING: Ensure the usage of correct host domains and cert-manager issuer.
 
 ---
 apiVersion: networking.k8s.io/v1
@@ -9,11 +9,19 @@ metadata:
   name: onms-ingress
   namespace: opennms
   annotations:
-    kubernetes.io/ingress.class: nginx
     ingress.kubernetes.io/affinity: cookie
     ingress.kubernetes.io/session-cookie-name: route
     ingress.kubernetes.io/session-cookie-hash: sha1
+    nginx.ingress.kubernetes.io/ssl-redirect: 'true'
+    cert-manager.io/cluster-issuer: opennms-issuer
 spec:
+  ingressClassName: nginx
+  tls:
+    - secretName: onms-ingress-cert
+      hosts:
+        - onms.k8s.agalue.net
+        - onms-core.k8s.agalue.net
+        - grafana.k8s.agalue.net
   rules:
     - host: onms.k8s.agalue.net
       http:

@@ -1,4 +1,4 @@
-# @author Alejandro Galue <agalue@opennms.org>
+# @author Alejandro Galue <agalue@opennms.com>
 #
 # WARNING: For testing purposes only
 
@@ -13,6 +13,9 @@ data:
   minion-config.yaml: |
     id: minion-0
     location: Minikube
+    system:
+      properties:
+        org.opennms.instance.id: onms
     ipc:
       twin:
         kafka:

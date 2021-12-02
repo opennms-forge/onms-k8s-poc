@@ -20,6 +20,8 @@ We expect `SASL_SSL` configured in Kafka using `SCRAM-SHA-512` for authenticatio
   
 * Multiple instances of Grafana (frontend), using PostgreSQL as the backend, pointing to the UI service.
 
+* Multiple instances of Sentinel to handle Flows.
+
 * A custom `StorageClass` for shared content (Google Filestore or Azure Files) to use `ReadWriteMany`.
   Use the same `UID` and `GID` as the OpenNMS image with proper file modes.
 
@@ -36,6 +38,8 @@ We expect `SASL_SSL` configured in Kafka using `SCRAM-SHA-512` for authenticatio
 
 * An `ExternalName` service that represents a Kafka bootstrap server.
 
+* An `ExternalName` service that represents an Elasticsearch server.
+
 * An `Ingress` to control TLS termination and provide access to all the components.
   We could manage certificates using LetsEncrypt via `cert-manager`.
   To integrate with Google Cloud DNS managed zones or Azure DNS, we need a wild-card entry.
@@ -51,6 +55,8 @@ We expect `SASL_SSL` configured in Kafka using `SCRAM-SHA-512` for authenticatio
 
 * Private Container Registry for custom Meridian Images (if applicable), in case OpenNMS Horizon is not an option.
 
+* [cert-manager](https://cert-manager.readthedocs.io/en/latest/) to provide HTTPS/TLS support to the web-based services managed by the ingress controller.
+
 ## Deployment
 
 * Use` Terraform` or your preferred methodology to deploy the Kubernetes Cluster and the shared infrastructure in Google Cloud or Azure.
@@ -64,7 +70,7 @@ We expect `SASL_SSL` configured in Kafka using `SCRAM-SHA-512` for authenticatio
 
 ## Run in the cloud
 
-The following assumes that you already have an AKS or GKE cluster up and running, and `kubectl` is correctly configured on your machine to access the cluster. At a minimum, it should have three instances with 4 Cores and 16GB of RAM on each of them.
+The following assumes that you already have an AKS or GKE cluster up and running with Nginx Ingress Controller and `cert-manager`, and `kubectl` is correctly configured on your machine to access the cluster. At a minimum, it should have three instances with 4 Cores and 16GB of RAM on each of them.
 
 Place the Java Truststore with the CA Certificate Chain of your Kafka cluster on a JKS file located at `k8s/pki/kafka-truststore.jks`. Otherwise, the deployment will fail.
 
@@ -72,11 +78,13 @@ Ensure that [k8s/postgresql.service.yaml](k8s/postgresql.service.yaml) and [k8s/
 
 Ensure that [k8s/ingress.yaml](k8s/ingress.yaml) and `GF_SERVER_DOMAIN` within [k8s/kustomization.yaml](k8s/kustomization.yaml) use the correct domain for the hostnames.
 
-For testing purposes, use the following script to initialize the dependencies within Kubernetes (no need to update the `ExternalName` services, and the script generates the Truststore for you):
+For testing purposes, use the following script to initialize the dependencies within Kubernetes (no need to update the `ExternalName` services, and the script generates the Truststore for you, and it includes `cert-manager`):
 
 ```bash
 ./start-dependencies.sh
 ```
+
+> You should enable SSL Passthrough on your NGinx Ingress controller to let Strimzi works properly.
 
 Start the cluster in Azure:
 

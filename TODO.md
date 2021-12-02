@@ -1,20 +1,8 @@
 # TODO
 
-* Add TLS termination for the Ingress Controller.
-  Use cert-manager with either LetsEncrypt or private certificates.
-
 * Learn how the GKE Ingress works (in case the Nginx Ingress is not an option).
 
-* Configure Instance ID for OpenNMS.
-
-* Configure Elasticsearch for the UI servers so Grafana/Helm can access Flow data.
-  Optionally, do the same in the Core server.
-
 * Configure ALEC on the Core server.
-
-* Configure Sentinels for Flow processing and disable Telemetryd in the Core server.
-
-* Add Elasticsearch to the test dependencies.
 
 * Enable TLS in PostgreSQL for the test dependencies.
 
@@ -34,7 +22,7 @@
 * Evaluate and test solutions for private container registries.
   Allows us to use Meridian instead of Horizon.
 
-* Start monitoring a local network and try to use the UI/Grafana servers.
+* Start monitoring a local network with Flow processing and verify usage of the UI/Grafana servers.
   Ensure everything works.
 
 * Perform stress tests using the `opennms:metrics-stress` command to ensure performance using RRD and shared volumes.

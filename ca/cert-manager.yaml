@@ -1,0 +1,40 @@
+# @author Alejandro Galue <agalue@opennms.com>
+#
+# WARNING: For testing purposes only
+
+# For private CA
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: selfsigned-issuer
+spec:
+  selfSigned: {}
+
+# Root private CA
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: onms-ca
+spec:
+  isCA: true
+  commonName: onms-system
+  secretName: onms-ca
+  subject:
+    organizations:
+    - OpenNMS
+  issuerRef:
+    name: selfsigned-issuer
+    kind: ClusterIssuer
+    group: cert-manager.io
+
+# For Ingress
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: opennms-issuer
+spec:
+  ca:
+    secretName: onms-ca

@@ -1,5 +1,11 @@
 #!/bin/bash
 # @author Alejandro Galue <agalue@opennms.com>
+#
+# External environment variables:
+# OPENNMS_INSTANCE_ID
+# ELASTICSEARCH_SERVER
+# ELASTICSEARCH_USER
+# ELASTICSEARCH_PASSWORD
 
 function wait_for {
   echo "Waiting for $1:$2"
@@ -11,7 +17,7 @@ function wait_for {
 
 echo "OpenNMS UI Configuration Script..."
 
-wait_for ${OPENNMS_SERVER} 8980
+wait_for ${OPENNMS_SERVER}:8980
 
 umask 002
 
@@ -30,6 +36,17 @@ mkdir -p ${CONFIG_DIR}/opennms.properties.d/
 
 # Ensure the install script won't be executed
 touch ${CONFIG_DIR}/configured
+
+# Configure the instance ID
+# Required when having multiple OpenNMS backends sharing an Elasticsearch cluster.
+if [[ ${OPENNMS_INSTANCE_ID} ]]; then
+  cat <<EOF > ${CONFIG_DIR}/opennms.properties.d/instanceid.properties
+# Used for Kafka Topics and Elasticsearch Index Prefixes
+org.opennms.instance.id=${OPENNMS_INSTANCE_ID}
+EOF
+else
+  OPENNMS_INSTANCE_ID="OpenNMS"
+fi
 
 # Disable data choices (optional)
 cat <<EOF > ${CONFIG_DIR}/org.opennms.features.datachoices.cfg
@@ -92,7 +109,7 @@ EOF
 
 # Required changes in order to use HTTPS through Ingress
 cat <<EOF > ${CONFIG_DIR}/opennms.properties.d/webui.properties
-opennms.web.base-url=http://%x%c/
+opennms.web.base-url=https://%x%c/
 opennms.report.scheduler.enabled=false
 org.opennms.security.disableLoginSuccessEvent=true
 org.opennms.web.console.centerUrl=/status/status-box.jsp,/geomap/map-box.jsp,/heatmap/heatmap-box.jsp
@@ -104,7 +121,21 @@ cat <<EOF > ${CONFIG_DIR}/opennms.properties.d/rrd.properties
 org.opennms.rrd.storeByGroup=true
 EOF
 
+# Configure Elasticsearch to allow Helm/Grafana to access Flow data
+if [[ ${ELASTICSEARCH_SERVER} ]]; then
+  PREFIX=$(echo ${OPENNMS_INSTANCE_ID} | tr '[:upper:]' '[:lower:]')-
+  cat <<EOF > ${CONFIG_DIR}/org.opennms.features.flows.persistence.elastic.cfg
+# Common Settings
+elasticUrl=http://${ELASTICSEARCH_SERVER}
+globalElasticUser=${ELASTICSEARCH_USER}
+globalElasticPassword=${ELASTICSEARCH_PASSWORD}
+elasticIndexStrategy=${ELASTICSEARCH_INDEX_STRATEGY_FLOWS}
+indexPrefix=${PREFIX}
+EOF
+fi
+
 # Create links to files from Core server
+# The following is not a comprehensive list of files to share
 CORE_FILES=(
   'categories.xml' \
   'groups.xml' \

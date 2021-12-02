@@ -6,9 +6,13 @@
 NAMESPACE="shared"
 TARGET_DIR="k8s/pki" # Expected location for the configMap that keeps the Truststore
 ONMS_USER_PASSWORD="0p3nNM5" # Must match KAFKA_SASL_PASSWORD from app-credentials
-TRUSTSTORE_FILE="kafka-truststore.jks" # Must be consistent with KAFKA_SSL_TRUSTSTORE_LOCATION from app-settings
+TRUSTSTORE_FILE="kafka-truststore.jks" # Must be consistent with KAFKA_SSL_TRUSTSTORE from app-settings
 TRUSTSTORE_PASSWORD="0p3nNM5" # Must match KAFKA_SSL_TRUSTSTORE_PASSWORD from app-credentials
 CLUSTER_NAME="onms" # Must match the name of the cluster inside dependencies/kafka.yaml
+
+CMVER=$(curl -s https://api.github.com/repos/jetstack/cert-manager/releases/latest | grep tag_name | cut -d '"' -f 4)
+kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/$CMVER/cert-manager.yaml
+kubectl apply -f ca -n cert-manager
 
 kubectl create namespace $NAMESPACE
 kubectl create secret generic kafka-user-credentials --from-literal="opennms=$ONMS_USER_PASSWORD" -n $NAMESPACE

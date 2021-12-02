@@ -10,5 +10,6 @@ bases:
 
 patchesStrategicMerge:
 - patches/opennms-core.statefulset.yaml
+- patches/opennms-sentinel.statefulset.yaml
 - patches/opennms-ui.deployment.yaml
 - patches/grafana.deployment.yaml
