@@ -12,6 +12,7 @@ CLUSTER_NAME="onms" # Must match the name of the cluster inside dependencies/kaf
 
 CMVER=$(curl -s https://api.github.com/repos/jetstack/cert-manager/releases/latest | grep tag_name | cut -d '"' -f 4)
 kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/$CMVER/cert-manager.yaml
+kubectl wait pod -l app.kubernetes.io/instance=cert-manager --for=condition=Ready --timeout=300s -n cert-manager
 kubectl apply -f ca -n cert-manager
 
 kubectl create namespace $NAMESPACE
