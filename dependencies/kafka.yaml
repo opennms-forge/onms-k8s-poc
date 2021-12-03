@@ -40,12 +40,6 @@ spec:
       tls: true
       authentication:
         type: scram-sha-512
-      configuration:
-        bootstrap:
-          alternativeNames: # Based on the ExternalName service that OpenNMS would use
-          - kafka.apex1.svc.cluster.local
-          - kafka.apex1.svc
-          - kafka.apex1
     - name: external
       port: 9094
       type: ingress

@@ -10,7 +10,7 @@ metadata:
     app: onms-core
     tier: storage
 spec:
-  storageClassName: onms-share
+  storageClassName: {{ .Values.storageClass }}
   accessModes:
   - ReadWriteMany
   resources:

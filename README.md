@@ -2,7 +2,7 @@
 
 This project aims to serve as a reference to implement [OpenNMS](https://www.opennms.com/) running in [Kubernetes](https://kubernetes.io/) and deployed via [Helm](https://helm.sh/), having a single Core Server and multiple read-only UI servers plus Grafana and a custom Ingress, sharing the RRD files and some configuration files.
 
-We expect Kafka, Elasticsearch, and PostgreSQL to run externally (and maintained separately from the solution). We would create a set of special services of type [ExternalName](https://kubernetes.io/docs/concepts/services-networking/service/#externalname) to make the solution independent from the actual location of the shared resources. That facilitates using local shared resources within Kubernetes for testing purposes without changing the workload manifests.
+We expect Kafka, Elasticsearch, and PostgreSQL to run externally (and maintained separately from the solution).
 
 We expect `SASL_SSL` configured in Kafka using `SCRAM-SHA-512` for authentication.
 
@@ -40,12 +40,6 @@ We expect `SASL_SSL` configured in Kafka using `SCRAM-SHA-512` for authenticatio
 
 * A `ConfigMap` to store initialization scripts and standard configuration settings.
 
-* An `ExternalName` service that represents a PostgreSQL server.
-
-* An `ExternalName` service that represents a Kafka bootstrap server.
-
-* An `ExternalName` service that represents an Elasticsearch server.
-
 * An `Ingress` to control TLS termination and provide access to all the components.
   We could manage certificates using LetsEncrypt via `cert-manager`.
   To integrate with Google Cloud DNS managed zones or Azure DNS, we need a wild-card entry.
@@ -80,7 +74,7 @@ The following assumes that you already have an AKS or GKE cluster up and running
 
 **Place the Java Truststore with the CA Certificate Chain of your Kafka cluster on a JKS file located at `k8s/pki/kafka-truststore.jks`, and pass it to OpenNMS via Helm.**
 
-For testing purposes, use the following script to initialize the dependencies within Kubernetes (no need to update the `ExternalName` services, and the script generates the Truststore for you, and it includes `cert-manager`):
+For testing purposes, use the following script to initialize all the dependencies within Kubernetes (including `cert-manager`):
 
 ```bash
 ./start-dependencies.sh
@@ -88,14 +82,20 @@ For testing purposes, use the following script to initialize the dependencies wi
 
 > You should enable SSL Passthrough on your NGinx Ingress controller to let Strimzi works properly.
 
-To start the cluster in Google Cloud:
+Create the Storage Class in Google Cloud, using `onms-share` as the name of the `StorageClass`:
 
 ```bash
-./create-storageclass.sh gke
+./create-storageclass.sh gke onms-share
+```
 
+For Azure, replace `gke` with `aks`.
+
+Start the OpenNMS environment on your cloud environment:
+
+```bash
 helm install -f helm-cloud.yaml \
-  --set environment=gke \
   --set domain=k8s.agalue.net \
+  --set storageClass=onms-share \
   --set dependencies.kafka.hostname=onms-kafka-bootstrap.shared.svc.cluster.local \
   --set dependencies.postgresql.hostname=postgresql.shared.svc.cluster.local \
   --set dependencies.elasticsearch.hostname=elasticsearch.shared.svc.cluster.local \
@@ -103,9 +103,7 @@ helm install -f helm-cloud.yaml \
   apex1 ./opennms
 ```
 
-To start a cluster in Azure, replace `gke` with `aks`.
-
-Please note that `apex1` uniquely identifies the environment. That word will be used as the namespace, the OpenNMS Instance ID, and prefix the `domain` for the FQDNs used in the Ingress Controller. Ensure to use the correct hostname for your dependencies.
+Please note that `apex1` uniquely identifies the environment. That word will be used as the namespace, the OpenNMS Instance ID, and prefix the `domain` for the FQDNs used in the Ingress Controller. Ensure to use the correct hostname for your dependencies, and the same name for the `StorageClass` used when created it.
 
 To tune further, edit [helm-cloud.yaml](helm-cloud.yaml).
 
@@ -127,14 +125,17 @@ Start the test dependencies:
 ./start-dependencies.sh
 ```
 
+Create the storage class:
+```bash
+./create-storageclass.sh minikube onms-share
+```
+
 Start OpenNMS:
 
 ```bash
-./create-storageclass.sh minikube
-
 helm install -f helm-minikube.yaml \
-  --set environment=minikube \
   --set domain=k8s.agalue.net \
+  --set storageClass=onms-share \
   --set dependencies.kafka.truststore.content=$(cat k8s/pki/kafka-truststore.jks | base64) \
   apex1 ./opennms
 ```
@@ -144,15 +145,15 @@ Take a look at the documentation of [ingress-dns](https://github.com/kubernetes/
 For instance, for macOS:
 
 ```bash
-DOMAIN="k8s.agalue.net" # Use your own, and ensure it matches the domain passed to OpenNMS via Helm
-
 cat <<EOF | sudo tee /etc/resolver/minikube-default-test
-domain $DOMAIN
+domain k8s.agalue.net
 nameserver $(minikube ip)
 search_order 1
 timeout 5
 EOF
 ```
+
+> Use your own, and ensure it matches the domain passed to OpenNMS via Helm
 
 ## Fix Ingress controller for Strimzi
 

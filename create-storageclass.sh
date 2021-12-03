@@ -4,9 +4,16 @@
 set -e
 
 environment=${1}
+storageclass=${2}
 
 if [[ "${environment}" != "gke" ]] && [[ "${environment}" != "aks" ]] && [[ "${environment}" != "minikube" ]]; then
   echo "Please specify the target environment: gke, aks, minikube"
+  exit 1
+fi
+
+if [[ "${storageclass}" == "" ]]; then
+  echo "Please specify the name of the storage class"
+  exit 1
 fi
 
 yaml="/tmp/_opennms.storageclass-$(date +%s).yaml"
@@ -15,7 +22,7 @@ cat <<EOF >$yaml
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
-  name: onms-share
+  name: ${storageclass}
   labels:
     tier: storage
 EOF

@@ -4,7 +4,7 @@
 
 timezone: America/New_York
 domain: example.com
-environment: gke # Acceptable values are: gke, aks, minikube
+storageClass: onms-share
 imagePullSecrets: []
 
 dependencies:
