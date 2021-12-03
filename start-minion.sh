@@ -55,6 +55,6 @@ docker run --name $minion_id -it --rm \
  -p ${syslog_port}:1514/udp \
  -p ${snmp_port}:1162/udp \
  -v $(pwd)/k8s/pki/${jks_file}:/opt/minion/etc/${jks_file} \
- -v $(pwd)/$yaml:/opt/minion/minion-config.yaml \
+ -v $yaml:/opt/minion/minion-config.yaml \
  opennms/minion:${minion_version} -c
 rm -f $yaml
