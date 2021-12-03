@@ -5,11 +5,10 @@ minion_version="29.0.1" # Must match the version chosen for OpenNMS
 minion_location="Apex"
 minion_id="minion-1"
 instance_id="apex1"  # Must match name of the Helm instance (or the Kubernetes namespace)
-kafka_boostrap="kafka.k8s.agalue.net:443" # Ensure it points to the same Kafka cluster used by OpenNMS
-kafka_user="opennms" # Must match KAFKA_SASL_USERNAME from app-credentials
-kafka_passwd="0p3nNM5" # Must match KAFKA_SASL_PASSWORD from app-credentials
-jks_passwd="0p3nNM5" # Must match KAFKA_SSL_TRUSTSTORE_PASSWORD from app-credentials
-jks_file="kafka-truststore.jks" # Must be consistent with KAFKA_SSL_TRUSTSTORE from app-settings
+kafka_boostrap="kafka.k8s.agalue.net:443" # Must match dependencies.kafka.hostname from the Helm deployment
+kafka_user="opennms" # Must match dependencies.kafka.username from the Helm deployment
+kafka_passwd="0p3nNM5" # Must match dependencies.kafka.password from the Helm deployment
+jks_passwd="0p3nNM5" # Must match dependencies.kafka.username from the Helm deployment
 karaf_port="8201"
 syslog_port="1514"
 snmp_port="1162"
@@ -23,8 +22,16 @@ while [ $# -gt 0 ]; do
   shift
 done
 
+# JKS file
+jks_file="kafka-truststore.jks"
+jks_path="$(pwd)/k8s/pki/${jks_file}"
+if [ ! -e ${jks_path} ]; then
+  echo "ERROR: ${jks_path} doesn't exist, aborting."
+  exit 1
+fi
+
 # Temp file
-yaml="/tmp/_minion-$(date +%s).yaml"
+yaml="/tmp/_${minion_id}-$(date +%s).yaml"
 
 # Build Minion Configuration
 cat <<EOF > $yaml
@@ -49,12 +56,12 @@ EOF
 done
 
 # Start Minion via Docker
-docker run --name $minion_id -it --rm \
+docker run --name ${minion_id} -it --rm \
  -e TZ=America/New_York \
  -p ${karaf_port}:8201 \
  -p ${syslog_port}:1514/udp \
  -p ${snmp_port}:1162/udp \
- -v $(pwd)/k8s/pki/${jks_file}:/opt/minion/etc/${jks_file} \
+ -v ${jks_path}:/opt/minion/etc/${jks_file} \
  -v $yaml:/opt/minion/minion-config.yaml \
  opennms/minion:${minion_version} -c
 rm -f $yaml
