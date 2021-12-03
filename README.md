@@ -165,6 +165,10 @@ pod=$(kubectl get pod -n ingress-nginx -l app.kubernetes.io/component=controller
 kubectl delete pod/$pod -n ingress-nginx
 ```
 
+## Testing multiple OpenNMS environments
+
+The current approach allows you to start multiple independent OpenNMS environments using the same Helm Chart. Ensure the deployment name is different every time you install or deploy a new environment (as mentioned, used for the namespace and the OpenNMS instance ID, among other things).
+
 ## Start an external Minion
 
 The [start-minion.sh](start-minion.sh) script is designed for the test use case. To tune it for your use case, you can alter all the environment variables with argument flags, for instance:
