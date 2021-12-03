@@ -10,11 +10,14 @@ kafka_user="opennms" # Must match KAFKA_SASL_USERNAME from app-credentials
 kafka_passwd="0p3nNM5" # Must match KAFKA_SASL_PASSWORD from app-credentials
 jks_passwd="0p3nNM5" # Must match KAFKA_SSL_TRUSTSTORE_PASSWORD from app-credentials
 jks_file="kafka-truststore.jks" # Must be consistent with KAFKA_SSL_TRUSTSTORE from app-settings
+karaf_port="8201"
+syslog_port="1514"
+snmp_port="1162"
 
 # Parse external variables
 while [ $# -gt 0 ]; do
   if [[ $1 == *"--"* ]]; then
-    param="$${1/--/}"
+    param="${1/--/}"
     declare $param="$2"
   fi
   shift
@@ -46,11 +49,11 @@ EOF
 done
 
 # Start Minion via Docker
-docker run --name minion -it --rm \
+docker run --name $minion_id -it --rm \
  -e TZ=America/New_York \
- -p 8201:8201 \
- -p 1514:1514/udp \
- -p 1162:1162/udp \
+ -p ${karaf_port}:8201 \
+ -p ${syslog_port}:1514/udp \
+ -p ${snmp_port}:1162/udp \
  -v $(pwd)/k8s/pki/${jks_file}:/opt/minion/etc/${jks_file} \
  -v $(pwd)/$yaml:/opt/minion/minion-config.yaml \
  opennms/minion:${minion_version} -c

@@ -1,8 +1,8 @@
 # OpenNMS K8s PoC
 
-This project aims to serve as a reference implementation of OpenNMS in the cloud, having a single Core Server and multiple read-only UI servers, sharing the RRD files and some configuration files running in Kubernetes.
+This project aims to serve as a reference to implement [OpenNMS](https://www.opennms.com/) running in [Kubernetes](https://kubernetes.io/) and deployed via [Helm](https://helm.sh/), having a single Core Server and multiple read-only UI servers plus Grafana and a custom Ingress, sharing the RRD files and some configuration files.
 
-We expect that Kafka and PostgreSQL running externally (and maintained separately from the solution), so a pair of special services of type `ExternalName` would be created for them. That facilitates using local shared resources within Kubernetes for testing purposes without changing the workload manifests.
+We expect Kafka, Elasticsearch, and PostgreSQL to run externally (and maintained separately from the solution). We would create a set of special services of type [ExternalName](https://kubernetes.io/docs/concepts/services-networking/service/#externalname) to make the solution independent from the actual location of the shared resources. That facilitates using local shared resources within Kubernetes for testing purposes without changing the workload manifests.
 
 We expect `SASL_SSL` configured in Kafka using `SCRAM-SHA-512` for authentication.
 
@@ -118,6 +118,8 @@ Start Minikube:
 ```bash
 minikube start --cpus=4 --memory=24g --addons=ingress --addons=ingress-dns --addons=metrics-server
 ```
+
+> You should enable SSL Passthrough on your NGinx Ingress controller to let Strimzi works properly.
 
 Start the test dependencies:
 
