@@ -4,10 +4,11 @@
 # WARNING: For testing purposes only
 
 NAMESPACE="shared"
-TARGET_DIR="k8s/pki" # Expected location for the configMap that keeps the Truststore
-ONMS_USER_PASSWORD="0p3nNM5" # Must match KAFKA_SASL_PASSWORD from app-credentials
-TRUSTSTORE_FILE="kafka-truststore.jks" # Must be consistent with KAFKA_SSL_TRUSTSTORE from app-settings
-TRUSTSTORE_PASSWORD="0p3nNM5" # Must match KAFKA_SSL_TRUSTSTORE_PASSWORD from app-credentials
+TARGET_DIR="jks" # Expected location for the JKS Truststores
+ONMS_USER="opennms" # Must match dependencies.kafka.username from the Helm deployment
+ONMS_PASSWORD="0p3nNM5" # Must match dependencies.kafka.password from the Helm deployment
+TRUSTSTORE_FILE="kafka-truststore.jks"
+TRUSTSTORE_PASSWORD="0p3nNM5" # Must match dependencies.kafka.truststore.password from the Helm deployment
 CLUSTER_NAME="onms" # Must match the name of the cluster inside dependencies/kafka.yaml
 
 CMVER=$(curl -s https://api.github.com/repos/jetstack/cert-manager/releases/latest | grep tag_name | cut -d '"' -f 4)
@@ -16,7 +17,7 @@ kubectl wait pod -l app.kubernetes.io/instance=cert-manager --for=condition=Read
 kubectl apply -f ca -n cert-manager
 
 kubectl create namespace $NAMESPACE
-kubectl create secret generic kafka-user-credentials --from-literal="opennms=$ONMS_USER_PASSWORD" -n $NAMESPACE
+kubectl create secret generic kafka-user-credentials --from-literal="$ONMS_USER=$ONMS_PASSWORD" -n $NAMESPACE
 kubectl apply -f "https://strimzi.io/install/latest?namespace=$NAMESPACE" -n $NAMESPACE
 kubectl apply -f dependencies -n $NAMESPACE
 kubectl wait kafka/$CLUSTER_NAME --for=condition=Ready --timeout=300s -n $NAMESPACE

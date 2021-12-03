@@ -8,7 +8,7 @@ instance_id="apex1"  # Must match name of the Helm instance (or the Kubernetes n
 kafka_boostrap="kafka.k8s.agalue.net:443" # Must match dependencies.kafka.hostname from the Helm deployment
 kafka_user="opennms" # Must match dependencies.kafka.username from the Helm deployment
 kafka_passwd="0p3nNM5" # Must match dependencies.kafka.password from the Helm deployment
-jks_passwd="0p3nNM5" # Must match dependencies.kafka.username from the Helm deployment
+jks_passwd="0p3nNM5" # Must match dependencies.kafka.truststore.password from the Helm deployment
 karaf_port="8201"
 syslog_port="1514"
 snmp_port="1162"
@@ -24,7 +24,7 @@ done
 
 # JKS file
 jks_file="kafka-truststore.jks"
-jks_path="$(pwd)/k8s/pki/${jks_file}"
+jks_path="$(pwd)/jks/${jks_file}"
 if [ ! -e ${jks_path} ]; then
   echo "ERROR: ${jks_path} doesn't exist, aborting."
   exit 1
