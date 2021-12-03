@@ -1,5 +1,9 @@
 # TODO
 
+* Reconsider using `ExternalName` Services. That imposes some restrictions when validating Hostnames and Certificates. Maybe we should pass through the real ones to avoid this problem.
+  Found this issue when having two systems running simultaneously.
+  The second one complains because there is no alternate name on the certificate.
+
 * Learn how the GKE Ingress works (in case the Nginx Ingress is not an option).
 
 * Enable TLS in PostgreSQL for the test dependencies.
