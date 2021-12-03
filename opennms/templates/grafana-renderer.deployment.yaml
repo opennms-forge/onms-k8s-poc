@@ -1,0 +1,48 @@
+# @author Alejandro Galue <agalue@opennms.com>
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana-renderer
+  namespace: {{ .Release.Name }}
+  labels:
+    app: grafana-renderer
+spec:
+  replicas: {{ .Values.grafana.imageRenderer.replicaCount }} 
+  selector:
+    matchLabels:
+      app: grafana-renderer
+  template:
+    metadata:
+      labels:
+        app: grafana-renderer
+    spec:
+      containers:
+      - name: grafana-renderer
+        image: {{ .Values.grafana.imageRenderer.image.repository }}:{{ .Values.grafana.imageRenderer.image.tag }}
+        imagePullPolicy: {{ .Values.grafana.imageRenderer.image.imagePullPolicy }}
+        ports:
+        - containerPort: 8081
+          name: http
+        env:
+        - name: BROWSER_TZ
+          value: {{ .Values.timezone }}
+        - name: ENABLE_METRICS
+          value: 'true'
+        {{- with .Values.grafana.imageRenderer.resources }}
+        resources:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        readinessProbe:
+          httpGet:
+            path: /
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 60

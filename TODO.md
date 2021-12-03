@@ -28,8 +28,7 @@
 * Detect OpenNMS flavor and apply configuration changes accordingly.
   For instance, H29 requires Twin API with Kafka, whereas M2021 doesn't.
 
-* Create a Helm Chart for OpenNMS and relatives (no external dependencies).
-  * Make the Namespace and the Instance ID the same.
+* Improve Helm Chart for OpenNMS and relatives (no external dependencies).
   * Make Sentinel creation optional (Telemetryd handles Flows when disabled).
   * Choose between RRD over shared volume and Cortex.
 

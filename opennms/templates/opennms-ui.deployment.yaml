@@ -1,0 +1,106 @@
+# @author Alejandro Galue <agalue@opennms.com>
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: onms-ui
+  namespace: {{ .Release.Name }}
+  labels:
+    app: onms-ui
+spec:
+  replicas: {{ .Values.opennms.uiServers.replicaCount }}
+  selector:
+    matchLabels:
+      app: onms-ui
+  template:
+    metadata:
+      labels:
+        app: onms-ui
+    spec:
+      terminationGracePeriodSeconds: 120
+      initContainers:
+      # Initializes OpenNMS Configuration
+      # Requires the same image/version used at runtime
+      - name: init
+        image: {{ .Values.opennms.image.repository }}:{{ .Values.opennms.image.tag | default .Chart.AppVersion }}
+        imagePullPolicy: {{ .Values.opennms.image.imagePullPolicy }}
+        command: [ bash, /init.sh ]
+        envFrom:
+        - configMapRef:
+            name: app-settings
+        - secretRef:
+            name: app-credentials
+        volumeMounts:
+        - name: overlay
+          mountPath: /opt/opennms-overlay
+        - name: scripts
+          mountPath: /init.sh
+          subPath: onms-ui-init.sh
+      containers:
+      - name: onms
+        image: {{ .Values.opennms.image.repository }}:{{ .Values.opennms.image.tag | default .Chart.AppVersion }}
+        imagePullPolicy: {{ .Values.opennms.image.imagePullPolicy }}
+        args:
+        - -s
+        ports:
+        - containerPort: 8101
+          name: karaf
+        - containerPort: 8980
+          name: http
+        envFrom:
+        - configMapRef:
+            name: app-settings
+        - secretRef:
+            name: app-credentials
+        {{- if .Values.opennms.uiServers.resources }}
+        {{- if .Values.opennms.uiServers.resources.requests }}
+        {{- if .Values.opennms.uiServers.resources.requests.memory }}
+        env:
+          - name: MEM_TOTAL_MB
+            valueFrom:
+              resourceFieldRef:
+                resource: requests.memory
+                divisor: 1Mi
+          - name: JAVA_OPTS
+            value: -Xms$(MEM_TOTAL_MB)m -Xmx$(MEM_TOTAL_MB)m -XX:+AlwaysPreTouch -XX:+UseG1GC -XX:+UseStringDeduplication
+        {{- end }}
+        {{- end }}
+        {{- end }}
+        volumeMounts:
+        - name: rrd-core
+          mountPath: /opennms-data/rrd
+        - name: etc-core
+          mountPath: /opennms-core/etc # Must match CORE_CONFIG_DIR from onms-ui-init.sh
+        - name: overlay
+          mountPath: /opt/opennms-overlay
+        {{- with .Values.opennms.uiServers.resources }}
+        resources:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        readinessProbe:
+          httpGet:
+            path: /opennms/login.jsp
+            port: http
+          initialDelaySeconds: 60
+          periodSeconds: 60
+        livenessProbe:
+          httpGet:
+            path: /opennms/login.jsp
+            port: http
+          initialDelaySeconds: 60
+          periodSeconds: 60
+      volumes:
+      - name: overlay
+        emptyDir: {}
+      - name: scripts
+        configMap:
+          name: app-scripts
+      - name: etc-core
+        persistentVolumeClaim:
+          claimName: onms-etc-pvc
+          readOnly: true
+      - name: rrd-core
+        persistentVolumeClaim:
+          claimName: onms-rrd-pvc
+          readOnly: true

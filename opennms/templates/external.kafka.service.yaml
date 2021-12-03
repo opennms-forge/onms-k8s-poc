@@ -1,0 +1,15 @@
+# @author Alejandro Galue <agalue@opennms.com>
+#
+# Ensure to adjust the FQDN for the externalName accordingly.
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka
+  namespace: {{ .Release.Name }}
+spec:
+  type: ExternalName
+  externalName: {{ .Values.dependencies.kafka.hostname }}
+  ports:
+  - port: {{ .Values.dependencies.kafka.port }}

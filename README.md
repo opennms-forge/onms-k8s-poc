@@ -8,9 +8,15 @@ We expect `SASL_SSL` configured in Kafka using `SCRAM-SHA-512` for authenticatio
 
 ## Requirements
 
+### Local
+
+* Have `kubectl` installed on your machine.
+
+* Have `helm` version 3 installed on your machine.
+
 ### For Kubernetes
 
-* A single instance of OpenNMS Core (backend) for centralized monitoring.
+* A single instance of OpenNMS Core (backend) for centralized monitoring running ALEC in standalone mode.
   OpenNMS doesn't support distributed mode, meaning the `StatefulSet` cannot have more than one replica.
 
 * Multiple instances of read-only OpenNMS UI (frontend).
@@ -86,17 +92,25 @@ For testing purposes, use the following script to initialize the dependencies wi
 
 > You should enable SSL Passthrough on your NGinx Ingress controller to let Strimzi works properly.
 
-Start the cluster in Azure:
+
+To start the cluster in Google Cloud:
 
 ```bash
-kubectl apply -k aks
+helm install -f helm-cloud.yaml \
+  --set environment=gke \
+  --set domain=k8s.agalue.net \
+  --set dependencies.kafka.hostname=onms-kafka-bootstrap.shared.svc.cluster.local \
+  --set dependencies.postgresql.hostname=postgresql.shared.svc.cluster.local \
+  --set dependencies.elasticsearch.hostname=elasticsearch.shared.svc.cluster.local \
+  --set dependencies.kafka.truststore.content=$(cat k8s/pki/kafka-truststore.jks | base64) \
+  apex1 ./opennms
 ```
 
-Start the cluster in Google Cloud:
+To start a cluster in Azure, replace `environment=gke` with `environment=aks`.
 
-```bash
-kubectl apply -k gke
-```
+Please note that `apex1` uniquely identifies the environment. That word will be used as the namespace, the OpenNMS Instance ID, and prefix the `domain` for the FQDNs used in the Ingress Controller.
+
+To tune further, edit [helm-cloud.yaml](helm-cloud.yaml).
 
 To access the cluster from external Minions, make sure to configure the DNS service correctly on your cloud provider.
 
@@ -126,7 +140,11 @@ Start the test dependencies:
 Start OpenNMS:
 
 ```bash
-kubectl apply -k minikube
+helm install -f helm-minikube.yaml \
+  --set environment=minikube \
+  --set domain=k8s.agalue.net \
+  --set dependencies.kafka.truststore.content=$(cat k8s/pki/kafka-truststore.jks | base64) \
+  apex1 ./opennms
 ```
 
 Take a look at the documentation of [ingress-dns](https://github.com/kubernetes/minikube/tree/master/deploy/addons/ingress-dns) for more information about how to use it, to avoid messing with `/etc/hosts`.
@@ -134,7 +152,7 @@ Take a look at the documentation of [ingress-dns](https://github.com/kubernetes/
 For instance, for macOS:
 
 ```bash
-DOMAIN="k8s.agalue.net" # Please use your own, and ensure it matches k8s/ingress.yaml
+DOMAIN="k8s.agalue.net" # Use your own, and ensure it matches the domain passed to OpenNMS via Helm
 
 cat <<EOF | sudo tee /etc/resolver/minikube-default-test
 domain $DOMAIN
@@ -146,7 +164,17 @@ EOF
 
 ## Start an external Minion
 
-Adjust the [start-minion.sh](start-minion.sh) script accordingly and run it. By default, it connects to the Kafka cluster managed by Strimzi for testing purposes.
+The [start-minion.sh](start-minion.sh) script is designed for the test use case. To tune it for your use case, you can alter all the environment variables with argument flags, for instance:
+
+```bash
+./start-minion.sh \
+  --instance_id Texas \
+  --minion_id minion01 \
+  --minion_location Houston \
+  --kafka_boostrap kafka1.example.com:9044
+```
+
+Check the script for more details.
 
 ## Pending
 

@@ -43,9 +43,9 @@ spec:
       configuration:
         bootstrap:
           alternativeNames: # Based on the ExternalName service that OpenNMS would use
-          - kafka.opennms.svc.cluster.local
-          - kafka.opennms.svc
-          - kafka.opennms
+          - kafka.apex1.svc.cluster.local
+          - kafka.apex1.svc
+          - kafka.apex1
     - name: external
       port: 9094
       type: ingress

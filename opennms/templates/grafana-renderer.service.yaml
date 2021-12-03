@@ -1,0 +1,16 @@
+# @author Alejandro Galue <agalue@opennms.com>
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana-renderer
+  namespace: {{ .Release.Name }}
+  labels:
+    app: grafana-renderer
+spec:
+  ports:
+  - port: 8081
+    name: http
+  selector:
+    app: grafana-renderer

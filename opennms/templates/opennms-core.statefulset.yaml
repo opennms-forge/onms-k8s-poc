@@ -1,0 +1,118 @@
+# @author Alejandro Galue <agalue@opennms.com>
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: onms-core
+  namespace: {{ .Release.Name }}
+  labels:
+    app: onms-core
+spec:
+  serviceName: onms-core
+  replicas: 1 # DO NOT CHANGE. The solution only allows 1 instance
+  selector:
+    matchLabels:
+      app: onms-core
+  template:
+    metadata:
+      labels:
+        app: onms-core
+    spec:
+      terminationGracePeriodSeconds: 120
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      initContainers:
+      # Initializes/Updates OpenNMS Configuration
+      # Requires the same image/version used at runtime
+      - name: init
+        image: {{ .Values.opennms.image.repository }}:{{ .Values.opennms.image.tag | default .Chart.AppVersion }}
+        imagePullPolicy: {{ .Values.opennms.image.imagePullPolicy }}
+        command: [ bash, /init.sh ]
+        envFrom:
+        - configMapRef:
+            name: app-settings
+        - secretRef:
+            name: app-credentials
+        volumeMounts:
+        - name: etc
+          mountPath: /opennms-etc # Required by the script
+        - name: deploy
+          mountPath: /opennms-deploy # Required by the script
+        - name: jks
+          mountPath: /opennms-jks # Required by the script
+        - name: scripts
+          mountPath: /init.sh
+          subPath: onms-core-init.sh
+      containers:
+      - name: onms
+        image: {{ .Values.opennms.image.repository }}:{{ .Values.opennms.image.tag | default .Chart.AppVersion }}
+        imagePullPolicy: {{ .Values.opennms.image.imagePullPolicy }}
+        args:
+        - -s
+        ports:
+        - containerPort: 8101
+          name: karaf
+        - containerPort: 8980
+          name: http
+        envFrom:
+        - configMapRef:
+            name: app-settings
+        - secretRef:
+            name: app-credentials
+        env:
+          {{- if .Values.opennms.resources }}
+          {{- if .Values.opennms.resources.requests }}
+          {{- if .Values.opennms.resources.requests.memory }}
+          - name: MEM_TOTAL_MB
+            valueFrom:
+              resourceFieldRef:
+                resource: requests.memory
+                divisor: 1Mi
+          - name: JAVA_OPTS
+            value: -Xms$(MEM_TOTAL_MB)m -Xmx$(MEM_TOTAL_MB)m -XX:+AlwaysPreTouch -XX:+UseG1GC -XX:+UseStringDeduplication
+          {{- end }}
+          {{- end }}
+          {{- end }}
+        volumeMounts:
+        - name: etc
+          mountPath: /opt/opennms/etc
+        - name: deploy
+          mountPath: /opt/opennms/deploy
+        - name: rrd
+          mountPath: /opennms-data/rrd
+        {{- with .Values.opennms.resources }}
+        resources:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        readinessProbe:
+          httpGet:
+            path: /opennms/login.jsp
+            port: http
+          initialDelaySeconds: 60
+          periodSeconds: 60
+        livenessProbe:
+          httpGet:
+            path: /opennms/login.jsp
+            port: http
+          initialDelaySeconds: 60
+          periodSeconds: 60
+      volumes:
+      - name: deploy
+        emptyDir: {}
+      - name: scripts
+        configMap:
+          name: app-scripts
+      - name: jks
+        configMap:
+          name: app-truststores
+      - name: etc
+        persistentVolumeClaim:
+          claimName: onms-etc-pvc
+          readOnly: false
+      - name: rrd
+        persistentVolumeClaim:
+          claimName: onms-rrd-pvc
+          readOnly: false

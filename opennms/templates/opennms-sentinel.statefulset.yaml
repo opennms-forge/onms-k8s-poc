@@ -1,0 +1,111 @@
+# @author Alejandro Galue <agalue@opennms.com>
+#
+# Sentinel is required only for Processing Flows and Telemetry Data.
+# Using StatefulSets for Sentinels only to have a unique and immutable SENTINEL_ID.
+# SENTINEL_ID and SENTINEL_LOCATION are required for tracing.
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: onms-sentinel
+  namespace: {{ .Release.Name }}
+  labels:
+    app: onms-sentinel
+spec:
+  serviceName: sentinel
+  replicas: {{ .Values.sentinel.replicaCount }}
+  podManagementPolicy: Parallel
+  selector:
+    matchLabels:
+      app: onms-sentinel
+  template:
+    metadata:
+      labels:
+        app: onms-sentinel
+    spec:
+      terminationGracePeriodSeconds: 60
+      initContainers:
+      - name: init
+        image: bash
+        imagePullPolicy: IfNotPresent
+        command: [ bash, /init.sh ]
+        envFrom:
+        - configMapRef:
+            name: app-settings
+        - secretRef:
+            name: app-credentials
+        volumeMounts:
+        - name: etc-overlay
+          mountPath: /opt/sentinel-etc-overlay
+        - name: scripts
+          mountPath: /init.sh
+          subPath: onms-sentinel-init.sh
+      containers:
+      - name: sentinel
+        image: {{ .Values.sentinel.image.repository }}:{{ .Values.sentinel.image.tag | default .Chart.AppVersion }}
+        imagePullPolicy: {{ .Values.sentinel.image.imagePullPolicy }}
+        args:
+        - -c
+        ports:
+        - containerPort: 8181
+          name: http
+        - containerPort: 8301
+          name: karaf
+        envFrom:
+        - configMapRef:
+            name: app-settings
+        - secretRef:
+            name: app-credentials
+        env:
+        - name: OPENNMS_HTTP_URL
+          value: http://onms-ui.{{ .Release.Name }}:8980/opennms
+        - name: SENTINEL_ID # Required when using tracing through Jaeger
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: MAX_FD # Maximum File Descriptors
+          value: '65536'
+        {{- if .Values.sentinel.resources }}
+        {{- if .Values.sentinel.resources.requests }}
+        {{- if .Values.sentinel.resources.requests.memory }}
+        - name: MEM_TOTAL_MB
+          valueFrom:
+            resourceFieldRef:
+              resource: requests.memory
+              divisor: 1Mi
+        - name: JAVA_OPTS
+          value: -Xms$(MEM_TOTAL_MB)m -Xmx$(MEM_TOTAL_MB)m -XX:+AlwaysPreTouch -XX:+UseG1GC -XX:+UseStringDeduplication
+        {{- end }}
+        {{- end }}
+        {{- end }}
+        volumeMounts:
+        - name: etc-overlay
+          mountPath: /opt/sentinel-etc-overlay
+        - name: jks
+          mountPath: /opt/sentinel/etc/jks
+        {{- with .Values.sentinel.resources }}
+        resources:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        readinessProbe:
+          exec:
+            command:
+            - /health.sh
+          initialDelaySeconds: 60
+          periodSeconds: 60
+        livenessProbe: # WARNING: The health-check checks dependencies, which is not suitable for liveness probes
+          exec:
+            command:
+            - /health.sh
+          initialDelaySeconds: 60
+          periodSeconds: 60
+      volumes:
+      - name: etc-overlay
+        emptyDir: {}
+      - name: scripts
+        configMap:
+          name: app-scripts
+      - name: jks
+        configMap:
+          name: app-truststores

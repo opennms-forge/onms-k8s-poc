@@ -4,12 +4,21 @@
 minion_version="29.0.1" # Must match the version chosen for OpenNMS
 minion_location="Apex"
 minion_id="minion-1"
-instance_id="onms"  # Must match OPENNMS_INSTANCE_ID from app-settings
+instance_id="apex1"  # Must match name of the Helm instance (or the Kubernetes namespace)
 kafka_boostrap="kafka.k8s.agalue.net:443" # Ensure it points to the same Kafka cluster used by OpenNMS
 kafka_user="opennms" # Must match KAFKA_SASL_USERNAME from app-credentials
 kafka_passwd="0p3nNM5" # Must match KAFKA_SASL_PASSWORD from app-credentials
 jks_passwd="0p3nNM5" # Must match KAFKA_SSL_TRUSTSTORE_PASSWORD from app-credentials
 jks_file="kafka-truststore.jks" # Must be consistent with KAFKA_SSL_TRUSTSTORE from app-settings
+
+# Parse external variables
+while [ $# -gt 0 ]; do
+  if [[ $1 == *"--"* ]]; then
+    param="$${1/--/}"
+    declare $param="$2"
+  fi
+  shift
+done
 
 # Build Minion Configuration
 cat <<EOF > minion.yaml
@@ -42,4 +51,4 @@ docker run --name minion -it --rm \
  -v $(pwd)/k8s/pki/${jks_file}:/opt/minion/etc/${jks_file} \
  -v $(pwd)/minion.yaml:/opt/minion/minion-config.yaml \
  opennms/minion:${minion_version} -c
-rm minion.yaml
+rm -f minion.yaml
