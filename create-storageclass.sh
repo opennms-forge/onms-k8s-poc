@@ -1,14 +1,28 @@
+#!env bash
 # @author Alejandro Galue <agalue@opennms.com>
 
----
+set -e
+
+environment=${1}
+
+if [[ "${environment}" != "gke" ]] && [[ "${environment}" != "aks" ]] && [[ "${environment}" != "minikube" ]]; then
+  echo "Please specify the target environment: gke, aks, minikube"
+fi
+
+yaml="/tmp/_opennms.storageclass-$(date +%s).yaml"
+
+cat <<EOF >$yaml
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
   name: onms-share
   labels:
     tier: storage
-{{- if eq .Values.environment "aks" }}
-provisioner: kubernetes.io/azure-file # Alternatively, we could use file.csi.azure.com
+EOF
+
+if [[ "${environment}" == "aks" ]]; then
+  cat <<EOF >>$yaml
+provisioner: file.csi.azure.com
 volumeBindingMode: WaitForFirstConsumer
 allowVolumeExpansion: true
 mountOptions:
@@ -21,8 +35,11 @@ mountOptions:
 - actimeo=30
 parameters:
   skuName: Standard_LRS
-{{- end }}
-{{- if eq .Values.environment "gke" }}
+EOF
+fi
+
+if [[ "${environment}" == "gke" ]]; then
+  cat <<EOF >>$yaml
 provisioner: filestore.csi.storage.gke.io
 volumeBindingMode: WaitForFirstConsumer
 allowVolumeExpansion: true
@@ -34,8 +51,11 @@ mountOptions:
 parameters:
   tier: standard # standard, premium, or enterprise
   network: default
-{{- end }}
-{{- if eq .Values.environment "minikube" }}
+EOF
+fi
+
+if [[ "${environment}" == "minikube" ]]; then
+  cat <<EOF >>$yaml
 provisioner: k8s.io/minikube-hostpath
 volumeBindingMode: Immediate
 allowVolumeExpansion: true
@@ -44,4 +64,10 @@ mountOptions:
 - file_mode=0644
 - uid=10001
 - gid=10001
-{{- end }}
+EOF
+fi
+
+kubectl apply -f $yaml
+rm -f $yaml
+
+echo "Done!"

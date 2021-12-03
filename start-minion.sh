@@ -1,4 +1,4 @@
-#!/bin/bash
+#!env bash
 # @author Alejandro Galue <agalue@opennms.com>
 
 minion_version="29.0.1" # Must match the version chosen for OpenNMS
@@ -20,8 +20,11 @@ while [ $# -gt 0 ]; do
   shift
 done
 
+# Temp file
+yaml="/tmp/_minion-$(date +%s).yaml"
+
 # Build Minion Configuration
-cat <<EOF > minion.yaml
+cat <<EOF > $yaml
 id: ${minion_id}
 location: ${minion_location}
 system:
@@ -30,7 +33,7 @@ system:
 ipc:
 EOF
 for module in rpc sink twin; do
-  cat <<EOF >> minion.yaml
+  cat <<EOF >> $yaml
   $module:
     kafka:
       bootstrap.servers: ${kafka_boostrap}
@@ -49,6 +52,6 @@ docker run --name minion -it --rm \
  -p 1514:1514/udp \
  -p 1162:1162/udp \
  -v $(pwd)/k8s/pki/${jks_file}:/opt/minion/etc/${jks_file} \
- -v $(pwd)/minion.yaml:/opt/minion/minion-config.yaml \
+ -v $(pwd)/$yaml:/opt/minion/minion-config.yaml \
  opennms/minion:${minion_version} -c
-rm -f minion.yaml
+rm -f $yaml

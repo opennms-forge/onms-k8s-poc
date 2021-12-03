@@ -78,11 +78,7 @@ We expect `SASL_SSL` configured in Kafka using `SCRAM-SHA-512` for authenticatio
 
 The following assumes that you already have an AKS or GKE cluster up and running with Nginx Ingress Controller and `cert-manager`, and `kubectl` is correctly configured on your machine to access the cluster. At a minimum, it should have three instances with 4 Cores and 16GB of RAM on each of them.
 
-**Place the Java Truststore with the CA Certificate Chain of your Kafka cluster on a JKS file located at `k8s/pki/kafka-truststore.jks`. Otherwise, the deployment will fail.**
-
-Ensure that [k8s/external.postgresql.service.yaml](k8s/external.postgresql.service.yaml), [k8s/external.kafka.service.yaml](k8s/external.kafka.service.yaml) and [k8s/external.elasticsearch.service.yaml](k8s/external.elasticsearch.service.yaml) point to the correct external resources. By default, they point to the test resources in the `shared` namespace.
-
-Ensure that [k8s/ingress.yaml](k8s/ingress.yaml) and `GF_SERVER_DOMAIN` within [k8s/kustomization.yaml](k8s/kustomization.yaml) use the correct domain for the hostnames.
+**Place the Java Truststore with the CA Certificate Chain of your Kafka cluster on a JKS file located at `k8s/pki/kafka-truststore.jks`, and pass it to OpenNMS via Helm.**
 
 For testing purposes, use the following script to initialize the dependencies within Kubernetes (no need to update the `ExternalName` services, and the script generates the Truststore for you, and it includes `cert-manager`):
 
@@ -92,10 +88,11 @@ For testing purposes, use the following script to initialize the dependencies wi
 
 > You should enable SSL Passthrough on your NGinx Ingress controller to let Strimzi works properly.
 
-
 To start the cluster in Google Cloud:
 
 ```bash
+./create-storageclass.sh gke
+
 helm install -f helm-cloud.yaml \
   --set environment=gke \
   --set domain=k8s.agalue.net \
@@ -106,9 +103,9 @@ helm install -f helm-cloud.yaml \
   apex1 ./opennms
 ```
 
-To start a cluster in Azure, replace `environment=gke` with `environment=aks`.
+To start a cluster in Azure, replace `gke` with `aks`.
 
-Please note that `apex1` uniquely identifies the environment. That word will be used as the namespace, the OpenNMS Instance ID, and prefix the `domain` for the FQDNs used in the Ingress Controller.
+Please note that `apex1` uniquely identifies the environment. That word will be used as the namespace, the OpenNMS Instance ID, and prefix the `domain` for the FQDNs used in the Ingress Controller. Ensure to use the correct hostname for your dependencies.
 
 To tune further, edit [helm-cloud.yaml](helm-cloud.yaml).
 
@@ -122,15 +119,6 @@ Start Minikube:
 minikube start --cpus=4 --memory=24g --addons=ingress --addons=ingress-dns --addons=metrics-server
 ```
 
-Enable SSL Passthrough to use Ingress with Strimzi:
-
-```bash
-kubectl patch deployment ingress-nginx-controller -n ingress-nginx --type json -p \
-  '[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--enable-ssl-passthrough"}]'
-pod=$(kubectl get pod -n ingress-nginx -l app.kubernetes.io/component=controller | grep Running | awk '{print $1}')
-kubectl delete pod/$pod -n ingress-nginx
-```
-
 Start the test dependencies:
 
 ```bash
@@ -140,6 +128,8 @@ Start the test dependencies:
 Start OpenNMS:
 
 ```bash
+./create-storageclass.sh minikube
+
 helm install -f helm-minikube.yaml \
   --set environment=minikube \
   --set domain=k8s.agalue.net \
@@ -160,6 +150,17 @@ nameserver $(minikube ip)
 search_order 1
 timeout 5
 EOF
+```
+
+## Fix Ingress controller for Strimzi
+
+If you're using the test Kafka cluster via Strimzi, you must enable SSL Passthrough on your Ingress Controller. The following updates the manifests and force restart the controller.
+
+```bash
+kubectl patch deployment ingress-nginx-controller -n ingress-nginx --type json -p \
+  '[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--enable-ssl-passthrough"}]'
+pod=$(kubectl get pod -n ingress-nginx -l app.kubernetes.io/component=controller | grep Running | awk '{print $1}')
+kubectl delete pod/$pod -n ingress-nginx
 ```
 
 ## Start an external Minion
