@@ -2,12 +2,13 @@
 
 * Learn how the GKE Ingress works (in case the Nginx Ingress is not an option).
 
-* Enable TLS in PostgreSQL for the test dependencies.
+* Enable TLS in PostgreSQL and Elasticsearch for the test dependencies.
+  Using a Private CA and custom Truststores in OpenNMS.
 
 * Describe a vendor-independent procedure to manage the wildcard DNS entry for the Ingress.
   The entry should point to the public IP of the Ingress Controller.
 
-* Ensure the solution works on GCloud.
+* Ensure the solution works on Google Cloud.
 
 * Test the solution using Google SQL for PostgreSQL.
 
@@ -16,8 +17,10 @@
 * Evaluate options for centralized logging (side-car with Fluentd).
 
 * Use relative/percentage size for the Java Heap, based on Pod resources (instead of fixed values) for OpenNMS.
+  For instance, `-XX:MaxRAMPercentage={{ .Values.opennms.jvm.heapPercentage }}`
+  We could let the user choose between discrete assignments via Xms/Xmx or percentage.
 
-* Evaluate and test solutions for private container registries.
+* Evaluate and test solutions with private container registries.
   Allows us to use Meridian instead of Horizon.
 
 * Start monitoring a local network with Flow processing and verify usage of the UI/Grafana servers.
