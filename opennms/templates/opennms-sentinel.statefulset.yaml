@@ -66,9 +66,7 @@ spec:
               fieldPath: metadata.name
         - name: MAX_FD # Maximum File Descriptors
           value: '65536'
-        {{- if .Values.sentinel.resources }}
-        {{- if .Values.sentinel.resources.requests }}
-        {{- if .Values.sentinel.resources.requests.memory }}
+        {{- if (((.Values.sentinel.resources).requests).memory) }}
         - name: MEM_TOTAL_MB
           valueFrom:
             resourceFieldRef:
@@ -76,8 +74,6 @@ spec:
               divisor: 1Mi
         - name: JAVA_OPTS
           value: -Xms$(MEM_TOTAL_MB)m -Xmx$(MEM_TOTAL_MB)m -XX:+AlwaysPreTouch -XX:+UseG1GC -XX:+UseStringDeduplication
-        {{- end }}
-        {{- end }}
         {{- end }}
         volumeMounts:
         - name: etc-overlay

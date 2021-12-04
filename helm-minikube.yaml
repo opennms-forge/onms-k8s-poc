@@ -58,6 +58,9 @@ opennms:
     database:
       username: opennms
       password: 0p3nNM5
+    storage:
+      etc: 1Gi
+      rrd: 1000Gi
   uiServers:
     replicaCount: 1
     resources: null

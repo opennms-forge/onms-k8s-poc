@@ -12,7 +12,7 @@ metadata:
 spec:
   storageClassName: {{ .Values.storageClass }}
   accessModes:
-  - ReadWriteMany
+  - ReadWriteMany # Mandatory
   resources:
     requests:
-      storage: 1000Gi
+      storage: {{ .Values.opennms.configuration.storage.rrd }}

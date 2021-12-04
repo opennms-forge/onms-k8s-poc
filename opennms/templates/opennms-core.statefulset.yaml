@@ -62,20 +62,6 @@ spec:
             name: app-settings
         - secretRef:
             name: app-credentials
-        env:
-          {{- if .Values.opennms.resources }}
-          {{- if .Values.opennms.resources.requests }}
-          {{- if .Values.opennms.resources.requests.memory }}
-          - name: MEM_TOTAL_MB
-            valueFrom:
-              resourceFieldRef:
-                resource: requests.memory
-                divisor: 1Mi
-          - name: JAVA_OPTS
-            value: -Xms$(MEM_TOTAL_MB)m -Xmx$(MEM_TOTAL_MB)m -XX:+AlwaysPreTouch -XX:+UseG1GC -XX:+UseStringDeduplication
-          {{- end }}
-          {{- end }}
-          {{- end }}
         volumeMounts:
         - name: etc
           mountPath: /opt/opennms/etc
@@ -84,6 +70,16 @@ spec:
         - name: rrd
           mountPath: /opennms-data/rrd
         {{- with .Values.opennms.resources }}
+        env:
+          {{- if ((.requests).memory) }}
+          - name: MEM_TOTAL_MB
+            valueFrom:
+              resourceFieldRef:
+                resource: requests.memory
+                divisor: 1Mi
+          - name: JAVA_OPTS
+            value: -Xms$(MEM_TOTAL_MB)m -Xmx$(MEM_TOTAL_MB)m -XX:+AlwaysPreTouch -XX:+UseG1GC -XX:+UseStringDeduplication
+          {{- end }}
         resources:
           {{- toYaml . | nindent 10 }}
         {{- end }}
