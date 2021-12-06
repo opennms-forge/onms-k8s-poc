@@ -40,7 +40,7 @@ We expect `SASL_SSL` configured in Kafka using `SCRAM-SHA-512` for authenticatio
 
 * A `ConfigMap` to store initialization scripts and standard configuration settings.
 
-* An `Ingress` to control TLS termination and provide access to all the components.
+* An `Ingress` to control TLS termination and provide access to all the components (using Nginx).
   We could manage certificates using LetsEncrypt via `cert-manager`.
   To integrate with Google Cloud DNS managed zones or Azure DNS, we need a wild-card entry.
 
@@ -56,6 +56,8 @@ We expect `SASL_SSL` configured in Kafka using `SCRAM-SHA-512` for authenticatio
 * Private Container Registry for custom Meridian Images (if applicable), in case OpenNMS Horizon is not an option.
 
 * [cert-manager](https://cert-manager.readthedocs.io/en/latest/) to provide HTTPS/TLS support to the web-based services managed by the ingress controller.
+
+* Nginx Ingress Controller
 
 ## Deployment
 
@@ -79,8 +81,6 @@ For testing purposes, use the following script to initialize all the dependencie
 ```bash
 ./start-dependencies.sh
 ```
-
-> You should enable SSL Passthrough on your NGinx Ingress controller to let Strimzi works properly.
 
 Create the Storage Class in Google Cloud, using `onms-share` as the name of the `StorageClass`:
 
@@ -117,8 +117,6 @@ Start Minikube:
 minikube start --cpus=4 --memory=24g --addons=ingress --addons=ingress-dns --addons=metrics-server
 ```
 
-> You should enable SSL Passthrough on your NGinx Ingress controller to let Strimzi works properly.
-
 Start the test dependencies:
 
 ```bash
@@ -154,17 +152,6 @@ EOF
 ```
 
 > Use your own, and ensure it matches the domain passed to OpenNMS via Helm
-
-## Fix Ingress controller for Strimzi
-
-If you're using the test Kafka cluster via Strimzi, you must enable SSL Passthrough on your Ingress Controller. The following updates the manifests and force restart the controller.
-
-```bash
-kubectl patch deployment ingress-nginx-controller -n ingress-nginx --type json -p \
-  '[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--enable-ssl-passthrough"}]'
-pod=$(kubectl get pod -n ingress-nginx -l app.kubernetes.io/component=controller | grep Running | awk '{print $1}')
-kubectl delete pod/$pod -n ingress-nginx
-```
 
 ## Testing multiple OpenNMS environments
 

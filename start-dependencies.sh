@@ -11,6 +11,11 @@ TRUSTSTORE_FILE="kafka-truststore.jks"
 TRUSTSTORE_PASSWORD="0p3nNM5" # Must match dependencies.kafka.truststore.password from the Helm deployment
 CLUSTER_NAME="onms" # Must match the name of the cluster inside dependencies/kafka.yaml
 
+kubectl patch deployment ingress-nginx-controller -n ingress-nginx --type json -p \
+  '[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--enable-ssl-passthrough"}]'
+NGINX_POD=$(kubectl get pod -n ingress-nginx -l app.kubernetes.io/component=controller | grep Running | awk '{print $1}')
+kubectl delete pod/$NGINX_POD -n ingress-nginx
+
 CMVER=$(curl -s https://api.github.com/repos/jetstack/cert-manager/releases/latest | grep tag_name | cut -d '"' -f 4)
 kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/$CMVER/cert-manager.yaml
 kubectl wait pod -l app.kubernetes.io/instance=cert-manager --for=condition=Ready --timeout=300s -n cert-manager
