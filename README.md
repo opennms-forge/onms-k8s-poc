@@ -74,7 +74,7 @@ We expect `SASL_SSL` configured in Kafka using `SCRAM-SHA-512` for authenticatio
 
 The following assumes that you already have an AKS or GKE cluster up and running with Nginx Ingress Controller and `cert-manager`, and `kubectl` is correctly configured on your machine to access the cluster. At a minimum, it should have three instances with 4 Cores and 16GB of RAM on each of them.
 
-**Place the Java Truststore with the CA Certificate Chain of your Kafka cluster on a JKS file located at `jks/kafka-truststore.jks`, and pass it to OpenNMS via Helm.**
+**Place the Java Truststore with the CA Certificate Chain of your Kafka cluster, your Elasticsearch cluster and your PostgreSQL server/cluster on a JKS file located at `jks/truststore.jks`, and pass it to OpenNMS via Helm (set the JKS password or update the values file).**
 
 For testing purposes, use the following script to initialize all the dependencies within Kubernetes (including `cert-manager`):
 
@@ -96,10 +96,10 @@ Start the OpenNMS environment on your cloud environment:
 helm install -f helm-cloud.yaml \
   --set domain=k8s.agalue.net \
   --set storageClass=onms-share \
-  --set dependencies.kafka.hostname=onms-kafka-bootstrap.shared.svc.cluster.local \
-  --set dependencies.postgresql.hostname=postgresql.shared.svc.cluster.local \
-  --set dependencies.elasticsearch.hostname=elasticsearch.shared.svc.cluster.local \
-  --set dependencies.kafka.truststore.content=$(cat jks/kafka-truststore.jks | base64) \
+  --set dependencies.truststore.content=$(cat jks/truststore.jks | base64) \
+  --set dependencies.postgresql.hostname=postgresql.shared.svc \
+  --set dependencies.kafka.hostname=onms-kafka-bootstrap.shared.svc \
+  --set dependencies.elasticsearch.hostname=onms-es-http.shared.svc \
   apex1 ./opennms
 ```
 
@@ -134,7 +134,7 @@ Start OpenNMS:
 helm install -f helm-minikube.yaml \
   --set domain=k8s.agalue.net \
   --set storageClass=onms-share \
-  --set dependencies.kafka.truststore.content=$(cat jks/kafka-truststore.jks | base64) \
+  --set dependencies.truststore.content=$(cat jks/truststore.jks | base64) \
   apex1 ./opennms
 ```
 

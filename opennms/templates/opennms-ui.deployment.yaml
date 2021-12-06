@@ -60,19 +60,28 @@ spec:
           mountPath: /opennms-core/etc # Must match CORE_CONFIG_DIR from onms-ui-init.sh
         - name: overlay
           mountPath: /opt/opennms-overlay
+        - name: jks
+          mountPath: /etc/java/jks
+        {{- $opt :=  include "opennms.jvmOptions" . }}
+        {{- if .Values.opennms.uiServers.resources }}
         {{- with .Values.opennms.uiServers.resources }}
+        {{- if ((.requests).memory) }}
         env:
-          {{- if ((.requests).memory) }}
-          - name: MEM_TOTAL_MB
-            valueFrom:
-              resourceFieldRef:
-                resource: requests.memory
-                divisor: 1Mi
-          - name: JAVA_OPTS
-            value: -Xms$(MEM_TOTAL_MB)m -Xmx$(MEM_TOTAL_MB)m -XX:+AlwaysPreTouch -XX:+UseG1GC -XX:+UseStringDeduplication
-          {{- end }}
+        - name: MEM_TOTAL_MB
+          valueFrom:
+            resourceFieldRef:
+              resource: requests.memory
+              divisor: 1Mi
+        - name: JAVA_OPTS
+          value: -Xms$(MEM_TOTAL_MB)m -Xmx$(MEM_TOTAL_MB)m {{ $opt }}
+        {{- end }}
         resources:
           {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- else }}
+        env:
+        - name: JAVA_OPTS
+          value: {{ $opt }}
         {{- end }}
         readinessProbe:
           httpGet:
@@ -92,6 +101,9 @@ spec:
       - name: scripts
         configMap:
           name: app-scripts
+      - name: jks
+        configMap:
+          name: app-jks
       - name: etc-core
         persistentVolumeClaim:
           claimName: onms-etc-pvc

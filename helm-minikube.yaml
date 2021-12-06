@@ -7,41 +7,32 @@ opennmsVersion: '29.0.1'
 imagePullSecrets: []
 
 dependencies:
-
+  truststore:
+    content: '' # A base64 encoded content of the JKS Truststore file. Empty means no TLS/SSL
+    password: '0p3nNM5'
   kafka:
-    hostname: onms-kafka-bootstrap.shared.svc.cluster.local
+    hostname: onms-kafka-bootstrap.shared.svc
     port: 9093
     username: opennms
     password: 0p3nNM5
-    truststore:
-      content: '' # A base64 encoded content of the JKS Truststore file. Empty means no TLS/SSL
-      password: '0p3nNM5'
     configuration:
       sasl_mechanism: SCRAM-SHA-512
       security_protocol: SASL_SSL
-
   elasticsearch:
-    hostname: elasticsearch.shared.svc.cluster.local
+    hostname: onms-es-http.shared.svc
     port: 9200
     username: elastic
     password: 31@st1c
-    truststore:
-      content: '' # A base64 encoded content of the JKS Truststore file. Empty means no TLS/SSL
-      password: '0p3nNM5'
     configuration:
       flows:
         index_strategy: daily
-        replication_factor: 1
+        replication_factor: 0
         num_shards: 1
-
   postgresql:
-    hostname: postgresql.shared.svc.cluster.local
+    hostname: postgresql.shared.svc
     port: 5432
     username: postgres
     password: P0stgr3s
-    truststore:
-      content: '' # A base64 encoded content of the JKS Truststore file. Empty means no TLS/SSL
-      password: '0p3nNM5'
 
 ingress:
   className: nginx

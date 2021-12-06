@@ -10,8 +10,6 @@
 # KAFKA_SASL_PASSWORD
 # KAFKA_SASL_MECHANISM
 # KAFKA_SECURITY_PROTOCOL
-# KAFKA_SSL_TRUSTSTORE
-# KAFKA_SSL_TRUSTSTORE_PASSWORD
 # ELASTICSEARCH_SERVER
 # ELASTICSEARCH_USER
 # ELASTICSEARCH_PASSWORD
@@ -54,7 +52,6 @@ echo "Twin API Available? $USE_TWIN"
 wait_for ${POSTGRES_HOST}:${POSTGRES_PORT}
 wait_for ${KAFKA_BOOTSTRAP_SERVER}
 
-JKS_DIR=/opennms-jks
 CONFIG_DIR=/opennms-etc
 BACKUP_ETC=/opt/opennms/etc
 KARAF_FILES=( \
@@ -243,16 +240,6 @@ org.opennms.core.ipc.$module.kafka.security.protocol=${KAFKA_SECURITY_PROTOCOL}
 org.opennms.core.ipc.$module.kafka.sasl.mechanism=${KAFKA_SASL_MECHANISM}
 org.opennms.core.ipc.$module.kafka.sasl.jaas.config=${JAAS_CLASS} required username="${KAFKA_SASL_USERNAME}" password="${KAFKA_SASL_PASSWORD}";
 EOF
-    if [[ "${KAFKA_SSL_TRUSTSTORE}" == "true" ]]; then
-      cat <<EOF >> ${CONFIG_DIR}/opennms.properties.d/kafka.properties
-org.opennms.core.ipc.$module.kafka.ssl.truststore.location=/opt/opennms/etc/jks/kafka.jks
-EOF
-      if [[ "${KAFKA_SSL_TRUSTSTORE_PASSWORD}" != "" ]]; then
-        cat <<EOF >> ${CONFIG_DIR}/opennms.properties.d/kafka.properties
-org.opennms.core.ipc.$module.kafka.ssl.truststore.password=${KAFKA_SSL_TRUSTSTORE_PASSWORD}
-EOF
-      fi
-    fi
     done
   fi
 fi
@@ -261,19 +248,13 @@ fi
 if [[ ${ELASTICSEARCH_SERVER} ]]; then
   PREFIX=$(echo ${OPENNMS_INSTANCE_ID} | tr '[:upper:]' '[:lower:]')-
   cat <<EOF > ${CONFIG_DIR}/org.opennms.features.flows.persistence.elastic.cfg
-# Common Settings
-elasticUrl=http://${ELASTICSEARCH_SERVER}
+elasticUrl=https://${ELASTICSEARCH_SERVER}
 globalElasticUser=${ELASTICSEARCH_USER}
 globalElasticPassword=${ELASTICSEARCH_PASSWORD}
 elasticIndexStrategy=${ELASTICSEARCH_INDEX_STRATEGY_FLOWS}
 indexPrefix=${PREFIX}
 EOF
 fi
-
-# Copying JKS files
-TARGET_JKS=${CONFIG_DIR}/jks/
-mkdir -p ${TARGET_JKS}
-cp ${JKS_DIR}/*.jks ${TARGET_JKS}
 
 # Cleanup temporary requisition files:
 rm -f ${CONFIG_DIR}/imports/pending/*.xml.*

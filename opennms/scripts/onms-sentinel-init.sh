@@ -11,8 +11,6 @@
 # KAFKA_SASL_PASSWORD
 # KAFKA_SASL_MECHANISM
 # KAFKA_SECURITY_PROTOCOL
-# KAFKA_SSL_TRUSTSTORE
-# KAFKA_SSL_TRUSTSTORE_PASSWORD
 # ELASTICSEARCH_SERVER
 # ELASTICSEARCH_USER
 # ELASTICSEARCH_PASSWORD
@@ -98,14 +96,11 @@ EOF
 
   PREFIX=$(echo ${OPENNMS_INSTANCE_ID} | tr '[:upper:]' '[:lower:]')-
   cat <<EOF > ${OVERLAY}/org.opennms.features.flows.persistence.elastic.cfg
-elasticUrl=http://${ELASTICSEARCH_SERVER}
+elasticUrl=https://${ELASTICSEARCH_SERVER}
 globalElasticUser=${ELASTICSEARCH_USER}
 globalElasticPassword=${ELASTICSEARCH_PASSWORD}
 elasticIndexStrategy=${ELASTICSEARCH_INDEX_STRATEGY_FLOWS}
 indexPrefix=${PREFIX}
-clockSkewCorrectionThreshold=5000
-nodeDiscovery=true
-nodeDiscoveryFrequency=3600
 # The following settings should be consistent with your ES cluster
 settings.index.number_of_shards=${ELASTICSEARCH_NUM_SHARDS}
 settings.index.number_of_replicas=${ELASTICSEARCH_REPLICATION_FACTOR}
@@ -141,16 +136,6 @@ security.protocol=${KAFKA_SECURITY_PROTOCOL}
 sasl.mechanism=${KAFKA_SASL_MECHANISM}
 sasl.jaas.config=${JAAS_CLASS} required username="${KAFKA_SASL_USERNAME}" password="${KAFKA_SASL_PASSWORD}";
 EOF
-    if [[ "${KAFKA_SSL_TRUSTSTORE}" == "true" ]]; then
-      cat <<EOF >> $f
-ssl.truststore.location=/opt/sentinel/etc/jks/kafka.jks
-EOF
-      if [[ "${KAFKA_SSL_TRUSTSTORE_PASSWORD}" != "" ]]; then
-        cat <<EOF >> $f
-ssl.truststore.password=${KAFKA_SSL_TRUSTSTORE_PASSWORD}
-EOF
-      fi
-    fi
     done
   fi
 fi

@@ -127,8 +127,7 @@ EOF
 if [[ ${ELASTICSEARCH_SERVER} ]]; then
   PREFIX=$(echo ${OPENNMS_INSTANCE_ID} | tr '[:upper:]' '[:lower:]')-
   cat <<EOF > ${CONFIG_DIR}/org.opennms.features.flows.persistence.elastic.cfg
-# Common Settings
-elasticUrl=http://${ELASTICSEARCH_SERVER}
+elasticUrl=https://${ELASTICSEARCH_SERVER}
 globalElasticUser=${ELASTICSEARCH_USER}
 globalElasticPassword=${ELASTICSEARCH_PASSWORD}
 elasticIndexStrategy=${ELASTICSEARCH_INDEX_STRATEGY_FLOWS}

@@ -11,7 +11,6 @@ data:
   POSTGRES_DB: {{ .Release.Name }}_opennms # Must match OPENNMS_DBNAME
   POSTGRES_HOST: {{ .Values.dependencies.postgresql.hostname }}
   POSTGRES_PORT: {{ .Values.dependencies.postgresql.port | quote }}
-  POSTGRES_SSL_TRUSTSTORE: {{ if .Values.dependencies.postgresql.truststore.content }}"true"{{ else }}"false"{{ end }}
   ENABLE_ALEC: {{ .Values.opennms.configuration.enable_alec | quote }}
   OPENNMS_INSTANCE_ID: {{ .Release.Name }}
   OPENNMS_SERVER: onms-core.{{ .Release.Name }}
@@ -20,14 +19,14 @@ data:
   ELASTICSEARCH_INDEX_STRATEGY_FLOWS: {{ .Values.dependencies.elasticsearch.configuration.flows.index_strategy }}
   ELASTICSEARCH_REPLICATION_FACTOR: {{ .Values.dependencies.elasticsearch.configuration.flows.replication_factor | quote }}
   ELASTICSEARCH_NUM_SHARDS: {{ .Values.dependencies.elasticsearch.configuration.flows.num_shards | quote }}
-  ELASTICSEARCH_SSL_TRUSTSTORE: {{ if .Values.dependencies.elasticsearch.truststore.content }}"true"{{ else }}"false"{{ end }}
   KAFKA_BOOTSTRAP_SERVER: {{ .Values.dependencies.kafka.hostname }}:{{ .Values.dependencies.kafka.port }}
   KAFKA_SASL_MECHANISM: {{ .Values.dependencies.kafka.configuration.sasl_mechanism }}
   KAFKA_SECURITY_PROTOCOL: {{ .Values.dependencies.kafka.configuration.security_protocol }}
-  KAFKA_SSL_TRUSTSTORE: {{ if .Values.dependencies.kafka.truststore.content }}"true"{{ else }}"false"{{ end }}
   GF_SERVER_DOMAIN: grafana.{{ .Release.Name }}.{{ .Values.domain }} # Must match ingress.yaml
   GF_SERVER_ROOT_URL: /
   GF_DATABASE_TYPE: postgres
   GF_DATABASE_SSL_MODE: {{ .Values.grafana.configuration.database.ssl_mode }}
   GF_DATABASE_NAME: {{ .Release.Name }}_grafana
   GF_SESSION_PROVIDER: postgres
+  {{- $opt :=  include "opennms.jvmOptions" . }}
+  USE_TRUSTSTORE: {{ if $opt }}"true"{{ else }}"false"{{ end }}

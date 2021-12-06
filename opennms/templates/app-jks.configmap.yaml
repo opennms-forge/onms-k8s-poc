@@ -1,0 +1,13 @@
+{{- /* @author Alejandro Galue <agalue@opennms.com> */}}
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-jks
+  namespace: {{ .Release.Name }}
+binaryData: # To be mounted at /etc/java/jks
+  {{- if .Values.dependencies.truststore.content }}
+  truststore.jks: |
+    {{ .Values.dependencies.truststore.content }}
+  {{- end }}

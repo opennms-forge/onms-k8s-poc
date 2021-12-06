@@ -59,7 +59,7 @@ spec:
             name: app-credentials
         env:
         - name: OPENNMS_HTTP_URL
-          value: http://onms-ui.{{ .Release.Name }}:8980/opennms
+          value: http://onms-ui.{{ .Release.Name }}.svc:8980/opennms
         - name: SENTINEL_ID # Required when using tracing through Jaeger
           valueFrom:
             fieldRef:
@@ -68,6 +68,7 @@ spec:
           value: {{ .Release.Name }}
         - name: MAX_FD # Maximum File Descriptors
           value: '65536'
+        {{- $opt :=  include "opennms.jvmOptions" . }}
         {{- if (((.Values.sentinel.resources).requests).memory) }}
         - name: MEM_TOTAL_MB
           valueFrom:
@@ -75,13 +76,16 @@ spec:
               resource: requests.memory
               divisor: 1Mi
         - name: JAVA_OPTS
-          value: -Xms$(MEM_TOTAL_MB)m -Xmx$(MEM_TOTAL_MB)m -XX:+AlwaysPreTouch -XX:+UseG1GC -XX:+UseStringDeduplication
+          value: -Xms$(MEM_TOTAL_MB)m -Xmx$(MEM_TOTAL_MB)m {{ $opt }}
+        {{- else }}
+        - name: JAVA_OPTS
+          value: {{ $opt }}
         {{- end }}
         volumeMounts:
         - name: etc-overlay
           mountPath: /opt/sentinel-etc-overlay
         - name: jks
-          mountPath: /opt/sentinel/etc/jks
+          mountPath: /etc/java/jks
         {{- with .Values.sentinel.resources }}
         resources:
           {{- toYaml . | nindent 10 }}
@@ -106,4 +110,4 @@ spec:
           name: app-scripts
       - name: jks
         configMap:
-          name: app-truststores
+          name: app-jks

@@ -41,8 +41,6 @@ spec:
           mountPath: /opennms-etc # Required by the script
         - name: deploy
           mountPath: /opennms-deploy # Required by the script
-        - name: jks
-          mountPath: /opennms-jks # Required by the script
         - name: scripts
           mountPath: /init.sh
           subPath: onms-core-init.sh
@@ -69,19 +67,28 @@ spec:
           mountPath: /opt/opennms/deploy
         - name: rrd
           mountPath: /opennms-data/rrd
+        - name: jks
+          mountPath: /etc/java/jks
+        {{- $opt :=  include "opennms.jvmOptions" . }}
+        {{- if .Values.opennms.resources }}
         {{- with .Values.opennms.resources }}
+        {{- if ((.requests).memory) }}
         env:
-          {{- if ((.requests).memory) }}
-          - name: MEM_TOTAL_MB
-            valueFrom:
-              resourceFieldRef:
-                resource: requests.memory
-                divisor: 1Mi
-          - name: JAVA_OPTS
-            value: -Xms$(MEM_TOTAL_MB)m -Xmx$(MEM_TOTAL_MB)m -XX:+AlwaysPreTouch -XX:+UseG1GC -XX:+UseStringDeduplication
-          {{- end }}
+        - name: MEM_TOTAL_MB
+          valueFrom:
+            resourceFieldRef:
+              resource: requests.memory
+              divisor: 1Mi
+        - name: JAVA_OPTS
+          value: -Xms$(MEM_TOTAL_MB)m -Xmx$(MEM_TOTAL_MB)m {{ $opt }}
+        {{- end }}
         resources:
           {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- else }}
+        env:
+        - name: JAVA_OPTS
+          value: {{ $opt }}
         {{- end }}
         readinessProbe:
           httpGet:
@@ -103,7 +110,7 @@ spec:
           name: app-scripts
       - name: jks
         configMap:
-          name: app-truststores
+          name: app-jks
       - name: etc
         persistentVolumeClaim:
           claimName: onms-etc-pvc
