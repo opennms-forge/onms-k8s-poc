@@ -1,1 +1,18 @@
-Everything is awesome!
+Thank you for installing OpenNMS {{ .Values.opennms.image.tag | default .Values.opennmsVersion }}.
+
+Your release is named {{ .Release.Name }}, used for:
+- The namespace for all the resources.
+- The sub-domain for the ingress controller.
+- The OpenNMS instance ID for your Minions.
+
+Resources URLS:
+
+OpenNMS UI (read-only): onms.{{ .Release.Name }}.{{ .Values.domain }}
+OpenNMS Core: onms-core.{{ .Release.Name }}.{{ .Values.domain }}
+Grafana: grafana.{{ .Release.Name }}.{{ .Values.domain }}
+
+To learn more about the release, try:
+
+$ helm status {{ .Release.Name }}
+$ helm get all {{ .Release.Name }}
+$ kubectl get all -n {{ .Release.Name }}

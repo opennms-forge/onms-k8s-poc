@@ -5,6 +5,7 @@
 timezone: America/New_York
 domain: example.com
 storageClass: onms-share
+opennmsVersion: '29.0.1'
 imagePullSecrets: []
 
 dependencies:
@@ -53,7 +54,7 @@ opennms:
   image:
     repository: opennms/horizon
     pullPolicy: IfNotPresent
-    tag: '' # Defaults to Chart.AppVersion
+    tag: '' # Defaults to opennmsVersion
   resources:
     limits:
       cpu: '2'
@@ -84,7 +85,7 @@ sentinel:
   image:
     repository: opennms/sentinel
     pullPolicy: IfNotPresent
-    tag: '' # Defaults to Chart.AppVersion
+    tag: '' # Defaults to opennmsVersion
   resources:
     limits:
       cpu: '2'

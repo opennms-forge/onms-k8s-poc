@@ -23,7 +23,7 @@ spec:
       # Initializes OpenNMS Configuration
       # Requires the same image/version used at runtime
       - name: init
-        image: {{ .Values.opennms.image.repository }}:{{ .Values.opennms.image.tag | default .Chart.AppVersion }}
+        image: {{ .Values.opennms.image.repository }}:{{ .Values.opennms.image.tag | default .Values.opennmsVersion }}
         imagePullPolicy: {{ .Values.opennms.image.imagePullPolicy }}
         command: [ bash, /init.sh ]
         envFrom:
@@ -39,7 +39,7 @@ spec:
           subPath: onms-ui-init.sh
       containers:
       - name: onms
-        image: {{ .Values.opennms.image.repository }}:{{ .Values.opennms.image.tag | default .Chart.AppVersion }}
+        image: {{ .Values.opennms.image.repository }}:{{ .Values.opennms.image.tag | default .Values.opennmsVersion }}
         imagePullPolicy: {{ .Values.opennms.image.imagePullPolicy }}
         args:
         - -s

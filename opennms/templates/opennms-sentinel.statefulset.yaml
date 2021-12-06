@@ -43,7 +43,7 @@ spec:
           subPath: onms-sentinel-init.sh
       containers:
       - name: sentinel
-        image: {{ .Values.sentinel.image.repository }}:{{ .Values.sentinel.image.tag | default .Chart.AppVersion }}
+        image: {{ .Values.sentinel.image.repository }}:{{ .Values.sentinel.image.tag | default .Values.opennmsVersion }}
         imagePullPolicy: {{ .Values.sentinel.image.imagePullPolicy }}
         args:
         - -c

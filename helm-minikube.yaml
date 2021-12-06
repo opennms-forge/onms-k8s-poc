@@ -3,6 +3,7 @@
 timezone: America/New_York
 domain: k8s.agalue.net
 storageClass: onms-share
+opennmsVersion: '29.0.1'
 imagePullSecrets: []
 
 dependencies:
@@ -51,7 +52,7 @@ opennms:
   image:
     repository: opennms/horizon
     pullPolicy: IfNotPresent
-    tag: '' # Defaults to Chart.AppVersion
+    tag: '' # Defaults to opennmsVersion
   resources: null
   configuration:
     enable_alec: true
@@ -70,7 +71,7 @@ sentinel:
   image:
     repository: opennms/sentinel
     pullPolicy: IfNotPresent
-    tag: '' # Defaults to Chart.AppVersion
+    tag: '' # Defaults to opennmsVersion
   resources: null
   configuration:
     opennms:
