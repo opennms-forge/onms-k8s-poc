@@ -1,4 +1,4 @@
-# @author Alejandro Galue <agalue@opennms.com>
+{{- /* @author Alejandro Galue <agalue@opennms.com> */}}
 
 ---
 apiVersion: v1
@@ -10,9 +10,9 @@ metadata:
     app: onms-core
     tier: storage
 spec:
-  storageClassName: {{ .Values.storageClass }}
+  storageClassName: {{ required "A ReadWriteMany StorageClass is required!" .Values.storageClass }}
   accessModes:
   - ReadWriteMany # Mandatory
   resources:
     requests:
-      storage: {{ .Values.opennms.configuration.storage.etc }}
+      storage: {{ .Values.opennms.configuration.storage.etc | default "1Gi" }}

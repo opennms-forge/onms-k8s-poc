@@ -34,6 +34,9 @@
 * Improve Helm Chart for OpenNMS and relatives (no external dependencies).
   * Make Sentinel creation optional (Telemetryd handles Flows when disabled).
   * Choose between RRD over shared volume and Cortex.
+  * Improve variables documentation in `values.yaml`.
+  * Improve OpenNMS version handling (`.Values.opennms.image.tag` vs `.Chart.AppVersion`).
+    * Use `appVersion=1.0` with the current state, `appVersion=1.1` when giving the possibility to use Cortex vs RRD and so on. That way we can set the OpenNMS version independenty even if it won't appear when running `helm ls` or `helm history`. That's because upgrading the "application" version doesn't have to mean upgrading the "opennms" version. Also, think about using Horizon vs Meridian.
 
 * Build Terraform recipes for the Cloud Infrastructure resources.
   * Private container registry

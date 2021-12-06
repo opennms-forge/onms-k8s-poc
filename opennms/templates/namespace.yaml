@@ -1,4 +1,4 @@
-# @author Alejandro Galue <agalue@opennms.com>
+{{- /* @author Alejandro Galue <agalue@opennms.com> */}}
 
 ---
 apiVersion: v1

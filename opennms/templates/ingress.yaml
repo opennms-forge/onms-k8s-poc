@@ -1,6 +1,4 @@
-# @author Alejandro Galue <agalue@opennms.com>
-#
-# WARNING: Ensure the usage of correct host domains and cert-manager issuer.
+{{- /* @author Alejandro Galue <agalue@opennms.com> */}}
 
 ---
 apiVersion: networking.k8s.io/v1
