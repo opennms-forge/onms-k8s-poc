@@ -12,6 +12,7 @@ jks_passwd="0p3nNM5" # Must match dependencies.kafka.truststore.password from th
 karaf_port="8201"
 syslog_port="1514"
 snmp_port="1162"
+flow_port="8877"
 
 # Parse external variables
 while [ $# -gt 0 ]; do
@@ -40,8 +41,41 @@ location: ${minion_location}
 system:
   properties:
     org.opennms.instance.id: ${instance_id}
+telemetry:
+  flows:
+    listeners:
+      Flow-Listener:
+        class-name: "org.opennms.netmgt.telemetry.listeners.UdpListener"
+        parameters:
+          port: ${flow_port}
+        parsers:
+          Netflow-9:
+            class-name: "org.opennms.netmgt.telemetry.protocols.netflow.parser.Netflow9UdpParser"
+            queue:
+              use-routing-key: "true"
+            parameters:
+              dnsLookupsEnabled: "false"
+          Netflow-5:
+            class-name: "org.opennms.netmgt.telemetry.protocols.netflow.parser.Netflow5UdpParser"
+            queue:
+              use-routing-key: "true"
+            parameters:
+              dnsLookupsEnabled: "false"
+          IPFIX:
+            class-name: "org.opennms.netmgt.telemetry.protocols.netflow.parser.IpfixUdpParser"
+            queue:
+              use-routing-key: "true"
+            parameters:
+              dnsLookupsEnabled: "false"
+          SFlow:
+            class-name: "org.opennms.netmgt.telemetry.protocols.sflow.parser.SFlowUdpParser"
+            queue:
+              use-routing-key: "true"
+            parameters:
+              dnsLookupsEnabled: "false"
 ipc:
 EOF
+
 for module in rpc sink twin; do
   cat <<EOF >> $yaml
   $module:
@@ -60,6 +94,7 @@ docker run --name ${minion_id} -it --rm \
  -p ${karaf_port}:8201 \
  -p ${syslog_port}:1514/udp \
  -p ${snmp_port}:1162/udp \
+ -p ${flow_port}:${flow_port}/udp \
  -v ${jks_path}:/etc/java/${jks_file} \
  -v $yaml:/opt/minion/minion-config.yaml \
  opennms/minion:${minion_version} -c
