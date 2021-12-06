@@ -2,8 +2,8 @@
 
 * Learn how the GKE Ingress works (in case the Nginx Ingress is not an option).
 
-* Enable TLS in PostgreSQL and Elasticsearch for the test dependencies.
-  Using a Private CA and custom Truststores in OpenNMS.
+* Enable TLS in PostgreSQL for the test dependencies.
+  Update the central Truststore in OpenNMS.
 
 * Describe a vendor-independent procedure to manage the wildcard DNS entry for the Ingress.
   The entry should point to the public IP of the Ingress Controller.
@@ -35,8 +35,6 @@
   * Make Sentinel creation optional (Telemetryd handles Flows when disabled).
   * Choose between RRD over shared volume and Cortex.
   * Improve variables documentation in `values.yaml`.
-  * Improve OpenNMS version handling (`.Values.opennms.image.tag` vs `.Chart.AppVersion`).
-    * Use `appVersion=1.0` with the current state, `appVersion=1.1` when giving the possibility to use Cortex vs RRD and so on. That way we can set the OpenNMS version independenty even if it won't appear when running `helm ls` or `helm history`. That's because upgrading the "application" version doesn't have to mean upgrading the "opennms" version. Also, think about using Horizon vs Meridian.
 
 * Build Terraform recipes for the Cloud Infrastructure resources.
   * Private container registry
