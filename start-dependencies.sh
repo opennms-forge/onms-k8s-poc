@@ -5,8 +5,13 @@
 
 NAMESPACE="shared"
 TARGET_DIR="jks" # Expected location for the JKS Truststores
-ONMS_USER="opennms" # Must match dependencies.kafka.username from the Helm deployment
-ONMS_PASSWORD="0p3nNM5" # Must match dependencies.kafka.password from the Helm deployment
+PG_USER="postgres" # Must match dependencies.postgresql.username from the Helm deployment
+PG_PASSWORD="P0stgr3s" # Must match dependencies.postgresql.password from the Helm deployment
+PG_ONMS_USER="opennms" # Must match dependencies.opennms.configuration.database.username from the Helm deployment
+PG_ONMS_PASSWORD="0p3nNM5" # Must match dependencies.opennms.configuration.database.password from the Helm deployment
+KAFKA_USER="opennms" # Must match dependencies.kafka.username from the Helm deployment
+KAFKA_PASSWORD="0p3nNM5" # Must match dependencies.kafka.password from the Helm deployment
+ELASTIC_USER="elastic" # Must match dependencies.elasticsearch.username from the Helm deployment
 ELASTIC_PASSWORD="31@st1c" # Must match dependencies.elasticsearch.password from the Helm deployment
 TRUSTSTORE_PASSWORD="0p3nNM5" # Must match dependencies.kafka.truststore.password from the Helm deployment
 CLUSTER_NAME="onms" # Must match the name of the cluster inside dependencies/kafka.yaml and dependencies/elasticsearch.yaml
@@ -27,15 +32,19 @@ kubectl apply -f ca -n cert-manager
 kubectl create namespace $NAMESPACE
 
 # Install PostgreSQL
+kubectl apply -f https://raw.githubusercontent.com/zalando/postgres-operator/master/manifests/postgresql.crd.yaml
+kubectl apply -k github.com/zalando/postgres-operator/manifests
+kubectl create secret generic $PG_USER.onms-db.credentials.postgresql.acid.zalan.do --from-literal="username=$PG_USER" --from-literal="password=$PG_PASSWORD" -n $NAMESPACE
+kubectl create secret generic $PG_ONMS_USER.onms-db.credentials.postgresql.acid.zalan.do --from-literal="username=$PG_ONMS_USER" --from-literal="password=$PG_ONMS_PASSWORD" -n $NAMESPACE
 kubectl apply -f dependencies/postgresql.yaml -n $NAMESPACE
 
 # Install Kafka via Strimzi
-kubectl create secret generic kafka-user-credentials --from-literal="$ONMS_USER=$ONMS_PASSWORD" -n $NAMESPACE
+kubectl create secret generic kafka-user-credentials --from-literal="$KAFKA_USER=$KAFKA_PASSWORD" -n $NAMESPACE
 kubectl apply -f "https://strimzi.io/install/latest?namespace=$NAMESPACE" -n $NAMESPACE
 kubectl apply -f dependencies/kafka.yaml -n $NAMESPACE
 
 # Install Elasticsearch via ECK
-kubectl create secret generic $CLUSTER_NAME-es-elastic-user --from-literal="elastic=$ELASTIC_PASSWORD" -n $NAMESPACE
+kubectl create secret generic $CLUSTER_NAME-es-elastic-user --from-literal="$ELASTIC_USER=$ELASTIC_PASSWORD" -n $NAMESPACE
 kubectl create -f https://download.elastic.co/downloads/eck/1.8.0/crds.yaml
 kubectl apply -f https://download.elastic.co/downloads/eck/1.8.0/operator.yaml
 kubectl apply -f dependencies/elasticsearch.yaml -n $NAMESPACE
@@ -47,6 +56,11 @@ kubectl wait pod -l elasticsearch.k8s.elastic.co/cluster-name=$CLUSTER_NAME --fo
 # Prepare target directory for the Truststores
 mkdir -p $TARGET_DIR
 TRUSTSTORE_TEMP="/tmp/ca.truststore.$(date +%s)"
+
+# Add OpenNMS CA (used for PostgreSQL) to the Truststore
+CERT_FILE_PATH="$TARGET_DIR/onms-ca.crt"
+kubectl get secret onms-ca -n cert-manager -o go-template='{{index .data "ca.crt" | base64decode }}' > $CERT_FILE_PATH
+keytool -import -trustcacerts -alias onms-ca -file $CERT_FILE_PATH -keystore $TRUSTSTORE_TEMP -storepass "$TRUSTSTORE_PASSWORD" -noprompt
 
 # Add Elasticsearch CA to the Truststore
 CERT_FILE_PATH="$TARGET_DIR/elastic-ca.crt"

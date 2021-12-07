@@ -9,6 +9,7 @@ metadata:
   labels:
     app: onms-core
     tier: storage
+    {{- include "opennms.labels" . | nindent 4 }}
 spec:
   storageClassName: {{ required "A ReadWriteMany StorageClass is required!" .Values.storageClass }}
   accessModes:

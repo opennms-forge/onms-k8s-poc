@@ -8,15 +8,18 @@ metadata:
   namespace: {{ .Release.Name }}
   labels:
     app: onms-ui
+    {{- include "opennms.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.opennms.uiServers.replicaCount }}
   selector:
     matchLabels:
       app: onms-ui
+      {{- include "opennms.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
         app: onms-ui
+        {{- include "opennms.selectorLabels" . | nindent 8 }}
     spec:
       terminationGracePeriodSeconds: 120
       initContainers:

@@ -38,7 +38,7 @@ We expect `SASL_SSL` configured in Kafka using `SCRAM-SHA-512` for authenticatio
 
 * A `Secret` to store the credentials.
 
-* A `ConfigMap` to store initialization scripts and standard configuration settings.
+* A `ConfigMap` to store initialization scripts, standard configuration settings and a JVM Truststore.
 
 * An `Ingress` to control TLS termination and provide access to all the components (using Nginx).
   We could manage certificates using LetsEncrypt via `cert-manager`.
@@ -76,7 +76,7 @@ The following assumes that you already have an AKS or GKE cluster up and running
 
 **Place the Java Truststore with the CA Certificate Chain of your Kafka cluster, your Elasticsearch cluster and your PostgreSQL server/cluster on a JKS file located at `jks/truststore.jks`, and pass it to OpenNMS via Helm (set the JKS password or update the values file).**
 
-For testing purposes, use the following script to initialize all the dependencies within Kubernetes (including `cert-manager`):
+Optionally, for testing purposes, use the following script to initialize all the dependencies within Kubernetes (including `cert-manager`):
 
 ```bash
 ./start-dependencies.sh
@@ -97,7 +97,7 @@ helm install -f helm-cloud.yaml \
   --set domain=k8s.agalue.net \
   --set storageClass=onms-share \
   --set dependencies.truststore.content=$(cat jks/truststore.jks | base64) \
-  --set dependencies.postgresql.hostname=postgresql.shared.svc \
+  --set dependencies.postgresql.hostname=onms-db.shared.svc \
   --set dependencies.kafka.hostname=onms-kafka-bootstrap.shared.svc \
   --set dependencies.elasticsearch.hostname=onms-es-http.shared.svc \
   apex1 ./opennms
@@ -156,6 +156,8 @@ EOF
 ## Testing multiple OpenNMS environments
 
 The current approach allows you to start multiple independent OpenNMS environments using the same Helm Chart. Ensure the deployment name is different every time you install or deploy a new environment (as mentioned, used for the namespace and the OpenNMS instance ID, among other things).
+
+> Remember to change all username/password pairs for each environment to increase security.
 
 ## Start an external Minion
 

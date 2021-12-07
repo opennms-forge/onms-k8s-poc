@@ -7,6 +7,7 @@ metadata:
   name: onms-ingress
   namespace: {{ .Release.Name }}
   annotations:
+    {{- include "opennms.labels" . | nindent 4 }}
     ingress.kubernetes.io/affinity: cookie
     ingress.kubernetes.io/session-cookie-name: route
     ingress.kubernetes.io/session-cookie-hash: sha1

@@ -8,9 +8,11 @@ metadata:
   namespace: {{ .Release.Name }}
   labels:
     app: grafana
+    {{- include "opennms.labels" . | nindent 4 }}
 spec:
   ports:
   - port: 3000
     name: http
   selector:
     app: grafana
+    {{- include "opennms.selectorLabels" . | nindent 4 }}

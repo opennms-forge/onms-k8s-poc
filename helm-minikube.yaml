@@ -29,7 +29,7 @@ dependencies:
         replication_factor: 0
         num_shards: 1
   postgresql:
-    hostname: postgresql.shared.svc
+    hostname: onms-db.shared.svc
     port: 5432
     username: postgres
     password: P0stgr3s

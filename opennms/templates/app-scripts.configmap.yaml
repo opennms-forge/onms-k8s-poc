@@ -6,6 +6,8 @@ kind: ConfigMap
 metadata:
   name: app-scripts
   namespace: {{ .Release.Name }}
+  labels:
+    {{- include "opennms.labels" . | nindent 4 }}
 data:
   grafana-init.sh: |
     {{- .Files.Get "scripts/grafana-init.sh" | nindent 4 }}

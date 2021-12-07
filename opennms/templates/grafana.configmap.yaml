@@ -6,6 +6,8 @@ kind: ConfigMap
 metadata:
   name: helm-config
   namespace: {{ .Release.Name }}
+  labels:
+    {{- include "opennms.labels" . | nindent 4 }}
 data:
   plugins.helm.yaml: |
     apiVersion: 1

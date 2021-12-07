@@ -6,6 +6,8 @@ kind: ConfigMap
 metadata:
   name: app-jks
   namespace: {{ .Release.Name }}
+  labels:
+    {{- include "opennms.labels" . | nindent 4 }}
 binaryData: # To be mounted at /etc/java/jks
   {{- if .Values.dependencies.truststore.content }}
   truststore.jks: |

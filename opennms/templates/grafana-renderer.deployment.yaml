@@ -8,15 +8,18 @@ metadata:
   namespace: {{ .Release.Name }}
   labels:
     app: grafana-renderer
+    {{- include "opennms.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.grafana.imageRenderer.replicaCount }} 
   selector:
     matchLabels:
       app: grafana-renderer
+      {{- include "opennms.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
         app: grafana-renderer
+        {{- include "opennms.selectorLabels" . | nindent 8 }}
     spec:
       containers:
       - name: grafana-renderer

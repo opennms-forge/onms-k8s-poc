@@ -50,11 +50,16 @@ else
   OPENNMS_INSTANCE_ID="OpenNMS"
 fi
 
+# Enable SSL for PostgreSQL
+if ! grep -q ssl ${CONFIG_DIR}/opennms-datasources.xml; then
+  sed -i -r '/url=/s/"$/?ssl=true"/' ${CONFIG_DIR}/opennms-datasources.xml
+fi
+
 # Disable data choices (optional)
 cat <<EOF > ${CONFIG_DIR}/org.opennms.features.datachoices.cfg
 enabled=false
 acknowledged-by=admin
-acknowledged-at=Mon Jan 01 00\:00\:00 EDT 2018
+acknowledged-at=Sun Mar 01 00\:00\:00 EDT 2020
 EOF
 
 # Trim down the events configuration, as event processing is not required for the WebUI

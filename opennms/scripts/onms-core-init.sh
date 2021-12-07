@@ -78,7 +78,7 @@ if [ ! -f ${CONFIG_DIR}/configured ]; then
   cat <<EOF > ${CONFIG_DIR}/org.opennms.features.datachoices.cfg
 enabled=false
 acknowledged-by=admin
-acknowledged-at=Mon Jan 01 00\:00\:00 EDT 2018
+acknowledged-at=Sun Mar 01 00\:00\:00 EDT 2020
 EOF
 
   echo "Initialize default foreign source definition"
@@ -141,11 +141,17 @@ else
   OPENNMS_INSTANCE_ID="OpenNMS"
 fi
 
+# Enable SSL for PostgreSQL
+if ! grep -q ssl ${CONFIG_DIR}/opennms-datasources.xml; then
+  sed -i -r '/url=/s/"$/?ssl=true"/' ${CONFIG_DIR}/opennms-datasources.xml
+fi
+
 # RRD Strategy is enabled by default
 cat <<EOF > ${CONFIG_DIR}/opennms.properties.d/rrd.properties
 org.opennms.rrd.storeByGroup=true
 EOF
 
+# Collectd Optimizations
 cat <<EOF > ${CONFIG_DIR}/opennms.properties.d/collectd.properties
 # To get data as close as possible to PDP
 org.opennms.netmgt.collectd.strictInterval=true

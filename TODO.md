@@ -2,8 +2,9 @@
 
 * Learn how the GKE Ingress works (in case the Nginx Ingress is not an option).
 
-* Enable TLS in PostgreSQL for the test dependencies.
-  Update the central Truststore in OpenNMS.
+* Learn how to configure Grafana and Sentinel when PostgreSQL has strict TLS mode using private certificates.
+
+* Allow tuning the DB connection pool for OpenNMS Core, UIs, and Sentinels.
 
 * Describe a vendor-independent procedure to manage the wildcard DNS entry for the Ingress.
   The entry should point to the public IP of the Ingress Controller.
@@ -30,6 +31,8 @@
 
 * Detect OpenNMS flavor and apply configuration changes accordingly.
   For instance, H29 requires Twin API with Kafka, whereas M2021 doesn't.
+
+* Consider `NetworkPolicies` to isolate resources on a given namespace.
 
 * Improve Helm Chart for OpenNMS and relatives (no external dependencies).
   * Make Sentinel creation optional (Telemetryd handles Flows when disabled).

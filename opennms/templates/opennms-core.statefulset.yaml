@@ -8,16 +8,19 @@ metadata:
   namespace: {{ .Release.Name }}
   labels:
     app: onms-core
+    {{- include "opennms.labels" . | nindent 4 }}
 spec:
   serviceName: onms-core
   replicas: 1 # DO NOT CHANGE. The solution only allows 1 instance
   selector:
     matchLabels:
       app: onms-core
+      {{- include "opennms.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
         app: onms-core
+        {{- include "opennms.selectorLabels" . | nindent 8 }}
     spec:
       terminationGracePeriodSeconds: 120
       {{- with .Values.imagePullSecrets }}

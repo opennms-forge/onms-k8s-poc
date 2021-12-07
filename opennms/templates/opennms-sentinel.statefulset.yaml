@@ -12,6 +12,7 @@ metadata:
   namespace: {{ .Release.Name }}
   labels:
     app: onms-sentinel
+    {{- include "opennms.labels" . | nindent 4 }}
 spec:
   serviceName: sentinel
   replicas: {{ .Values.sentinel.replicaCount }}
@@ -19,10 +20,12 @@ spec:
   selector:
     matchLabels:
       app: onms-sentinel
+      {{- include "opennms.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
         app: onms-sentinel
+        {{- include "opennms.selectorLabels" . | nindent 8 }}
     spec:
       terminationGracePeriodSeconds: 60
       initContainers:
@@ -59,7 +62,7 @@ spec:
             name: app-credentials
         env:
         - name: OPENNMS_HTTP_URL
-          value: http://onms-ui.{{ .Release.Name }}.svc:8980/opennms
+          value: http://$(OPENNMS_SERVER):8980/opennms
         - name: SENTINEL_ID # Required when using tracing through Jaeger
           valueFrom:
             fieldRef:

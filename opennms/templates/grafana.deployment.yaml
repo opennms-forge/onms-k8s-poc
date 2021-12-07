@@ -8,15 +8,18 @@ metadata:
   namespace: {{ .Release.Name }}
   labels:
     app: grafana
+    {{- include "opennms.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.grafana.replicaCount }}
   selector:
     matchLabels:
       app: grafana
+      {{- include "opennms.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
         app: grafana
+        {{- include "opennms.selectorLabels" . | nindent 8 }}
     spec:
       initContainers:
       - name: init # Should run once (regardless of the replicas)

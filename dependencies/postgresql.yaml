@@ -3,87 +3,54 @@
 # WARNING: For testing purposes only
 
 ---
-apiVersion: v1
-kind: Service
+apiVersion: cert-manager.io/v1
+kind: Certificate
 metadata:
-  name: postgresql
-  labels:
-    app: postgres
+  name: onms-db
 spec:
-  clusterIP: None
-  ports:
-  - port: 5432
-  selector:
-    app: postgres
+  secretName: onms-db-certs
+  dnsNames:
+  - onms-db
+  - onms-db.shared
+  - onms-db.shared.svc
+  - onms-db.shared.svc.cluster.local
+  issuerRef:
+    name: opennms-issuer
+    kind: ClusterIssuer
+    group: cert-manager.io
 
 ---
-apiVersion: apps/v1
-kind: StatefulSet
+apiVersion: acid.zalan.do/v1
+kind: postgresql
 metadata:
-  name: postgres
-  labels:
-    app: postgres
-    role: master
+  name: onms-db
 spec:
-  serviceName: postgresql
-  replicas: 1 # The solution only allows 1 instance
-  selector:
-    matchLabels:
-      app: postgres
-  template:
-    metadata:
-      labels:
-        app: postgres
-        role: master
-    spec:
-      containers:
-      - name: postgres
-        image: postgres:13
-        imagePullPolicy: IfNotPresent
-        env:
-        - name: TZ
-          value: America/New_York # Should match app-settings from k8s/kustomization.yaml
-        - name: POSTGRES_USER
-          value: postgres # Must match app-credentials from k8s/kustomization.yaml
-        - name: POSTGRES_PASSWORD
-          value: P0stgr3s # Must match app-credentials from k8s/kustomization.yaml
-        - name: PGDATA
-          value: /var/lib/postgresql/data/pgdata
-        ports:
-        - containerPort: 5432
-          name: client
-        volumeMounts:
-        - name: data
-          mountPath: /var/lib/postgresql/data
-        resources:
-          limits:
-            cpu: 400m
-            memory: 2Gi
-          requests:
-            cpu: 200m
-            memory: 1Gi
-        readinessProbe:
-          exec:
-            command:
-            - sh
-            - -c
-            - exec pg_isready --host $HOSTNAME -U $POSTGRES_USER
-          initialDelaySeconds: 10
-          periodSeconds: 10
-        livenessProbe:
-          exec:
-            command:
-            - sh
-            - -c
-            - exec pg_isready --host $HOSTNAME -U $POSTGRES_USER
-          initialDelaySeconds: 30
-          periodSeconds: 60
-  volumeClaimTemplates:
-  - metadata:
-      name: data
-    spec:
-      accessModes:
-      - ReadWriteOnce
-      resources:
-        requests:
-          storage: 100Gi
+  teamId: onms
+  volume:
+    size: 100Gi
+  numberOfInstances: 1
+  users:
+    opennms:
+    - superuser
+    - createdb
+  postgresql:
+    version: "13"
+  spiloFSGroup: 103
+  patroni:
+    initdb:
+      encoding: UTF8
+      locale: en_US.UTF-8
+      data-checksums: "true"
+    pg_hba:
+    - local     all         all                     trust
+    - hostssl   all         +zalandos 127.0.0.1/32  pam
+    - host      all         all       127.0.0.1/32  md5
+    - hostssl   all         +zalandos ::1/128       pam
+    - host      all         all       ::1/128       md5
+    - local     replication standby                 trust
+    - hostssl   replication standby   all           md5
+    - hostnossl all         all       all           md5 # To avoid issues with Grafana and Sentinel
+    - hostssl   all         +zalandos all           pam
+    - hostssl   all         all       all           md5
+  tls:
+    secretName: onms-db-certs
