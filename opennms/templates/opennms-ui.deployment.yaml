@@ -65,11 +65,13 @@ spec:
           mountPath: /opt/opennms-overlay
         - name: jks
           mountPath: /etc/java/jks
+        env:
+        - name: OPENNMS_DATABASE_CONNECTION_MAXPOOL
+          value: {{ .Values.opennms.uiServers.configuration.database.pool_size | default "50" | quote }}
         {{- $opt :=  include "opennms.jvmOptions" . }}
         {{- if .Values.opennms.uiServers.resources }}
         {{- with .Values.opennms.uiServers.resources }}
         {{- if ((.requests).memory) }}
-        env:
         - name: MEM_TOTAL_MB
           valueFrom:
             resourceFieldRef:
@@ -82,7 +84,6 @@ spec:
           {{- toYaml . | nindent 10 }}
         {{- end }}
         {{- else }}
-        env:
         - name: JAVA_OPTS
           value: {{ $opt }}
         {{- end }}
