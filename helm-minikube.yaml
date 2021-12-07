@@ -1,4 +1,5 @@
-# Default values for minikube.
+# @author Alejandro Galue <agalue@opennms.com>
+# Default values for minikube (for testing purposes only)
 
 timezone: America/New_York
 domain: k8s.agalue.net

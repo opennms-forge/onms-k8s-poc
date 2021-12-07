@@ -1,4 +1,5 @@
-# Default values for Cloud Deployment
+# @author Alejandro Galue <agalue@opennms.com>
+# Example content for the Helm Chart values with modest resources for a Cloud Deployment
 
 timezone: America/New_York
 domain: example.com # Please use a valid domain
@@ -63,10 +64,10 @@ opennms:
     replicaCount: 2
     resources:
       limits:
-        cpu: '2'
+        cpu: '1'
         memory: 8Gi
       requests:
-        cpu: '2'
+        cpu: '1'
         memory: 4Gi
 
 sentinel:

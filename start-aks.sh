@@ -18,7 +18,7 @@ fi
 RESOURCE_GROUP=${RESOURCE_GROUP-support-testing}
 LOCATION=${LOCATION-eastus}
 AKS_NODE_COUNT=${AKS_NODE_COUNT-3}
-AKS_VM_SIZE=${AKS_VM_SIZE-Standard_DS3_v2}
+AKS_VM_SIZE=${AKS_VM_SIZE-Standard_DS4_v2}
 
 VERSION=$(az aks get-versions --location "$LOCATION" | jq -r '.orchestrators[-1].orchestratorVersion')
 

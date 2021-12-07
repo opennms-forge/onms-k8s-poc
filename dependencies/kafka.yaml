@@ -59,6 +59,13 @@ spec:
       transaction.state.log.min.isr: 1
       log.message.format.version: "3.0"
       inter.broker.protocol.version: "3.0"
+      # Required for OpenNMS and Minions
+      auto.create.topics.enable: true
+      # To allow multiple Minions per location and Sentinels
+      num.partitions: 4
+      # For the OpenNMS Kafka Producer
+      message.max.bytes: 5000000
+      replica.fetch.max.bytes: 5000000
     storage:
       type: jbod
       volumes:
