@@ -58,9 +58,9 @@ mkdir -p $TARGET_DIR
 TRUSTSTORE_TEMP="/tmp/ca.truststore.$(date +%s)"
 
 # Add OpenNMS CA (used for PostgreSQL) to the Truststore
-CERT_FILE_PATH="$TARGET_DIR/onms-ca.crt"
+CERT_FILE_PATH="$TARGET_DIR/postgres-ca.crt"
 kubectl get secret onms-ca -n cert-manager -o go-template='{{index .data "ca.crt" | base64decode }}' > $CERT_FILE_PATH
-keytool -import -trustcacerts -alias onms-ca -file $CERT_FILE_PATH -keystore $TRUSTSTORE_TEMP -storepass "$TRUSTSTORE_PASSWORD" -noprompt
+keytool -import -trustcacerts -alias postgres-ca -file $CERT_FILE_PATH -keystore $TRUSTSTORE_TEMP -storepass "$TRUSTSTORE_PASSWORD" -noprompt
 
 # Add Elasticsearch CA to the Truststore
 CERT_FILE_PATH="$TARGET_DIR/elastic-ca.crt"
