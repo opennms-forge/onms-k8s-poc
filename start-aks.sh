@@ -42,9 +42,3 @@ az aks get-credentials --resource-group "$RESOURCE_GROUP" --name "$USER-opennms"
 
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/cloud/deploy.yaml
 kubectl wait pod -l app.kubernetes.io/component=controller --for=condition=Ready --timeout=300s -n ingress-nginx
-
-kubectl patch deployment ingress-nginx-controller -n ingress-nginx --type json -p \
-  '[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--enable-ssl-passthrough"}]'
-pod=$(kubectl get pod -n ingress-nginx -l app.kubernetes.io/component=controller | grep Running | awk '{print $1}')
-kubectl delete pod/$pod -n ingress-nginx
-
