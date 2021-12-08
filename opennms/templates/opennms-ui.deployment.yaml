@@ -65,6 +65,9 @@ spec:
           mountPath: /opt/opennms-overlay
         - name: jks
           mountPath: /etc/java/jks
+        - name: jks
+          mountPath: /opt/opennms/.postgresql/root.crt
+          subPath: postgresql-ca.crt
         env:
         - name: OPENNMS_DATABASE_CONNECTION_MAXPOOL
           value: {{ .Values.opennms.uiServers.configuration.database.pool_size | default "50" | quote }}
@@ -106,8 +109,8 @@ spec:
         configMap:
           name: app-scripts
       - name: jks
-        configMap:
-          name: app-jks
+        secret:
+          secretName: app-jks
       - name: etc-core
         persistentVolumeClaim:
           claimName: onms-etc-pvc

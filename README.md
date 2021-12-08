@@ -36,9 +36,9 @@ We expect `SASL_SSL` configured in Kafka using `SCRAM-SHA-512` for authenticatio
 * A shared volume for the core configuration files, mounted as read-only on the UI instances.
   The purpose is to share configuration across all the OpenNMS instances.
 
-* A `Secret` to store the credentials.
+* `Secrets` to store the credentials, certificates and truststores.
 
-* A `ConfigMap` to store initialization scripts, standard configuration settings and a JVM Truststore.
+* `ConfigMaps` to store initialization scripts and standard configuration settings.
 
 * An `Ingress` to control TLS termination and provide access to all the components (using Nginx).
   We could manage certificates using LetsEncrypt via `cert-manager`.
@@ -74,7 +74,7 @@ We expect `SASL_SSL` configured in Kafka using `SCRAM-SHA-512` for authenticatio
 
 The following assumes that you already have an AKS or GKE cluster up and running with Nginx Ingress Controller and `cert-manager`, and `kubectl` is correctly configured on your machine to access the cluster. At a minimum, it should have three instances with 4 Cores and 16GB of RAM on each of them.
 
-**Place the Java Truststore with the CA Certificate Chain of your Kafka cluster, your Elasticsearch cluster and your PostgreSQL server/cluster on a JKS file located at `jks/truststore.jks`, and pass it to OpenNMS via Helm (set the JKS password or update the values file).**
+**Place the Java Truststore with the CA Certificate Chain of your Kafka cluster, your Elasticsearch cluster, and your PostgreSQL server/cluster on a JKS file located at `jks/truststore.jks`, and also the Root CA used for your PostgreSQL server certificate on a PKCS12 file located at `jks/postgresql-ca.crt`. Then, pass them to OpenNMS via Helm (set the JKS password or update the values file).**
 
 Optionally, for testing purposes, use the following script to initialize all the dependencies within Kubernetes (including `cert-manager`):
 
@@ -97,6 +97,7 @@ helm install -f helm-cloud.yaml \
   --set domain=k8s.agalue.net \
   --set storageClass=onms-share \
   --set dependencies.truststore.content=$(cat jks/truststore.jks | base64) \
+  --set dependencies.postgresql.ca_cert=$(cat jks/postgresql-ca.crt | base64) \
   --set dependencies.postgresql.hostname=onms-db.shared.svc \
   --set dependencies.kafka.hostname=onms-kafka-bootstrap.shared.svc \
   --set dependencies.elasticsearch.hostname=onms-es-http.shared.svc \
@@ -135,6 +136,7 @@ helm install -f helm-minikube.yaml \
   --set domain=k8s.agalue.net \
   --set storageClass=onms-share \
   --set dependencies.truststore.content=$(cat jks/truststore.jks | base64) \
+  --set dependencies.postgresql.ca_cert=$(cat jks/postgresql-ca.crt | base64) \
   apex1 ./opennms
 ```
 

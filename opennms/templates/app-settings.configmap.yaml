@@ -12,7 +12,8 @@ data:
   TZ: {{ .Values.timezone }}
   POSTGRES_HOST: {{ .Values.dependencies.postgresql.hostname }}
   POSTGRES_PORT: {{ .Values.dependencies.postgresql.port | quote }}
-  POSTGRES_SSL_MODE: {{ .Values.dependencies.postgresql.ssl_mode | default "disable" }}
+  POSTGRES_SSL_MODE: {{ .Values.dependencies.postgresql.sslmode }}
+  POSTGRES_SSL_FACTORY: {{ .Values.dependencies.postgresql.sslfactory }}
   ENABLE_ALEC: {{ .Values.opennms.configuration.enable_alec | quote }}
   OPENNMS_INSTANCE_ID: {{ .Release.Name }}
   OPENNMS_SERVER: onms-core.{{ .Release.Name }}
@@ -27,8 +28,9 @@ data:
   GF_SERVER_DOMAIN: grafana.{{ .Release.Name }}.{{ .Values.domain }} # Must match ingress.yaml
   GF_SERVER_ROOT_URL: /
   GF_DATABASE_TYPE: postgres
-  GF_DATABASE_SSL_MODE: {{ .Values.grafana.configuration.database.ssl_mode }}
   GF_DATABASE_NAME: {{ .Release.Name }}_grafana
+  GF_DATABASE_SSL_MODE: {{ .Values.grafana.configuration.database.sslmode }}
+  GF_DATABASE_CA_CERT_PATH: /etc/java/jks/postgresql-ca.crt
   GF_SESSION_PROVIDER: postgres
   {{- $opt :=  include "opennms.jvmOptions" . }}
   USE_TRUSTSTORE: {{ if $opt }}"true"{{ else }}"false"{{ end }}

@@ -2,9 +2,6 @@
 
 * Learn how the GKE Ingress works (in case the Nginx Ingress is not an option).
 
-* Add Server Certificates in PEM format besides the common Truststore.
-  * Grafana requires it for `database.ca_cert_path` or `GF_DATABASE_CA_CERT_PATH` when using PostgreSQL with TLS, which is the only non-java application.
-
 * Describe a vendor-independent procedure to manage the wildcard DNS entry for the Ingress.
   * The entry should point to the public IP of the Ingress Controller.
 

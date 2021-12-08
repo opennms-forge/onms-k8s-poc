@@ -79,6 +79,9 @@ spec:
           mountPath: /opennms-data/rrd
         - name: jks
           mountPath: /etc/java/jks
+        - name: jks
+          mountPath: /opt/opennms/.postgresql/root.crt
+          subPath: postgresql-ca.crt
         env:
         {{- $opt :=  include "opennms.jvmOptions" . }}
         {{- if .Values.opennms.resources }}
@@ -120,8 +123,8 @@ spec:
         configMap:
           name: app-scripts
       - name: jks
-        configMap:
-          name: app-jks
+        secret:
+          secretName: app-jks
       - name: etc
         persistentVolumeClaim:
           claimName: onms-etc-pvc

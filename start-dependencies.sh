@@ -58,14 +58,14 @@ mkdir -p $TARGET_DIR
 TRUSTSTORE_TEMP="/tmp/ca.truststore.$(date +%s)"
 
 # Add OpenNMS CA (used for PostgreSQL) to the Truststore
-CERT_FILE_PATH="$TARGET_DIR/postgres-ca.crt"
+CERT_FILE_PATH="$TARGET_DIR/postgresql-ca.crt"
 kubectl get secret onms-ca -n cert-manager -o go-template='{{index .data "ca.crt" | base64decode }}' > $CERT_FILE_PATH
-keytool -import -trustcacerts -alias postgres-ca -file $CERT_FILE_PATH -keystore $TRUSTSTORE_TEMP -storepass "$TRUSTSTORE_PASSWORD" -noprompt
+keytool -import -trustcacerts -alias postgresql-ca -file $CERT_FILE_PATH -keystore $TRUSTSTORE_TEMP -storepass "$TRUSTSTORE_PASSWORD" -noprompt
 
 # Add Elasticsearch CA to the Truststore
-CERT_FILE_PATH="$TARGET_DIR/elastic-ca.crt"
+CERT_FILE_PATH="$TARGET_DIR/elasticsearch-ca.crt"
 kubectl get secret $CLUSTER_NAME-es-http-certs-internal -n $NAMESPACE -o go-template='{{index .data "ca.crt" | base64decode }}' > $CERT_FILE_PATH
-keytool -import -trustcacerts -alias elastic-ca -file $CERT_FILE_PATH -keystore $TRUSTSTORE_TEMP -storepass "$TRUSTSTORE_PASSWORD" -noprompt
+keytool -import -trustcacerts -alias elasticsearch-ca -file $CERT_FILE_PATH -keystore $TRUSTSTORE_TEMP -storepass "$TRUSTSTORE_PASSWORD" -noprompt
 
 # Add Kafka CA to the Truststore
 CERT_FILE_PATH="$TARGET_DIR/kafka-ca.crt"

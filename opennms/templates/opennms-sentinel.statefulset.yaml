@@ -92,6 +92,9 @@ spec:
           mountPath: /opt/sentinel-etc-overlay
         - name: jks
           mountPath: /etc/java/jks
+        - name: jks
+          mountPath: /opt/opennms/.postgresql/root.crt
+          subPath: postgresql-ca.crt
         {{- with .Values.sentinel.resources }}
         resources:
           {{- toYaml . | nindent 10 }}
@@ -115,5 +118,5 @@ spec:
         configMap:
           name: app-scripts
       - name: jks
-        configMap:
-          name: app-jks
+        secret:
+          secretName: app-jks

@@ -7,6 +7,7 @@
 # POSTGRES_USER
 # POSTGRES_PASSWORD
 # POSTGRES_SSL_MODE
+# POSTGRES_SSL_FACTORY
 # OPENNMS_DATABASE_CONNECTION_MAXPOOL
 # OPENNMS_DBNAME
 # OPENNMS_DBUSER
@@ -79,14 +80,14 @@ cat <<EOF > ${CONFIG_DIR}/opennms-datasources.xml
   <jdbc-data-source name="opennms"
                     database-name="${OPENNMS_DBNAME}"
                     class-name="org.postgresql.Driver"
-                    url="jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${OPENNMS_DBNAME}?sslmode=${POSTGRES_SSL_MODE}&amp;sslfactory=org.postgresql.ssl.DefaultJavaSSLFactory"
+                    url="jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${OPENNMS_DBNAME}?sslmode=${POSTGRES_SSL_MODE}&amp;sslfactory=${POSTGRES_SSL_FACTORY}"
                     user-name="${OPENNMS_DBUSER}"
                     password="${OPENNMS_DBPASS}" />
 
   <jdbc-data-source name="opennms-admin"
                     database-name="template1"
                     class-name="org.postgresql.Driver"
-                    url="jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/template1?sslmode=${POSTGRES_SSL_MODE}&amp;sslfactory=org.postgresql.ssl.DefaultJavaSSLFactory"
+                    url="jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/template1?sslmode=${POSTGRES_SSL_MODE}&amp;sslfactory=${POSTGRES_SSL_FACTORY}"
                     user-name="${POSTGRES_USER}"
                     password="${POSTGRES_PASSWORD}"/>
 </datasource-configuration>

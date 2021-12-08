@@ -36,7 +36,9 @@ dependencies:
     port: 5432
     username: postgres
     password: P0stgr3s
-    ssl_mode: disable # "disable", "allow", "prefer", "require", "verify-ca", "verify-full"
+    sslmode: require # disable, allow, prefer, require, verify-ca, verify-full
+    sslfactory: org.postgresql.ssl.LibPQFactory # LibPQFactory, DefaultJavaSSLFactory, NonValidatingFactory
+    ca_cert: '' # A base64 encoded content of the Server Certificate
 
 ingress:
   className: nginx
@@ -111,10 +113,10 @@ grafana:
       cpu: 100m
       memory: 128Mi
   configuration:
-    database:
+    database: # Assumes PostgreSQL
       username: grafana
       password: Gr@f@n@
-      ssl_mode: disable # "disable", "require", "verify-full"
+      sslmode: require # disable, require, verify-full
     ui:
       admin_password: 0p3nNM5
     opennms:

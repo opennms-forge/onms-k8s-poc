@@ -5,6 +5,7 @@
 # POSTGRES_HOST
 # POSTGRES_PORT
 # POSTGRES_SSL_MODE
+# POSTGRES_SSL_FACTORY
 # OPENNMS_SERVER
 # OPENNMS_INSTANCE_ID
 # OPENNMS_DBNAME
@@ -67,7 +68,7 @@ else
 fi
 
 cat <<EOF > ${OVERLAY}/org.opennms.netmgt.distributed.datasource.cfg
-datasource.url=jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${OPENNMS_DBNAME}?sslmode=${POSTGRES_SSL_MODE}&sslfactory=org.postgresql.ssl.DefaultJavaSSLFactory
+datasource.url=jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${OPENNMS_DBNAME}?sslmode=${POSTGRES_SSL_MODE}&sslfactory=${POSTGRES_SSL_FACTORY}
 datasource.username=${OPENNMS_DBUSER}
 datasource.password=${OPENNMS_DBPASS}
 datasource.databaseName=${OPENNMS_DBNAME}

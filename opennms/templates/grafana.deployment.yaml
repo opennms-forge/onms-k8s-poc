@@ -54,13 +54,6 @@ spec:
             name: app-settings
         - secretRef:
             name: app-credentials
-        volumeMounts:
-        - name: config
-          mountPath: /etc/grafana/provisioning/plugins/helm.yaml
-          subPath: plugins.helm.yaml
-        - name: config
-          mountPath: /etc/grafana/provisioning/datasources/helm.yaml
-          subPath: datasources.helm.yaml
         env:
         - name: GF_DATABASE_HOST
           value: $(POSTGRES_HOST):$(POSTGRES_PORT)
@@ -70,6 +63,15 @@ spec:
           value: http://grafana-renderer.{{ .Release.Name }}:8081/render
         - name: GF_RENDERING_CALLBACK_URL
           value: http://grafana.{{ .Release.Name }}:3000/
+        volumeMounts:
+        - name: config
+          mountPath: /etc/grafana/provisioning/plugins/helm.yaml
+          subPath: plugins.helm.yaml
+        - name: config
+          mountPath: /etc/grafana/provisioning/datasources/helm.yaml
+          subPath: datasources.helm.yaml
+        - name: jks
+          mountPath: /etc/java/jks
         {{- with .Values.grafana.resources }}
         resources:
           {{- toYaml . | nindent 10 }}
@@ -93,3 +95,6 @@ spec:
       - name: config
         configMap:
           name: helm-config
+      - name: jks
+        secret:
+          secretName: app-jks
