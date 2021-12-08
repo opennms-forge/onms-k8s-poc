@@ -141,7 +141,7 @@ echo "Overriding mandatory files from ${MANDATORY}..."
 rsync -aO --no-perms ${MANDATORY}/ ${CONFIG_DIR}/
 
 # Initialize overlay
-mkdir -p ${CONFIG_DIR_OVERLAY}
+mkdir -p ${CONFIG_DIR_OVERLAY}/opennms.properties.d ${CONFIG_DIR_OVERLAY}/featuresBoot.d
 
 # Configure the instance ID
 # Required when having multiple OpenNMS backends sharing a Kafka cluster or an Elasticsearch cluster.
@@ -202,13 +202,6 @@ opennms.web.base-url=https://%x%c/
 org.opennms.security.disableLoginSuccessEvent=true
 org.opennms.web.defaultGraphPeriod=last_2_hour
 EOF
-
-# Enable Syslogd
-sed -r -i '/enabled="false"/{$!{N;s/ enabled="false"[>]\n(.*OpenNMS:Name=Syslogd.*)/>\n\1/}}' ${CONFIG_DIR}/service-configuration.xml
-
-# Disable Telemetryd as BMP, flows, and streaming telemetry data will be managed by sentinels
-sed -i -r '/opennms-flows/d' ${CONFIG_DIR}/org.apache.karaf.features.cfg
-sed -i 'N;s/service.*\n\(.*Telemetryd\)/service enabled="false">\n\1/;P;D' ${CONFIG_DIR}/service-configuration.xml
 
 # Enable ALEC standalone
 if [[ ${ENABLE_ALEC} ]]; then
@@ -278,7 +271,7 @@ EOF
       MODULES="twin $MODULES"
     fi
     for module in $MODULES; do
-      cat <<EOF >> ${CONFIG_DIR}/opennms.properties.d/kafka.properties
+      cat <<EOF >> ${CONFIG_DIR_OVERLAY}/opennms.properties.d/kafka.properties
 
 # ${module^^} Security
 org.opennms.core.ipc.$module.kafka.security.protocol=${KAFKA_SECURITY_PROTOCOL}
@@ -300,6 +293,13 @@ elasticIndexStrategy=${ELASTICSEARCH_INDEX_STRATEGY_FLOWS}
 indexPrefix=${PREFIX}
 EOF
 fi
+
+# Enable Syslogd
+sed -r -i '/enabled="false"/{$!{N;s/ enabled="false"[>]\n(.*OpenNMS:Name=Syslogd.*)/>\n\1/}}' ${CONFIG_DIR}/service-configuration.xml
+
+# Disable Telemetryd as BMP, flows, and streaming telemetry data will be managed by sentinels
+sed -i -r '/opennms-flows/d' ${CONFIG_DIR}/org.apache.karaf.features.cfg
+sed -i 'N;s/service.*\n\(.*Telemetryd\)/service enabled="false">\n\1/;P;D' ${CONFIG_DIR}/service-configuration.xml
 
 # Cleanup temporary requisition files:
 rm -f ${CONFIG_DIR}/imports/pending/*.xml.*
