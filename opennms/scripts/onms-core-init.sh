@@ -77,12 +77,13 @@ KARAF_FILES=( \
 )
 
 # Show permissions (debug purposes)
+echo "Configuration directory:"
 ls -ld ${CONFIG_DIR}
 
 # Initialize configuration directory
 if [ ! -f ${CONFIG_DIR}/configured ]; then
   echo "Initializing configuration directory for the first time ..."
-  rsync -arO --no-perms ${BACKUP_ETC}/ ${CONFIG_DIR}/
+  rsync -arO --no-perms --no-owner --no-group ${BACKUP_ETC}/ ${CONFIG_DIR}/
 
   echo "Disabling data choices"
   cat <<EOF > ${CONFIG_DIR}/org.opennms.features.datachoices.cfg
@@ -126,7 +127,7 @@ EOF
 EOF
 else
   echo "Previous configuration found. Synchronizing only new files..."
-  rsync -aruO --no-perms ${BACKUP_ETC}/ ${CONFIG_DIR}/
+  rsync -aruO --no-perms --no-owner --no-group ${BACKUP_ETC}/ ${CONFIG_DIR}/
 fi
 
 # Guard against application upgrades
@@ -138,7 +139,7 @@ for file in "${KARAF_FILES[@]}"; do
 done
 # WARNING: if the volume behind CONFIG_DIR doesn't have the right permissions, the following fails
 echo "Overriding mandatory files from ${MANDATORY}..."
-rsync -aO --no-perms ${MANDATORY}/ ${CONFIG_DIR}/
+rsync -aO --no-perms --no-owner --no-group ${MANDATORY}/ ${CONFIG_DIR}/
 
 # Initialize overlay
 mkdir -p ${CONFIG_DIR_OVERLAY}/opennms.properties.d ${CONFIG_DIR_OVERLAY}/featuresBoot.d
