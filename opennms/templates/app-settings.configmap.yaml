@@ -9,15 +9,13 @@ metadata:
   labels:
     {{- include "opennms.labels" . | nindent 4 }}
 data:
-  {{- $db_name := printf "%s_%s" .Release.Name "opennms" }}
   TZ: {{ .Values.timezone }}
-  POSTGRES_DB: {{ $db_name }} # Must match OPENNMS_DBNAME
   POSTGRES_HOST: {{ .Values.dependencies.postgresql.hostname }}
   POSTGRES_PORT: {{ .Values.dependencies.postgresql.port | quote }}
   ENABLE_ALEC: {{ .Values.opennms.configuration.enable_alec | quote }}
   OPENNMS_INSTANCE_ID: {{ .Release.Name }}
   OPENNMS_SERVER: onms-core.{{ .Release.Name }}
-  OPENNMS_DBNAME: {{ $db_name }} # Must match POSTGRES_DB
+  OPENNMS_DBNAME: {{ .Release.Name  }}_opennms
   ELASTICSEARCH_SERVER: {{  .Values.dependencies.elasticsearch.hostname }}:{{ .Values.dependencies.elasticsearch.port }}
   ELASTICSEARCH_INDEX_STRATEGY_FLOWS: {{ .Values.dependencies.elasticsearch.configuration.flows.index_strategy }}
   ELASTICSEARCH_REPLICATION_FACTOR: {{ .Values.dependencies.elasticsearch.configuration.flows.replication_factor | quote }}

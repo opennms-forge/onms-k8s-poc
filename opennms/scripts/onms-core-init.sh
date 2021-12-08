@@ -4,6 +4,12 @@
 # External environment variables:
 # POSTGRES_HOST
 # POSTGRES_PORT
+# POSTGRES_USER
+# POSTGRES_PASSWORD
+# OPENNMS_DATABASE_CONNECTION_MAXPOOL
+# OPENNMS_DBNAME
+# OPENNMS_DBUSER
+# OPENNMS_DBPASS
 # OPENNMS_INSTANCE_ID
 # KAFKA_BOOTSTRAP_SERVER
 # KAFKA_SASL_USERNAME
@@ -27,6 +33,7 @@ function wait_for {
 
 echo "OpenNMS Core Configuration Script..."
 
+OPENNMS_DATABASE_CONNECTION_MAXPOOL=${OPENNMS_DATABASE_CONNECTION_MAXPOOL-50}
 KAFKA_SASL_MECHANISM=${KAFKA_SASL_MECHANISM-PLAIN}
 KAFKA_SECURITY_PROTOCOL=${KAFKA_SECURITY_PROTOCOL-SASL_PLAINTEXT}
 
@@ -52,6 +59,7 @@ echo "Twin API Available? $USE_TWIN"
 wait_for ${POSTGRES_HOST}:${POSTGRES_PORT}
 wait_for ${KAFKA_BOOTSTRAP_SERVER}
 
+CONFIG_DIR_OVERLAY=/opennms-overlay/etc
 CONFIG_DIR=/opennms-etc
 BACKUP_ETC=/opt/opennms/etc
 KARAF_FILES=( \
@@ -130,10 +138,13 @@ done
 echo "Overriding mandatory files from ${MANDATORY}..."
 rsync -aO --no-perms ${MANDATORY}/ ${CONFIG_DIR}/
 
+# Initialize overlay
+mkdir -p ${CONFIG_DIR_OVERLAY}
+
 # Configure the instance ID
 # Required when having multiple OpenNMS backends sharing a Kafka cluster or an Elasticsearch cluster.
 if [[ ${OPENNMS_INSTANCE_ID} ]]; then
-  cat <<EOF > ${CONFIG_DIR}/opennms.properties.d/instanceid.properties
+  cat <<EOF > ${CONFIG_DIR_OVERLAY}/opennms.properties.d/instanceid.properties
 # Used for Kafka Topics and Elasticsearch Index Prefixes
 org.opennms.instance.id=${OPENNMS_INSTANCE_ID}
 EOF
@@ -141,24 +152,50 @@ else
   OPENNMS_INSTANCE_ID="OpenNMS"
 fi
 
-# Enable SSL for PostgreSQL
-if ! grep -q ssl ${CONFIG_DIR}/opennms-datasources.xml; then
-  sed -i -r '/url=/s/"$/?ssl=true"/' ${CONFIG_DIR}/opennms-datasources.xml
-fi
+# Configure Database access
+cat <<EOF > ${CONFIG_DIR_OVERLAY}/opennms-datasources.xml
+<?xml version="1.0" encoding="UTF-8"?>
+<datasource-configuration xmlns:this="http://xmlns.opennms.org/xsd/config/opennms-datasources"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://xmlns.opennms.org/xsd/config/opennms-datasources
+  http://www.opennms.org/xsd/config/opennms-datasources.xsd ">
+
+  <connection-pool factory="org.opennms.core.db.HikariCPConnectionFactory"
+    idleTimeout="600"
+    loginTimeout="3"
+    minPool="50"
+    maxPool="50"
+    maxSize="${OPENNMS_DATABASE_CONNECTION_MAXPOOL}" />
+
+  <jdbc-data-source name="opennms"
+                    database-name="${OPENNMS_DBNAME}"
+                    class-name="org.postgresql.Driver"
+                    url="jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${OPENNMS_DBNAME}?sslmode=disable&amp;sslfactory=org.postgresql.ssl.DefaultJavaSSLFactory"
+                    user-name="${OPENNMS_DBUSER}"
+                    password="${OPENNMS_DBPASS}" />
+
+  <jdbc-data-source name="opennms-admin"
+                    database-name="template1"
+                    class-name="org.postgresql.Driver"
+                    url="jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/template1?sslmode=disable&amp;sslfactory=org.postgresql.ssl.DefaultJavaSSLFactory"
+                    user-name="${POSTGRES_USER}"
+                    password="${POSTGRES_PASSWORD}"/>
+</datasource-configuration>
+EOF
 
 # RRD Strategy is enabled by default
-cat <<EOF > ${CONFIG_DIR}/opennms.properties.d/rrd.properties
+cat <<EOF > ${CONFIG_DIR_OVERLAY}/opennms.properties.d/rrd.properties
 org.opennms.rrd.storeByGroup=true
 EOF
 
 # Collectd Optimizations
-cat <<EOF > ${CONFIG_DIR}/opennms.properties.d/collectd.properties
+cat <<EOF > ${CONFIG_DIR_OVERLAY}/opennms.properties.d/collectd.properties
 # To get data as close as possible to PDP
 org.opennms.netmgt.collectd.strictInterval=true
 EOF
 
 # Required changes in order to use HTTPS through Ingress
-cat <<EOF > ${CONFIG_DIR}/opennms.properties.d/webui.properties
+cat <<EOF > ${CONFIG_DIR_OVERLAY}/opennms.properties.d/webui.properties
 opennms.web.base-url=https://%x%c/
 org.opennms.security.disableLoginSuccessEvent=true
 org.opennms.web.defaultGraphPeriod=last_2_hour
@@ -175,7 +212,7 @@ sed -i 'N;s/service.*\n\(.*Telemetryd\)/service enabled="false">\n\1/;P;D' ${CON
 if [[ ${ENABLE_ALEC} ]]; then
   KAR_URL="https://github.com/OpenNMS/alec/releases/download/v1.1.1/opennms-alec-plugin.kar"
   curl -LJ -o /opennms-deploy/opennms-alec-plugin.kar $KAR_URL 2>/dev/null
-  cat <<EOF > ${CONFIG_DIR}/featuresBoot.d/alec.boot
+  cat <<EOF > ${CONFIG_DIR_OVERLAY}/featuresBoot.d/alec.boot
 alec-opennms-standalone wait-for-kar=opennms-alec-plugin
 EOF
 fi
@@ -184,16 +221,16 @@ fi
 if [[ ${KAFKA_BOOTSTRAP_SERVER} ]]; then
   echo "Configuring Kafka..."
 
-  cat <<EOF > ${CONFIG_DIR}/opennms.properties.d/amq.properties
+  cat <<EOF > ${CONFIG_DIR_OVERLAY}/opennms.properties.d/amq.properties
 org.opennms.activemq.broker.disable=true
 EOF
 
-  cat <<EOF > ${CONFIG_DIR}/opennms.properties.d/kafka.properties
+  cat <<EOF > ${CONFIG_DIR_OVERLAY}/opennms.properties.d/kafka.properties
 org.opennms.core.ipc.strategy=kafka
 EOF
 
   if [[ "$USE_TWIN" == "true" ]]; then
-    cat <<EOF >> ${CONFIG_DIR}/opennms.properties.d/kafka.properties
+    cat <<EOF >> ${CONFIG_DIR_OVERLAY}/opennms.properties.d/kafka.properties
 
 # TWIN
 org.opennms.core.ipc.twin.kafka.bootstrap.servers=${KAFKA_BOOTSTRAP_SERVER}
@@ -201,7 +238,7 @@ org.opennms.core.ipc.twin.kafka.group.id=${OPENNMS_INSTANCE_ID}-Core-Twin
 EOF
   fi
 
-  cat <<EOF >> ${CONFIG_DIR}/opennms.properties.d/kafka.properties
+  cat <<EOF >> ${CONFIG_DIR_OVERLAY}/opennms.properties.d/kafka.properties
 
 # SINK
 org.opennms.core.ipc.sink.initialSleepTime=60000
@@ -253,7 +290,7 @@ fi
 # Configure Elasticsearch to allow Helm/Grafana to access Flow data
 if [[ ${ELASTICSEARCH_SERVER} ]]; then
   PREFIX=$(echo ${OPENNMS_INSTANCE_ID} | tr '[:upper:]' '[:lower:]')-
-  cat <<EOF > ${CONFIG_DIR}/org.opennms.features.flows.persistence.elastic.cfg
+  cat <<EOF > ${CONFIG_DIR_OVERLAY}/org.opennms.features.flows.persistence.elastic.cfg
 elasticUrl=https://${ELASTICSEARCH_SERVER}
 globalElasticUser=${ELASTICSEARCH_USER}
 globalElasticPassword=${ELASTICSEARCH_PASSWORD}

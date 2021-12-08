@@ -2,11 +2,6 @@
 
 * Learn how the GKE Ingress works (in case the Nginx Ingress is not an option).
 
-* Learn how to configure Grafana when PostgreSQL has strict TLS mode using private certificates.
-
-* Allow tuning the DB connection pool for OpenNMS Core, UIs, and Sentinels.
-  The number of connections, as the DB server must allow all DB pools per environment to connect.
-
 * Add Server Certificates in PEM format besides the common Truststore.
   * Grafana requires it for `database.ca_cert_path` or `GF_DATABASE_CA_CERT_PATH` when using PostgreSQL with TLS, which is the only non-java application.
 
@@ -40,14 +35,13 @@
 
 * Evaluate the idea of having custom entry point scripts replacing the initialization scripts.
   * The less invasive option to expand our possibility without building custom images.
-  * There are limitations with `confd` in OpenNMS, besides other restrictions inside the `entrypoint.sh` script in OpenNMS and Sentinel that prevents enabling certain features like TLS for PostgreSQL.
-  * Override the whole `datasource.url` for `org.opennms.netmgt.distributed.datasource.cfg` in Sentinel
-  * Override the whole URLs for `opennms-datasources.xml` in OpenNMS.
+  * There are limitations with `confd` in OpenNMS, besides other restrictions inside the `entrypoint.sh` script in OpenNMS and Sentinel that prevents enabling certain features.
 
 * Improve Helm Chart for OpenNMS and relatives (no external dependencies).
   * Make Sentinel creation optional (Telemetryd handles Flows when disabled).
   * Choose between RRD over shared volume and Cortex.
   * Improve variables documentation in `values.yaml`.
+  * Use the `lookup` function to ensure that the `StorageClass` exists and fail if it doesn't. Or use it to only create it if it doesn't exist (and reduce requirements).
 
 * Build Terraform recipes for the Cloud Infrastructure resources.
   * Private container registry

@@ -39,11 +39,16 @@ spec:
             name: app-settings
         - secretRef:
             name: app-credentials
+        env:
+        - name: OPENNMS_DATABASE_CONNECTION_MAXPOOL
+          value: {{ .Values.opennms.configuration.database.pool_size | default "50" | quote }}
         volumeMounts:
         - name: etc
           mountPath: /opennms-etc # Required by the script
         - name: deploy
           mountPath: /opennms-deploy # Required by the script
+        - name: overlay
+          mountPath: /opennms-overlay # Required by the script
         - name: scripts
           mountPath: /init.sh
           subPath: onms-core-init.sh
@@ -68,13 +73,13 @@ spec:
           mountPath: /opt/opennms/etc
         - name: deploy
           mountPath: /opt/opennms/deploy
+        - name: overlay
+          mountPath: /opt/opennms-overlay
         - name: rrd
           mountPath: /opennms-data/rrd
         - name: jks
           mountPath: /etc/java/jks
         env:
-        - name: OPENNMS_DATABASE_CONNECTION_MAXPOOL
-          value: {{ .Values.opennms.configuration.database.pool_size | default "50" | quote }}
         {{- $opt :=  include "opennms.jvmOptions" . }}
         {{- if .Values.opennms.resources }}
         {{- with .Values.opennms.resources }}
@@ -108,6 +113,8 @@ spec:
           periodSeconds: 60
       volumes:
       - name: deploy
+        emptyDir: {}
+      - name: overlay
         emptyDir: {}
       - name: scripts
         configMap:

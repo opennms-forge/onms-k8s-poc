@@ -38,6 +38,9 @@ spec:
             name: app-settings
         - secretRef:
             name: app-credentials
+        env:
+        - name: OPENNMS_DATABASE_CONNECTION_MAXPOOL
+          value: {{ .Values.sentinel.configuration.database.pool_size | default "50" | quote }}
         volumeMounts:
         - name: etc-overlay
           mountPath: /opt/sentinel-etc-overlay

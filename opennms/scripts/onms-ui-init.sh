@@ -2,11 +2,21 @@
 # @author Alejandro Galue <agalue@opennms.com>
 #
 # External environment variables:
-# OPENNMS_SERVER
+# POSTGRES_HOST
+# POSTGRES_PORT
+# POSTGRES_USER
+# POSTGRES_PASSWORD
+# OPENNMS_DATABASE_CONNECTION_MAXPOOL
+# OPENNMS_DBNAME
+# OPENNMS_DBUSER
+# OPENNMS_DBPASS
 # OPENNMS_INSTANCE_ID
+# OPENNMS_SERVER
 # ELASTICSEARCH_SERVER
 # ELASTICSEARCH_USER
 # ELASTICSEARCH_PASSWORD
+
+umask 002
 
 function wait_for {
   echo "Waiting for $1"
@@ -19,9 +29,9 @@ function wait_for {
 
 echo "OpenNMS UI Configuration Script..."
 
-wait_for ${OPENNMS_SERVER}:8980
+OPENNMS_DATABASE_CONNECTION_MAXPOOL=${OPENNMS_DATABASE_CONNECTION_MAXPOOL-50}
 
-umask 002
+wait_for ${OPENNMS_SERVER}:8980
 
 command -v jq   >/dev/null 2>&1 || { echo >&2 "jq is required but it's not installed. Aborting.";   exit 1; }
 command -v curl >/dev/null 2>&1 || { echo >&2 "curl is required but it's not installed. Aborting."; exit 1; }
@@ -50,10 +60,36 @@ else
   OPENNMS_INSTANCE_ID="OpenNMS"
 fi
 
-# Enable SSL for PostgreSQL
-if ! grep -q ssl ${CONFIG_DIR}/opennms-datasources.xml; then
-  sed -i -r '/url=/s/"$/?ssl=true"/' ${CONFIG_DIR}/opennms-datasources.xml
-fi
+# Configure Database access
+cat <<EOF > ${CONFIG_DIR}/opennms-datasources.xml
+<?xml version="1.0" encoding="UTF-8"?>
+<datasource-configuration xmlns:this="http://xmlns.opennms.org/xsd/config/opennms-datasources"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://xmlns.opennms.org/xsd/config/opennms-datasources
+  http://www.opennms.org/xsd/config/opennms-datasources.xsd ">
+
+  <connection-pool factory="org.opennms.core.db.HikariCPConnectionFactory"
+    idleTimeout="600"
+    loginTimeout="3"
+    minPool="50"
+    maxPool="50"
+    maxSize="${OPENNMS_DATABASE_CONNECTION_MAXPOOL}" />
+
+  <jdbc-data-source name="opennms"
+                    database-name="${OPENNMS_DBNAME}"
+                    class-name="org.postgresql.Driver"
+                    url="jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${OPENNMS_DBNAME}?sslmode=disable&amp;sslfactory=org.postgresql.ssl.DefaultJavaSSLFactory"
+                    user-name="${OPENNMS_DBUSER}"
+                    password="${OPENNMS_DBPASS}" />
+
+  <jdbc-data-source name="opennms-admin"
+                    database-name="template1"
+                    class-name="org.postgresql.Driver"
+                    url="jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/template1?sslmode=disable&amp;sslfactory=org.postgresql.ssl.DefaultJavaSSLFactory"
+                    user-name="${POSTGRES_USER}"
+                    password="${POSTGRES_PASSWORD}"/>
+</datasource-configuration>
+EOF
 
 # Disable data choices (optional)
 cat <<EOF > ${CONFIG_DIR}/org.opennms.features.datachoices.cfg
@@ -146,15 +182,6 @@ CORE_FILES=(
   'categories.xml' \
   'groups.xml' \
   'notifd-configuration.xml' \
-  'org.opennms.features.topology.app.icons.application.cfg' \
-  'org.opennms.features.topology.app.icons.bsm.cfg' \
-  'org.opennms.features.topology.app.icons.default.cfg' \
-  'org.opennms.features.topology.app.icons.linkd.cfg' \
-  'org.opennms.features.topology.app.icons.list' \
-  'org.opennms.features.topology.app.icons.pathoutage.cfg' \
-  'org.opennms.features.topology.app.icons.sfree.cfg' \
-  'org.opennms.features.topology.app.icons.vmware.cfg' \
-  'org.opennms.features.topology.app.menu.cfg' \
   'surveillance-views.xml' \
   'users.xml' \
   'viewsdisplay.xml' \
