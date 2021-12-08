@@ -12,6 +12,7 @@ data:
   TZ: {{ .Values.timezone }}
   POSTGRES_HOST: {{ .Values.dependencies.postgresql.hostname }}
   POSTGRES_PORT: {{ .Values.dependencies.postgresql.port | quote }}
+  POSTGRES_SSL_MODE: {{ .Values.dependencies.postgresql.ssl_mode | default "disable" }}
   ENABLE_ALEC: {{ .Values.opennms.configuration.enable_alec | quote }}
   OPENNMS_INSTANCE_ID: {{ .Release.Name }}
   OPENNMS_SERVER: onms-core.{{ .Release.Name }}
