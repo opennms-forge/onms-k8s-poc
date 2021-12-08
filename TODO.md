@@ -30,6 +30,9 @@
 
 * Consider `NetworkPolicies` to isolate resources on a given namespace.
 
+* Find a way to create OpenNMS users for Sentinel and Grafana.
+  Changing `http_username` or `http_password` will affect those applications until the changes are reflected in OpenNMS.
+
 * Evaluate the idea of having custom entry point scripts replacing the initialization scripts.
   * The less invasive option to expand our possibility without building custom images.
   * There are limitations with `confd` in OpenNMS, besides other restrictions inside the `entrypoint.sh` script in OpenNMS and Sentinel that prevents enabling certain features.
