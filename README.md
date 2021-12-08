@@ -106,6 +106,8 @@ helm install -f helm-cloud.yaml \
 
 Please note that `apex1` uniquely identifies the environment. That word will be used as the namespace, the OpenNMS Instance ID, and prefix the `domain` for the FQDNs used in the Ingress Controller. Ensure to use the correct hostname for your dependencies, and the same name for the `StorageClass` used when created it.
 
+Keep in mind the above is only an example. You must treat the content of `helm-cloud.yaml` as a sample for testing purposes.
+
 To tune further, edit [helm-cloud.yaml](helm-cloud.yaml).
 
 To access the cluster from external Minions, make sure to configure the DNS service correctly on your cloud provider.
@@ -115,7 +117,12 @@ To access the cluster from external Minions, make sure to configure the DNS serv
 Start Minikube:
 
 ```bash
-minikube start --cpus=4 --memory=24g --addons=ingress --addons=ingress-dns --addons=metrics-server
+minikube start --cpus=4 --memory=24g \
+  --cni=calico \
+  --container-runtime=containerd \
+  --addons=ingress \
+  --addons=ingress-dns \
+  --addons=metrics-server
 ```
 
 Start the test dependencies:

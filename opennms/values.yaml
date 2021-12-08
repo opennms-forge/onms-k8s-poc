@@ -11,7 +11,7 @@ imagePullSecrets: []
 
 dependencies:
   truststore:
-    content: '' # A base64 encoded content of the JKS Truststore file. Empty means no TLS/SSL
+    content: '' # A base64 encoded content of the JKS Truststore file.
     password: '0p3nNM5'
   kafka:
     hostname: onms-kafka-bootstrap.shared.svc
@@ -20,7 +20,7 @@ dependencies:
     password: 0p3nNM5
     configuration:
       sasl_mechanism: SCRAM-SHA-512
-      security_protocol: SASL_PLAIN
+      security_protocol: SASL_SSL
   elasticsearch:
     hostname: onms-es-http.shared.svc
     port: 9200
@@ -119,7 +119,7 @@ grafana:
       sslmode: require # disable, require, verify-full
     ui:
       admin_password: 0p3nNM5
-    opennms:
+    opennms: # Access to the OpenNMS UI for Helm datasources
       http_username: admin
       http_password: admin
   imageRenderer:

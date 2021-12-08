@@ -14,16 +14,12 @@ dependencies:
   kafka:
     hostname: onms-kafka-bootstrap.shared.svc # Please change it
     port: 9093
-    username: opennms
-    password: 0p3nNM5
     configuration:
       sasl_mechanism: SCRAM-SHA-512
       security_protocol: SASL_SSL
   elasticsearch:
     hostname: onms-es-http.shared.svc # Please change it
     port: 9200
-    username: elastic
-    password: 31@st1c
     configuration:
       flows:
         index_strategy: daily
@@ -32,13 +28,7 @@ dependencies:
   postgresql:
     hostname: onms-db.shared.svc # Please change it
     port: 5432
-    username: postgres
-    password: P0stgr3s
 
-ingress:
-  className: nginx
-  certManager:
-    clusterIssuer: opennms-issuer
 
 opennms:
   resources:
@@ -50,9 +40,6 @@ opennms:
       memory: 4Gi
   configuration:
     enable_alec: true
-    database:
-      username: opennms
-      password: 0p3nNM5
     storage:
       etc: 1Gi
       rrd: 1000Gi
@@ -75,10 +62,6 @@ sentinel:
     requests:
       cpu: '1'
       memory: 2Gi
-  configuration:
-    opennms:
-      http_username: admin
-      http_password: admin
 
 grafana:
   replicaCount: 2
@@ -89,16 +72,6 @@ grafana:
     requests:
       cpu: 100m
       memory: 128Mi
-  configuration:
-    database:
-      username: grafana
-      password: Gr@f@n@
-      ssl_mode: disable
-    ui:
-      admin_password: 0p3nNM5
-    opennms:
-      http_username: admin
-      http_password: admin
   imageRenderer:
     replicaCount: 2
     resources:
