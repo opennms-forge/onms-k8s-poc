@@ -41,10 +41,6 @@ ingress:
     clusterIssuer: opennms-issuer
 
 opennms:
-  image:
-    repository: opennms/horizon
-    pullPolicy: IfNotPresent
-    tag: '' # Defaults to opennmsVersion
   resources: null
   configuration:
     enable_alec: true
@@ -60,10 +56,6 @@ opennms:
 
 sentinel:
   replicaCount: 1
-  image:
-    repository: opennms/sentinel
-    pullPolicy: IfNotPresent
-    tag: '' # Defaults to opennmsVersion
   resources: null
   configuration:
     opennms:
@@ -72,10 +64,6 @@ sentinel:
 
 grafana:
   replicaCount: 1
-  image:
-    repository: opennms/helm
-    pullPolicy: IfNotPresent
-    tag: '7.1.2'
   resources: null
   configuration:
     database:
@@ -89,8 +77,4 @@ grafana:
       http_password: admin
   imageRenderer:
     replicaCount: 1
-    image:
-      repository: grafana/grafana-image-renderer
-      pullPolicy: IfNotPresent
-      tag: latest
     resources: null

@@ -87,9 +87,11 @@ sentinel:
       cpu: '2'
       memory: 4Gi
     requests:
-      cpu: '1'
+      cpu: '2'
       memory: 2Gi
   configuration:
+    database:
+      pool_size: 25
     opennms:
       http_username: admin
       http_password: admin
@@ -99,7 +101,7 @@ grafana:
   image:
     repository: opennms/helm
     pullPolicy: IfNotPresent
-    tag: '7.1.2'
+    tag: '7.2.0'
   resources:
     limits:
       cpu: 200m

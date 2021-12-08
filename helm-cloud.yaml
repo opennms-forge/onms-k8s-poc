@@ -41,10 +41,6 @@ ingress:
     clusterIssuer: opennms-issuer
 
 opennms:
-  image:
-    repository: opennms/horizon
-    pullPolicy: IfNotPresent
-    tag: '' # Defaults to opennmsVersion
   resources:
     limits:
       cpu: '2'
@@ -61,7 +57,7 @@ opennms:
       etc: 1Gi
       rrd: 1000Gi
   uiServers:
-    replicaCount: 2
+    replicaCount: 1
     resources:
       limits:
         cpu: '1'
@@ -71,14 +67,10 @@ opennms:
         memory: 4Gi
 
 sentinel:
-  replicaCount: 2
-  image:
-    repository: opennms/sentinel
-    pullPolicy: IfNotPresent
-    tag: '' # Defaults to opennmsVersion
+  replicaCount: 1
   resources:
     limits:
-      cpu: '2'
+      cpu: '1'
       memory: 4Gi
     requests:
       cpu: '1'
@@ -90,10 +82,6 @@ sentinel:
 
 grafana:
   replicaCount: 2
-  image:
-    repository: opennms/helm
-    pullPolicy: IfNotPresent
-    tag: '7.1.2'
   resources:
     limits:
       cpu: 200m
@@ -113,10 +101,6 @@ grafana:
       http_password: admin
   imageRenderer:
     replicaCount: 2
-    image:
-      repository: grafana/grafana-image-renderer
-      pullPolicy: IfNotPresent
-      tag: latest
     resources:
       limits:
         cpu: 200m
