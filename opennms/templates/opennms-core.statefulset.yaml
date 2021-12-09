@@ -22,6 +22,8 @@ spec:
         app: onms-core
         {{- include "opennms.selectorLabels" . | nindent 8 }}
     spec:
+      securityContext:
+        fsGroup: 10001 # Required for Google Fileshare (might impact performance)
       terminationGracePeriodSeconds: 120
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
