@@ -1,5 +1,6 @@
 {{- /* @author Alejandro Galue <agalue@opennms.com> */}}
 
+{{- if not .Values.opennms.enable_cortex }}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -17,3 +18,4 @@ spec:
   resources:
     requests:
       storage: {{ .Values.opennms.configuration.storage.rrd | default "1000Gi" }}
+{{- end }}

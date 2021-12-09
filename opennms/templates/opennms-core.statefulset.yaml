@@ -71,14 +71,16 @@ spec:
         - secretRef:
             name: app-credentials
         volumeMounts:
+        {{- if not .Values.opennms.enable_cortex }}
+        - name: rrd
+          mountPath: /opennms-data/rrd
+        {{- end }}
         - name: etc
           mountPath: /opt/opennms/etc
         - name: deploy
           mountPath: /opt/opennms/deploy
         - name: overlay
           mountPath: /opt/opennms-overlay
-        - name: rrd
-          mountPath: /opennms-data/rrd
         - name: jks
           mountPath: /etc/java/jks
         - name: jks
@@ -131,7 +133,9 @@ spec:
         persistentVolumeClaim:
           claimName: onms-etc-pvc
           readOnly: false
+      {{- if not .Values.opennms.enable_cortex }}
       - name: rrd
         persistentVolumeClaim:
           claimName: onms-rrd-pvc
           readOnly: false
+      {{- end }}

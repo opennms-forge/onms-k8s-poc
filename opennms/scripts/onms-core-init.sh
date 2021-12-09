@@ -16,6 +16,8 @@
 # ENABLE_ALEC
 # ENABLE_ACLS
 # ENABLE_TELEMETRYD
+# ENABLE_CORTEX
+# CORTEX_BASE_URL
 # KAFKA_BOOTSTRAP_SERVER
 # KAFKA_SASL_USERNAME
 # KAFKA_SASL_PASSWORD
@@ -194,6 +196,36 @@ cat <<EOF > ${CONFIG_DIR_OVERLAY}/opennms.properties.d/rrd.properties
 org.opennms.rrd.storeByGroup=true
 EOF
 
+# Configure Timeseries for Cortex
+if [[ ${ENABLE_CORTEX} == "true" ]]; then
+  KAR_VER=$(curl -s https://api.github.com/repos/OpenNMS/opennms-cortex-tss-plugin/releases/latest | grep tag_name | cut -d '"' -f 4)
+  KAR_URL="https://github.com/OpenNMS/opennms-cortex-tss-plugin/releases/download/${KAR_VER}/opennms-cortex-tss-plugin.kar"
+  curl -LJ -o /opennms-deploy/opennms-cortex-tss-plugin.kar ${KAR_URL} 2>/dev/null
+
+  cat <<EOF > ${CONFIG_DIR_OVERLAY}/opennms.properties.d/timeseries.properties
+org.opennms.timeseries.strategy=integration
+org.opennms.timeseries.tin.metatags.tag.node=\${node:label}
+org.opennms.timeseries.tin.metatags.tag.location=\${node:location}
+org.opennms.timeseries.tin.metatags.tag.geohash=\${node:geohash}
+org.opennms.timeseries.tin.metatags.tag.ifDescr=\${interface:if-description}
+org.opennms.timeseries.tin.metatags.tag.label=\${resource:label}
+EOF
+
+  cat <<EOF > ${CONFIG_DIR_OVERLAY}/org.opennms.plugins.tss.cortex.cfg
+writeUrl=${CORTEX_BASE_URL}/api/prom/push
+readUrl=${CORTEX_BASE_URL}/prometheus/api/v1
+maxConcurrentHttpConnections=100
+writeTimeoutInMs=1000
+readTimeoutInMs=1000
+metricCacheSize=1000
+bulkheadMaxWaitDurationInMs=9223372036854775807
+EOF
+
+  cat <<EOF > ${CONFIG_DIR_OVERLAY}/featuresBoot.d/cortex.boot
+opennms-plugins-cortex-tss wait-for-kar=opennms-cortex-tss-plugin
+EOF
+fi
+
 # Collectd Optimizations
 cat <<EOF > ${CONFIG_DIR_OVERLAY}/opennms.properties.d/collectd.properties
 # To get data as close as possible to PDP
@@ -209,8 +241,9 @@ EOF
 
 # Enable ALEC standalone
 if [[ ${ENABLE_ALEC} == "true" ]]; then
-  KAR_URL="https://github.com/OpenNMS/alec/releases/download/v1.1.1/opennms-alec-plugin.kar"
-  curl -LJ -o /opennms-deploy/opennms-alec-plugin.kar $KAR_URL 2>/dev/null
+  KAR_VER=$(curl -s https://api.github.com/repos/OpenNMS/alec/releases/latest | grep tag_name | cut -d '"' -f 4)
+  KAR_URL="https://github.com/OpenNMS/alec/releases/download/${KAR_VER}/opennms-alec-plugin.kar"
+  curl -LJ -o /opennms-deploy/opennms-alec-plugin.kar ${KAR_URL} 2>/dev/null
   cat <<EOF > ${CONFIG_DIR_OVERLAY}/featuresBoot.d/alec.boot
 alec-opennms-standalone wait-for-kar=opennms-alec-plugin
 EOF

@@ -9,30 +9,32 @@ metadata:
   labels:
     {{- include "opennms.labels" . | nindent 4 }}
 data:
-  TZ: {{ .Values.timezone }}
-  POSTGRES_HOST: {{ .Values.dependencies.postgresql.hostname }}
+  TZ: {{ .Values.timezone | quote }}
+  POSTGRES_HOST: {{ .Values.dependencies.postgresql.hostname | quote }}
   POSTGRES_PORT: {{ .Values.dependencies.postgresql.port | quote }}
-  POSTGRES_SSL_MODE: {{ .Values.dependencies.postgresql.sslmode }}
-  POSTGRES_SSL_FACTORY: {{ .Values.dependencies.postgresql.sslfactory }}
+  POSTGRES_SSL_MODE: {{ .Values.dependencies.postgresql.sslmode | quote }}
+  POSTGRES_SSL_FACTORY: {{ .Values.dependencies.postgresql.sslfactory | quote }}
   ENABLE_ALEC: {{ .Values.opennms.configuration.enable_alec | quote }}
   ENABLE_ACLS: {{ .Values.opennms.configuration.enable_acls | quote }}
   ENABLE_TELEMETRYD: {{ if gt ((.Values).sentinel).replicaCount 0.0 }}"false"{{ else }}"true"{{ end }}
-  OPENNMS_INSTANCE_ID: {{ .Release.Name }}
-  OPENNMS_SERVER: onms-core.{{ .Release.Name }}
-  OPENNMS_DBNAME: {{ .Release.Name  }}_opennms
-  ELASTICSEARCH_SERVER: {{  .Values.dependencies.elasticsearch.hostname }}:{{ .Values.dependencies.elasticsearch.port }}
-  ELASTICSEARCH_INDEX_STRATEGY_FLOWS: {{ .Values.dependencies.elasticsearch.configuration.flows.index_strategy }}
+  ENABLE_CORTEX: {{ .Values.opennms.configuration.enable_cortex | quote }}
+  OPENNMS_INSTANCE_ID: {{ .Release.Name | quote }}
+  OPENNMS_SERVER: {{ printf "onms-core.%s.svc" .Release.Name | quote }}
+  OPENNMS_DBNAME: {{ printf "%s_opennms" .Release.Name | quote }}
+  CORTEX_BASE_URL: {{ .Values.dependencies.cortex.baseUrl | quote }}
+  ELASTICSEARCH_SERVER: {{ printf "%s:%d" .Values.dependencies.elasticsearch.hostname (.Values.dependencies.elasticsearch.port | int) | quote }}
+  ELASTICSEARCH_INDEX_STRATEGY_FLOWS: {{ .Values.dependencies.elasticsearch.configuration.flows.index_strategy | quote }}
   ELASTICSEARCH_REPLICATION_FACTOR: {{ .Values.dependencies.elasticsearch.configuration.flows.replication_factor | quote }}
   ELASTICSEARCH_NUM_SHARDS: {{ .Values.dependencies.elasticsearch.configuration.flows.num_shards | quote }}
-  KAFKA_BOOTSTRAP_SERVER: {{ .Values.dependencies.kafka.hostname }}:{{ .Values.dependencies.kafka.port }}
-  KAFKA_SASL_MECHANISM: {{ .Values.dependencies.kafka.configuration.sasl_mechanism }}
-  KAFKA_SECURITY_PROTOCOL: {{ .Values.dependencies.kafka.configuration.security_protocol }}
-  GF_SERVER_DOMAIN: grafana.{{ .Release.Name }}.{{ .Values.domain }} # Must match ingress.yaml
-  GF_SERVER_ROOT_URL: /
-  GF_DATABASE_TYPE: postgres
-  GF_DATABASE_NAME: {{ .Release.Name }}_grafana
-  GF_DATABASE_SSL_MODE: {{ .Values.grafana.configuration.database.sslmode }}
-  GF_DATABASE_CA_CERT_PATH: /etc/java/jks/postgresql-ca.crt
-  GF_SESSION_PROVIDER: postgres
+  KAFKA_BOOTSTRAP_SERVER: {{ printf "%s:%d" .Values.dependencies.kafka.hostname (.Values.dependencies.kafka.port | int) | quote }}
+  KAFKA_SASL_MECHANISM: {{ .Values.dependencies.kafka.configuration.sasl_mechanism | quote }}
+  KAFKA_SECURITY_PROTOCOL: {{ .Values.dependencies.kafka.configuration.security_protocol | quote }}
+  GF_SERVER_DOMAIN: {{ printf "grafana.%s.%s" .Release.Name .Values.domain | quote }} # Must match ingress.yaml
+  GF_SERVER_ROOT_URL: "/"
+  GF_DATABASE_TYPE: "postgres"
+  GF_DATABASE_NAME: {{ printf "%s_grafana" .Release.Name | quote }}
+  GF_DATABASE_SSL_MODE: {{ .Values.grafana.configuration.database.sslmode | quote }}
+  GF_DATABASE_CA_CERT_PATH: "/etc/java/jks/postgresql-ca.crt"
+  GF_SESSION_PROVIDER: "postgres"
   {{- $opt :=  include "opennms.jvmOptions" . }}
   USE_TRUSTSTORE: {{ if $opt }}"true"{{ else }}"false"{{ end }}

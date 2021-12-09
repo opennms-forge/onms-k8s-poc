@@ -58,8 +58,10 @@ spec:
         - secretRef:
             name: app-credentials
         volumeMounts:
+        {{- if not .Values.opennms.enable_cortex }}
         - name: rrd-core
           mountPath: /opennms-data/rrd
+        {{- end }}
         - name: etc-core
           mountPath: /opennms-core/etc # Must match CORE_CONFIG_DIR from onms-ui-init.sh
         - name: overlay
@@ -116,8 +118,10 @@ spec:
         persistentVolumeClaim:
           claimName: onms-etc-pvc
           readOnly: true
+      {{- if not .Values.opennms.enable_cortex }}
       - name: rrd-core
         persistentVolumeClaim:
           claimName: onms-rrd-pvc
           readOnly: true
+      {{- end }}
 {{- end }}

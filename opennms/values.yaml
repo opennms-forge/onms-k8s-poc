@@ -39,6 +39,8 @@ dependencies:
     sslmode: require # disable, allow, prefer, require, verify-ca, verify-full
     sslfactory: org.postgresql.ssl.LibPQFactory # LibPQFactory, DefaultJavaSSLFactory, NonValidatingFactory
     ca_cert: '' # A base64 encoded content of the Server Certificate
+  cortex:
+    baseUrl: '' # Used only when opennms.enable_cortex=true
 
 ingress:
   className: nginx
@@ -60,6 +62,7 @@ opennms:
   configuration:
     enable_alec: true
     enable_acls: false
+    enable_cortex: false
     database:
       username: opennms
       password: 0p3nNM5
