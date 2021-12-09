@@ -1,7 +1,16 @@
 {{- /* @author Alejandro Galue <agalue@opennms.com> */}}
-{{- $srv := "onms" }}
-{{- if gt (((.Values).opennms).uiServers).replicaCount 0.0 }}
-  {{- $srv = "onms-ui" }}
+{{- define "opennms.grafanaDSOptions" -}}
+{{- $srv := "onms" -}}
+{{- if gt (((.Values).opennms).uiServers).replicaCount 0.0 -}}
+  {{- $srv = "onms-ui" -}}
+{{- end -}}
+editable: true
+access: proxy
+url: {{ printf "http://%s.%s.svc:8980/opennms" $srv .Release.Name }}
+basicAuth: true
+basicAuthUser: {{ .Values.grafana.configuration.opennms.http_username }}
+secureJsonData:
+  basicAuthPassword: {{ .Values.grafana.configuration.opennms.http_password }}
 {{- end }}
 ---
 apiVersion: v1
@@ -23,28 +32,10 @@ data:
     - name: OpenNMS-Performance
       type: opennms-helm-performance-datasource
       isDefault: true
-      editable: true
-      access: proxy
-      url: http://{{ $srv }}.{{ .Release.Name }}:8980/opennms
-      basicAuth: true
-      basicAuthUser: {{ .Values.grafana.configuration.opennms.http_username }}
-      secureJsonData:
-        basicAuthPassword: {{ .Values.grafana.configuration.opennms.http_password }}
+      {{- include "opennms.grafanaDSOptions" . | nindent 6 }}
     - name: OpenNMS-Entity
       type: opennms-helm-entity-datasource
-      editable: true
-      access: proxy
-      url: http://{{ $srv }}.{{ .Release.Name }}:8980/opennms
-      basicAuth: true
-      basicAuthUser: {{ .Values.grafana.configuration.opennms.http_username }}
-      secureJsonData:
-        basicAuthPassword: {{ .Values.grafana.configuration.opennms.http_password }}
+      {{- include "opennms.grafanaDSOptions" . | nindent 6 }}
     - name: OpenNMS-Flow
       type: opennms-helm-flow-datasource
-      editable: true
-      access: proxy
-      url: http://{{ $srv }}.{{ .Release.Name }}:8980/opennms
-      basicAuth: true
-      basicAuthUser: {{ .Values.grafana.configuration.opennms.http_username }}
-      secureJsonData:
-        basicAuthPassword: {{ .Values.grafana.configuration.opennms.http_password }}
+      {{- include "opennms.grafanaDSOptions" . | nindent 6 }}
