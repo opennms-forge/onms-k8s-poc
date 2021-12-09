@@ -13,6 +13,9 @@
 # OPENNMS_DBUSER
 # OPENNMS_DBPASS
 # OPENNMS_INSTANCE_ID
+# ENABLE_ALEC
+# ENABLE_ACLS
+# ENABLE_TELEMETRYD
 # KAFKA_BOOTSTRAP_SERVER
 # KAFKA_SASL_USERNAME
 # KAFKA_SASL_PASSWORD
@@ -44,7 +47,7 @@ command -v rsync >/dev/null 2>&1 || { echo >&2 "rsync is required but it's not i
 PKG=$(rpm -qa | egrep '(meridian|opennms)-core')
 VERSION=$(rpm -q --queryformat '%{VERSION}' $PKG)
 MAJOR=${VERSION%%.*}
-USE_TWIN=false
+USE_TWIN="false"
 if [[ "$PKG" == *"meridian"* ]]; then
   echo "OpenNMS Meridian $MAJOR detected"
   if (( $MAJOR > 2021 )); then
@@ -61,9 +64,9 @@ echo "Twin API Available? $USE_TWIN"
 wait_for ${POSTGRES_HOST}:${POSTGRES_PORT}
 wait_for ${KAFKA_BOOTSTRAP_SERVER}
 
-CONFIG_DIR_OVERLAY=/opennms-overlay/etc
-CONFIG_DIR=/opennms-etc
-BACKUP_ETC=/opt/opennms/etc
+CONFIG_DIR_OVERLAY="/opennms-overlay/etc"  # Mounted externally
+CONFIG_DIR="/opennms-etc"                  # Mounted externally
+BACKUP_ETC="/opt/opennms/etc"              # Requires OpenNMS Image
 KARAF_FILES=( \
 "config.properties" \
 "startup.properties" \
@@ -205,13 +208,18 @@ org.opennms.web.defaultGraphPeriod=last_2_hour
 EOF
 
 # Enable ALEC standalone
-if [[ ${ENABLE_ALEC} ]]; then
+if [[ ${ENABLE_ALEC} == "true" ]]; then
   KAR_URL="https://github.com/OpenNMS/alec/releases/download/v1.1.1/opennms-alec-plugin.kar"
   curl -LJ -o /opennms-deploy/opennms-alec-plugin.kar $KAR_URL 2>/dev/null
   cat <<EOF > ${CONFIG_DIR_OVERLAY}/featuresBoot.d/alec.boot
 alec-opennms-standalone wait-for-kar=opennms-alec-plugin
 EOF
 fi
+
+# Enable ACLs
+cat <<EOF > ${CONFIG_DIR_OVERLAY}/opennms.properties.d/acl.properties
+org.opennms.web.aclsEnabled=${ENABLE_ACLS}
+EOF
 
 # Configure Sink and RPC to use Kafka, and the Kafka Producer.
 if [[ ${KAFKA_BOOTSTRAP_SERVER} ]]; then
@@ -298,9 +306,11 @@ fi
 # Enable Syslogd
 sed -r -i '/enabled="false"/{$!{N;s/ enabled="false"[>]\n(.*OpenNMS:Name=Syslogd.*)/>\n\1/}}' ${CONFIG_DIR}/service-configuration.xml
 
-# Disable Telemetryd as BMP, flows, and streaming telemetry data will be managed by sentinels
-sed -i -r '/opennms-flows/d' ${CONFIG_DIR}/org.apache.karaf.features.cfg
-sed -i 'N;s/service.*\n\(.*Telemetryd\)/service enabled="false">\n\1/;P;D' ${CONFIG_DIR}/service-configuration.xml
+# Disable Telemetryd
+if [[ ${ENABLE_TELEMETRYD} == "false" ]]; then
+  sed -i -r '/opennms-flows/d' ${CONFIG_DIR}/org.apache.karaf.features.cfg
+  sed -i 'N;s/service.*\n\(.*Telemetryd\)/service enabled="false">\n\1/;P;D' ${CONFIG_DIR}/service-configuration.xml
+fi
 
 # Cleanup temporary requisition files:
 rm -f ${CONFIG_DIR}/imports/pending/*.xml.*

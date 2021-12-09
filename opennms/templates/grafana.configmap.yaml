@@ -1,5 +1,8 @@
 {{- /* @author Alejandro Galue <agalue@opennms.com> */}}
-
+{{- $srv := "onms" }}
+{{- if gt (((.Values).opennms).uiServers).replicaCount 0.0 }}
+  {{- $srv = "onms-ui" }}
+{{- end }}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -22,7 +25,7 @@ data:
       isDefault: true
       editable: true
       access: proxy
-      url: http://onms-ui.{{ .Release.Name }}:8980/opennms
+      url: http://{{ $srv }}.{{ .Release.Name }}:8980/opennms
       basicAuth: true
       basicAuthUser: {{ .Values.grafana.configuration.opennms.http_username }}
       secureJsonData:
@@ -31,7 +34,7 @@ data:
       type: opennms-helm-entity-datasource
       editable: true
       access: proxy
-      url: http://onms-ui.{{ .Release.Name }}:8980/opennms
+      url: http://{{ $srv }}.{{ .Release.Name }}:8980/opennms
       basicAuth: true
       basicAuthUser: {{ .Values.grafana.configuration.opennms.http_username }}
       secureJsonData:
@@ -40,7 +43,7 @@ data:
       type: opennms-helm-flow-datasource
       editable: true
       access: proxy
-      url: http://onms-ui.{{ .Release.Name }}:8980/opennms
+      url: http://{{ $srv }}.{{ .Release.Name }}:8980/opennms
       basicAuth: true
       basicAuthUser: {{ .Values.grafana.configuration.opennms.http_username }}
       secureJsonData:

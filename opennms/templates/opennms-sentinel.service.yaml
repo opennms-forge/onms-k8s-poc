@@ -1,5 +1,6 @@
 {{- /* @author Alejandro Galue <agalue@opennms.com> */}}
 
+{{- if gt ((.Values).sentinel).replicaCount 0.0 }}
 ---
 apiVersion: v1
 kind: Service
@@ -22,3 +23,4 @@ spec:
     targetPort: http
   selector:
     app: onms-sentinel
+{{- end}}

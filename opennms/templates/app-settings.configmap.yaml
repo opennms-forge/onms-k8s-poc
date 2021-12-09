@@ -15,6 +15,8 @@ data:
   POSTGRES_SSL_MODE: {{ .Values.dependencies.postgresql.sslmode }}
   POSTGRES_SSL_FACTORY: {{ .Values.dependencies.postgresql.sslfactory }}
   ENABLE_ALEC: {{ .Values.opennms.configuration.enable_alec | quote }}
+  ENABLE_ACLS: {{ .Values.opennms.configuration.enable_acls | quote }}
+  ENABLE_TELEMETRYD: {{ if gt ((.Values).sentinel).replicaCount 0.0 }}"false"{{ else }}"true"{{ end }}
   OPENNMS_INSTANCE_ID: {{ .Release.Name }}
   OPENNMS_SERVER: onms-core.{{ .Release.Name }}
   OPENNMS_DBNAME: {{ .Release.Name  }}_opennms

@@ -1,5 +1,6 @@
 {{- /* @author Alejandro Galue <agalue@opennms.com> */}}
 
+{{- if gt (((.Values).opennms).uiServers).replicaCount 0.0 }}
 ---
 apiVersion: v1
 kind: Service
@@ -19,3 +20,4 @@ spec:
   selector:
     app: onms-ui
     {{- include "opennms.selectorLabels" . | nindent 4 }}
+{{- end }}

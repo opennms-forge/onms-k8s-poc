@@ -18,10 +18,13 @@ spec:
   tls:
     - secretName: onms-ingress-cert
       hosts:
+        {{- if gt (((.Values).opennms).uiServers).replicaCount 0.0 }}
         - onms.{{ .Release.Name }}.{{ .Values.domain }}
+        {{- end }}
         - onms-core.{{ .Release.Name }}.{{ .Values.domain }}
         - grafana.{{ .Release.Name }}.{{ .Values.domain }}
   rules:
+    {{- if gt (((.Values).opennms).uiServers).replicaCount 0.0 }}
     - host: onms.{{ .Release.Name }}.{{ .Values.domain }}
       http:
         paths:
@@ -39,6 +42,7 @@ spec:
                 name: onms-core
                 port:
                   number: 8980
+    {{- end }}
     - host: onms-core.{{ .Release.Name }}.{{ .Values.domain }}
       http:
         paths:

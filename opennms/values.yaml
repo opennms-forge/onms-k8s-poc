@@ -59,6 +59,7 @@ opennms:
       memory: 4Gi
   configuration:
     enable_alec: true
+    enable_acls: false
     database:
       username: opennms
       password: 0p3nNM5
