@@ -5,6 +5,7 @@ minion_version="29.0.1" # Must match the version chosen for OpenNMS
 minion_location="Apex"
 minion_id="minion-1"
 instance_id="apex1"  # Must match name of the Helm instance (or the Kubernetes namespace)
+http_url="" # For M2021/H28 or older
 kafka_boostrap="kafka.k8s.agalue.net:443" # Must match dependencies.kafka.hostname from the Helm deployment
 kafka_user="opennms" # Must match dependencies.kafka.username from the Helm deployment
 kafka_passwd="0p3nNM5" # Must match dependencies.kafka.password from the Helm deployment
@@ -13,6 +14,7 @@ karaf_port="8201"
 syslog_port="1514"
 snmp_port="1162"
 flow_port="8877"
+debug="0"
 
 # Parse external variables
 while [ $# -gt 0 ]; do
@@ -38,6 +40,13 @@ yaml="/tmp/_${minion_id}-$(date +%s).yaml"
 cat <<EOF > $yaml
 id: ${minion_id}
 location: ${minion_location}
+EOF
+
+if [[ "$http_url" != "" ]]; then
+  echo "http-url: ${http_url}" >> $yaml
+fi
+
+cat <<EOF >> $yaml
 system:
   properties:
     org.opennms.instance.id: ${instance_id}
@@ -76,7 +85,11 @@ telemetry:
 ipc:
 EOF
 
-for module in rpc sink twin; do
+modules="rpc sink"
+if [[ "${http_url}" == "" ]]; then
+  modules="twin ${modules}"
+fi
+for module in ${modules}; do
   cat <<EOF >> $yaml
   $module:
     kafka:
@@ -86,6 +99,11 @@ for module in rpc sink twin; do
       sasl.jaas.config: org.apache.kafka.common.security.scram.ScramLoginModule required username="${kafka_user}" password="${kafka_passwd}";
 EOF
 done
+
+if [[ "${debug}" != "0" ]]; then
+  cat $yaml
+  exit
+fi
 
 # Start Minion via Docker
 docker run --name ${minion_id} -it --rm \
