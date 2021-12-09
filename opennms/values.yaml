@@ -39,7 +39,7 @@ dependencies:
     sslmode: require # disable, allow, prefer, require, verify-ca, verify-full
     sslfactory: org.postgresql.ssl.LibPQFactory # LibPQFactory, DefaultJavaSSLFactory, NonValidatingFactory
     ca_cert: '' # A base64 encoded content of the Server Certificate
-  cortex:
+  cortex: # Not production ready - use for test/dev purposes only
     baseUrl: '' # Used only when opennms.enable_cortex=true
 
 ingress:

@@ -23,7 +23,7 @@
 * Start monitoring a local network with Flow processing and verify usage of the UI/Grafana servers.
   Ensure everything works.
 
-* Perform stress tests using the `opennms:metrics-stress` command to ensure performance using RRD and shared volumes.
+* Perform stress tests using the `opennms:metrics-stress` command to ensure performance using RRD and shared volumes. This is crucial for GKE as ownership is configured via `securityContext.fsGroup` (not required for AKS).
 
 * Detect OpenNMS flavor and apply configuration changes accordingly.
   For instance, H29 requires Twin API with Kafka, whereas M2021 doesn't.
@@ -31,15 +31,14 @@
 * Consider `NetworkPolicies` to isolate resources on a given namespace.
 
 * Find a way to create OpenNMS users for Sentinel and Grafana.
-  Changing `http_username` or `http_password` will affect those applications until the changes are reflected in OpenNMS.
+  * Changing `http_username` or `http_password` will affect those applications until the changes are reflected in OpenNMS.
+  * One approach could be create a `Job` that runs once after the Core server is up and running that uses the ReST API to add the users and change the admin password.
 
 * Evaluate the idea of having custom entry point scripts replacing the initialization scripts.
   * The less invasive option to expand our possibility without building custom images.
   * There are limitations with `confd` in OpenNMS, besides other restrictions inside the `entrypoint.sh` script in OpenNMS and Sentinel that prevents enabling certain features.
 
 * Improve Helm Chart for OpenNMS and relatives (no external dependencies).
-  * Make Sentinel creation optional (Telemetryd handles Flows when disabled).
-  * Choose between RRD over shared volume and Cortex.
   * Improve variables documentation in `values.yaml`.
   * Use the `lookup` function to ensure that the `StorageClass` exists and fail if it doesn't. Or use it to only create it if it doesn't exist (and reduce requirements).
 
