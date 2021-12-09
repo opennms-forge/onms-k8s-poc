@@ -14,6 +14,8 @@ We expect `SASL_SSL` configured in Kafka using `SCRAM-SHA-512` for authenticatio
 
 * Have `helm` version 3 installed on your machine.
 
+* When using Cloud Resources, `az` for Azure, or `gcloud` for Google Cloud.
+
 ### For Kubernetes
 
 * A single instance of OpenNMS Core (backend) for centralized monitoring running ALEC in standalone mode.
@@ -76,6 +78,13 @@ The following assumes that you already have an AKS or GKE cluster up and running
 
 **Place the Java Truststore with the CA Certificate Chain of your Kafka cluster, your Elasticsearch cluster, and your PostgreSQL server/cluster on a JKS file located at `jks/truststore.jks`, and also the Root CA used for your PostgreSQL server certificate on a PKCS12 file located at `jks/postgresql-ca.crt`. Then, pass them to OpenNMS via Helm (set the JKS password or update the values file).**
 
+When using Google Cloud, ensure that `GcpFilestoreCsiDriver` is enabled in your GKE Cluster, if not, you can enabled it as follow (according to the [documentation](https://cloud.google.com/kubernetes-engine/docs/how-to/persistent-volumes/filestore-csi-driver)):
+
+```bash
+gcloud container clusters update CLUSTER_NAME_HERE \
+   --update-addons=GcpFilestoreCsiDriver=ENABLED
+```
+
 Optionally, for testing purposes, use the following script to initialize all the dependencies within Kubernetes (including `cert-manager`):
 
 ```bash
@@ -88,7 +97,7 @@ Create the Storage Class in Google Cloud, using `onms-share` as the name of the 
 ./create-storageclass.sh gke onms-share
 ```
 
-For Azure, replace `gke` with `aks`.
+For Azure, replace `gke` with `aks`. On GKE, please keep in mind that it uses the standard tier and the default network/VPC, refer to Google's documentation for a custom networks/VPC, whereas on Azure it uses `Standard_LRS`.
 
 Start the OpenNMS environment on your cloud environment:
 
@@ -193,8 +202,6 @@ Check the script for more details.
 
 ## Manual configuration changes
 
-* Access the OpenNMS container via a remote shell.
-* Edit the file using `vi` (the only editor available within the OpenNMS container).
+* Either access the OpenNMS container via a remote shell through `kubectl`, and edit the file using `vi` (the only editor available within the OpenNMS container), or mount the NFS share from Google Filestore or Azure Files from a VM or a temporary container and make the changes.
 * Send the reload configuration event via `send-event.pl` or the Karaf Shell (not accessible within the container).
-  In case OpenNMS has to be restarted, delete the Pod, and Kubernetes will recreate it again.
-  Changes persisted to the PV.
+* In case OpenNMS has to be restarted, delete the Pod (not the StatefulSet), and Kubernetes controller will recreate it again.
