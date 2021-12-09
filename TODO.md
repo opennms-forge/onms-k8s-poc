@@ -11,13 +11,13 @@
 
 * Test the solution with Kafka outside K8s [Optional].
 
-* Evaluate options for centralized logging (side-car with Fluentd).
+* Evaluate options for centralized logging based on [Grafana Loki](https://grafana.com/oss/loki/).
 
 * Use relative/percentage size for the Java Heap, based on Pod resources (instead of fixed values) for OpenNMS.
   * For instance, `-XX:MaxRAMPercentage={{ .Values.opennms.jvm.heapPercentage }}`
   * We could let the user choose between discrete assignments via Xms/Xmx or percentage.
 
-* Evaluate and test solutions with private container registries.
+* Evaluate and test solutions with private container registries ([Google Artifact Registry](https://cloud.google.com/artifact-registry/docs/overview), [Azure Container Registry](https://azure.microsoft.com/en-us/services/container-registry/)).
   Allows us to use Meridian instead of Horizon.
 
 * Start monitoring a local network with Flow processing and verify usage of the UI/Grafana servers.
