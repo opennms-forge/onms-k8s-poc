@@ -32,6 +32,7 @@ if [[ "${environment}" == "aks" ]]; then
 provisioner: file.csi.azure.com
 volumeBindingMode: WaitForFirstConsumer
 allowVolumeExpansion: true
+reclaimPolicy: Retain
 mountOptions:
 - dir_mode=0755
 - file_mode=0644
@@ -50,11 +51,7 @@ if [[ "${environment}" == "gke" ]]; then
 provisioner: filestore.csi.storage.gke.io
 volumeBindingMode: WaitForFirstConsumer
 allowVolumeExpansion: true
-mountOptions:
-- dir_mode=0755
-- file_mode=0644
-- uid=10001 # OpenNMS User
-- gid=10001 # OpenNMS Group
+reclaimPolicy: Retain
 parameters:
   tier: standard # standard, premium, or enterprise
   network: default
