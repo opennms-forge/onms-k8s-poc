@@ -100,17 +100,21 @@ spec:
         resources:
           {{- toYaml . | nindent 10 }}
         {{- end }}
+        startupProbe:
+          exec:
+            command:
+            - /health.sh
+          failureThreshold: 30
+          periodSeconds: 60
         readinessProbe:
           exec:
             command:
             - /health.sh
-          initialDelaySeconds: 60
-          periodSeconds: 60
+          periodSeconds: 15
         livenessProbe: # WARNING: The health-check checks dependencies, which is not suitable for liveness probes
           exec:
             command:
             - /health.sh
-          initialDelaySeconds: 60
           periodSeconds: 60
       volumes:
       - name: etc-overlay

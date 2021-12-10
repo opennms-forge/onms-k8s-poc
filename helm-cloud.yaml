@@ -8,9 +8,6 @@ opennmsVersion: '29.0.1'
 imagePullSecrets: []
 
 dependencies:
-  truststore:
-    content: '' # A base64 encoded content of the JKS Truststore file. Empty means no TLS/SSL
-    password: '0p3nNM5'
   kafka:
     hostname: onms-kafka-bootstrap.shared.svc # Please change it
     port: 9093
@@ -28,7 +25,6 @@ dependencies:
   postgresql:
     hostname: onms-db.shared.svc # Please change it
     port: 5432
-
 
 opennms:
   resources:

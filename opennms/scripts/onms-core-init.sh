@@ -198,9 +198,11 @@ EOF
 
 # Configure Timeseries for Cortex
 if [[ ${ENABLE_CORTEX} == "true" ]]; then
-  KAR_VER=$(curl -s https://api.github.com/repos/OpenNMS/opennms-cortex-tss-plugin/releases/latest | grep tag_name | cut -d '"' -f 4)
-  KAR_URL="https://github.com/OpenNMS/opennms-cortex-tss-plugin/releases/download/${KAR_VER}/opennms-cortex-tss-plugin.kar"
-  curl -LJ -o /opennms-deploy/opennms-cortex-tss-plugin.kar ${KAR_URL} 2>/dev/null
+  if [[ ! -e /opt/opennms/deploy/opennms-cortex-tss-plugin.kar ]]; then
+    KAR_VER=$(curl -s https://api.github.com/repos/OpenNMS/opennms-cortex-tss-plugin/releases/latest | grep tag_name | cut -d '"' -f 4)
+    KAR_URL="https://github.com/OpenNMS/opennms-cortex-tss-plugin/releases/download/${KAR_VER}/opennms-cortex-tss-plugin.kar"
+    curl -LJ -o /opennms-deploy/opennms-cortex-tss-plugin.kar ${KAR_URL} 2>/dev/null
+  fi
 
   cat <<EOF > ${CONFIG_DIR_OVERLAY}/opennms.properties.d/timeseries.properties
 org.opennms.timeseries.strategy=integration
@@ -241,9 +243,12 @@ EOF
 
 # Enable ALEC standalone
 if [[ ${ENABLE_ALEC} == "true" ]]; then
-  KAR_VER=$(curl -s https://api.github.com/repos/OpenNMS/alec/releases/latest | grep tag_name | cut -d '"' -f 4)
-  KAR_URL="https://github.com/OpenNMS/alec/releases/download/${KAR_VER}/opennms-alec-plugin.kar"
-  curl -LJ -o /opennms-deploy/opennms-alec-plugin.kar ${KAR_URL} 2>/dev/null
+  if [[ ! -e /opt/opennms/deploy/opennms-alec-plugin.kar ]]; then
+    KAR_VER=$(curl -s https://api.github.com/repos/OpenNMS/alec/releases/latest | grep tag_name | cut -d '"' -f 4)
+    KAR_URL="https://github.com/OpenNMS/alec/releases/download/${KAR_VER}/opennms-alec-plugin.kar"
+    curl -LJ -o /opennms-deploy/opennms-alec-plugin.kar ${KAR_URL} 2>/dev/null
+  fi
+
   cat <<EOF > ${CONFIG_DIR_OVERLAY}/featuresBoot.d/alec.boot
 alec-opennms-standalone wait-for-kar=opennms-alec-plugin
 EOF

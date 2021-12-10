@@ -22,21 +22,21 @@ We expect `SASL_SSL` configured in Kafka using `SCRAM-SHA-512` for authenticatio
   OpenNMS doesn't support distributed mode, meaning the `StatefulSet` cannot have more than one replica.
 
 * Multiple instances of read-only OpenNMS UI (frontend).
-  Must be stateless (unconfigurable).
-  The `Deployment` must have multiple instances.
-  Any configuration change goes to the core server.
+  * Must be stateless (unconfigurable), meaning the `Deployment` must work with multiple replicas.
+  * Any configuration change goes to the core server.
   
 * Multiple instances of Grafana (frontend), using PostgreSQL as the backend, pointing to the UI service.
 
-* Multiple instances of Sentinel to handle Flows.
+* Multiple instances of Sentinel to handle Flows (requires Elasticsearch as an external dependency).
 
 * A custom `StorageClass` for shared content (Google Filestore or Azure Files) to use `ReadWriteMany`.
-  Use the same `UID` and `GID` as the OpenNMS image with proper file modes.
+  * Use the same `UID` and `GID` as the OpenNMS image with proper file modes.
+  * Due to how Google Filestore works, we need to specify `securityContext.fsGroup` (not required for Azure Files).
 
-* A shared volume for the RRD files, mounted as read-only on the UI instances.
+* A shared volume for the RRD files, mounted as read-write on the Core instance, and as read-only on the UI instances.
 
 * A shared volume for the core configuration files, mounted as read-only on the UI instances.
-  The purpose is to share configuration across all the OpenNMS instances.
+  The purpose is to share configuration across all the OpenNMS instances (i.e., `users.xml`, `groups.xml`).
 
 * `Secrets` to store the credentials, certificates and truststores.
 
@@ -45,6 +45,8 @@ We expect `SASL_SSL` configured in Kafka using `SCRAM-SHA-512` for authenticatio
 * An `Ingress` to control TLS termination and provide access to all the components (using Nginx).
   We could manage certificates using LetsEncrypt via `cert-manager`.
   To integrate with Google Cloud DNS managed zones or Azure DNS, we need a wild-card entry.
+
+> **Please note that unless you build custom images for OpenNMS, the latest available versions of ALEC and the TSS Cortex Plugin (when enabled) as KAR files will be downloaded directly from Github every time the container starts, as those binaries are not part of the current Docker Image for OpenNMS.**
 
 ### External Dependencies
 
@@ -76,7 +78,7 @@ We expect `SASL_SSL` configured in Kafka using `SCRAM-SHA-512` for authenticatio
 
 The following assumes that you already have an AKS or GKE cluster up and running with Nginx Ingress Controller and `cert-manager`, and `kubectl` is correctly configured on your machine to access the cluster. At a minimum, it should have three instances with 4 Cores and 16GB of RAM on each of them.
 
-**Place the Java Truststore with the CA Certificate Chain of your Kafka cluster, your Elasticsearch cluster, and your PostgreSQL server/cluster on a JKS file located at `jks/truststore.jks`, and also the Root CA used for your PostgreSQL server certificate on a PKCS12 file located at `jks/postgresql-ca.crt`. Then, pass them to OpenNMS via Helm (set the JKS password or update the values file).**
+> **Place the Java Truststore with the CA Certificate Chain of your Kafka cluster, your Elasticsearch cluster, and your PostgreSQL server/cluster on a JKS file located at `jks/truststore.jks`, and also the Root CA used for your PostgreSQL server certificate on a PKCS12 file located at `jks/postgresql-ca.crt`. Then, pass them to OpenNMS via Helm (set the JKS password or update the values file).**
 
 When using Google Cloud, ensure that `GcpFilestoreCsiDriver` is enabled in your GKE Cluster, if not, you can enabled it as follow (according to the [documentation](https://cloud.google.com/kubernetes-engine/docs/how-to/persistent-volumes/filestore-csi-driver)):
 

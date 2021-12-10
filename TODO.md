@@ -11,7 +11,7 @@
 
 * Test the solution with Kafka outside K8s [Optional].
 
-* Evaluate options for centralized logging based on [Grafana Loki](https://grafana.com/oss/loki/).
+* Evaluate options for centralized logging based on [Grafana Loki](https://grafana.com/oss/loki/), for instance, as explained [here](https://grafana.com/docs/loki/latest/clients/promtail/installation/). I believe we should consider Loki an external dependency like PostgreSQL or Kafka.
 
 * Use relative/percentage size for the Java Heap, based on Pod resources (instead of fixed values) for OpenNMS.
   * For instance, `-XX:MaxRAMPercentage={{ .Values.opennms.jvm.heapPercentage }}`
@@ -39,6 +39,7 @@
   * There are limitations with `confd` in OpenNMS, besides other restrictions inside the `entrypoint.sh` script in OpenNMS and Sentinel that prevents enabling certain features.
 
 * Improve Helm Chart for OpenNMS and relatives (no external dependencies).
+  * Make readiness/liveness probes configurable (DB migration time could impact behavior). Or keep them fixed and expose settings for the startup probe.
   * Improve variables documentation in `values.yaml`.
   * Use the `lookup` function to ensure that the `StorageClass` exists and fail if it doesn't. Or use it to only create it if it doesn't exist (and reduce requirements).
 

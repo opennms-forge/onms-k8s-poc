@@ -106,17 +106,21 @@ spec:
         - name: JAVA_OPTS
           value: {{ $opt }}
         {{- end }}
+        startupProbe:
+          httpGet:
+            path: /opennms/login.jsp
+            port: http
+          failureThreshold: 30
+          periodSeconds: 60
         readinessProbe:
           httpGet:
             path: /opennms/login.jsp
             port: http
-          initialDelaySeconds: 60
-          periodSeconds: 60
+          periodSeconds: 15
         livenessProbe:
           httpGet:
             path: /opennms/login.jsp
             port: http
-          initialDelaySeconds: 60
           periodSeconds: 60
       volumes:
       - name: deploy

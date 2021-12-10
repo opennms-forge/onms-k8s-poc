@@ -60,9 +60,9 @@ opennms:
       cpu: '2'
       memory: 4Gi
   configuration:
-    enable_alec: true
+    enable_alec: true    # Download KAR from Github when the container starts if it doesn't exist on the image
+    enable_cortex: false # Download KAR from Github when the container starts if it doesn't exist on the image
     enable_acls: false
-    enable_cortex: false
     database:
       username: opennms
       password: 0p3nNM5
