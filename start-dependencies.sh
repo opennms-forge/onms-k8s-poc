@@ -28,13 +28,17 @@ kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/$CMV
 kubectl wait pod -l app.kubernetes.io/instance=cert-manager --for=condition=Ready --timeout=300s -n cert-manager
 kubectl apply -f ca -n cert-manager
 
+# Create a namespace for all the dependencies
+kubectl create namespace $NAMESPACE
+
 # Install Grafana Loki
 helm repo add grafana https://grafana.github.io/helm-charts
 helm repo update
-helm upgrade --install onms-loki --namespace=shared grafana/loki
-
-# Create a namespace for all the dependencies
-kubectl create namespace $NAMESPACE
+helm upgrade --install onms-loki --namespace=$NAMESPACE \
+  --set "persistence.enabled=true" \
+  --set "persistence.accessModes={ReadWriteOnce}" \
+  --set "persistence.size=50Gi" \
+  grafana/loki
 
 # Install PostgreSQL
 kubectl apply -f https://raw.githubusercontent.com/zalando/postgres-operator/master/manifests/postgresql.crd.yaml
