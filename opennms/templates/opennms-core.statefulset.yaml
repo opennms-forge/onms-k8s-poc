@@ -150,9 +150,11 @@ spec:
       - name: scripts
         configMap:
           name: app-scripts
+      {{- if ((.Values.dependencies).loki).hostname }}
       - name: promtail
         configMap:
           name: promtail-config
+      {{- end }}
       - name: jks
         secret:
           secretName: app-jks

@@ -139,9 +139,11 @@ spec:
         emptyDir: {}
       - name: logs
         emptyDir: {}
+      {{- if ((.Values.dependencies).loki).hostname }}
       - name: promtail
         configMap:
           name: promtail-config
+      {{- end }}
       - name: scripts
         configMap:
           name: app-scripts
