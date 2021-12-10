@@ -51,6 +51,7 @@ dependencies:
 
 ingress:
   className: nginx
+  annotations: {}
   certManager:
     clusterIssuer: opennms-issuer
 
