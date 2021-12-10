@@ -16,6 +16,10 @@ dependencies:
   loki:
     hostname: onms-loki.shared.svc
     port: 3100
+    promtail:
+      repository: grafana/promtail
+      pullPolicy: IfNotPresent
+      tag: latest
   kafka:
     hostname: onms-kafka-bootstrap.shared.svc
     port: 9092

@@ -113,7 +113,8 @@ spec:
           periodSeconds: 60
       {{- if ((.Values.dependencies).loki).hostname }}
       - name: promtail
-        image: grafana/promtail
+        image: {{ .Values.dependencies.loki.promtail.repository }}:{{ .Values.dependencies.loki.promtail.tag | default "latest" }}
+        imagePullPolicy: {{ .Values.dependencies.loki.promtail.pullPolicy }}
         args:
         - -config.file=/etc/promtail/promtail.yaml
         volumeMounts:
