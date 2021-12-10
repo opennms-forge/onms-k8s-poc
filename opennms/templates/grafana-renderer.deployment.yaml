@@ -27,7 +27,7 @@ spec:
       {{- end }}
       containers:
       - name: grafana-renderer
-        image: {{ .Values.grafana.imageRenderer.image.repository }}:{{ .Values.grafana.imageRenderer.image.tag }}
+        image: {{ printf "%s:%s" .Values.grafana.imageRenderer.image.repository .Values.grafana.imageRenderer.image.tag }}
         imagePullPolicy: {{ .Values.grafana.imageRenderer.image.imagePullPolicy }}
         ports:
         - containerPort: 8081

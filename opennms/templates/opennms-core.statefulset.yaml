@@ -1,5 +1,6 @@
 {{- /* @author Alejandro Galue <agalue@opennms.com> */}}
 
+{{- $image := printf "%s:%s" .Values.opennms.image.repository (.Values.opennms.image.tag | default .Values.opennmsVersion) -}}
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -33,7 +34,7 @@ spec:
       # Initializes/Updates OpenNMS Configuration
       # Requires the same image/version used at runtime
       - name: init
-        image: {{ .Values.opennms.image.repository }}:{{ .Values.opennms.image.tag | default .Values.opennmsVersion }}
+        image: {{ $image }}
         imagePullPolicy: {{ .Values.opennms.image.imagePullPolicy }}
         command: [ bash, /init.sh ]
         envFrom:
@@ -56,7 +57,7 @@ spec:
           subPath: onms-core-init.sh
       containers:
       - name: onms
-        image: {{ .Values.opennms.image.repository }}:{{ .Values.opennms.image.tag | default .Values.opennmsVersion }}
+        image: {{ $image }}
         imagePullPolicy: {{ .Values.opennms.image.imagePullPolicy }}
         args:
         - -s
@@ -126,7 +127,7 @@ spec:
           periodSeconds: 60
       {{- if ((.Values.dependencies).loki).hostname }}
       - name: promtail
-        image: {{ .Values.dependencies.loki.promtail.repository }}:{{ .Values.dependencies.loki.promtail.tag | default "latest" }}
+        image: {{ printf "%s:%s" .Values.dependencies.loki.promtail.repository (.Values.dependencies.loki.promtail.tag | default "latest") }}
         imagePullPolicy: {{ .Values.dependencies.loki.promtail.pullPolicy }}
         args:
         - -config.file=/etc/promtail/promtail.yaml

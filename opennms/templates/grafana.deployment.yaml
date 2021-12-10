@@ -48,7 +48,7 @@ spec:
           subPath: grafana-init.sh
       containers:
       - name: grafana-helm
-        image: {{ .Values.grafana.image.repository }}:{{ .Values.grafana.image.tag }}
+        image: {{ printf "%s:%s" .Values.grafana.image.repository .Values.grafana.image.tag }}
         imagePullPolicy: {{ .Values.grafana.image.imagePullPolicy }}
         ports:
         - containerPort: 3000
