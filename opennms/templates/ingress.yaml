@@ -11,7 +11,7 @@ metadata:
     ingress.kubernetes.io/affinity: cookie
     ingress.kubernetes.io/session-cookie-name: route
     ingress.kubernetes.io/session-cookie-hash: sha1
-    nginx.ingress.kubernetes.io/ssl-redirect: 'true'
+    ingress.kubernetes.io/force-ssl-redirect: "true"
     cert-manager.io/cluster-issuer: {{ .Values.ingress.certManager.clusterIssuer }}
 spec:
   ingressClassName: {{ .Values.ingress.className }}
