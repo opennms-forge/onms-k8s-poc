@@ -1,5 +1,5 @@
 {{- /* @author Alejandro Galue <agalue@opennms.com> */}}
-
+{{- $domain := printf "%s.%s" .Release.Name .Values.domain -}}
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -13,7 +13,9 @@ metadata:
     ingress.kubernetes.io/session-cookie-name: route
     ingress.kubernetes.io/session-cookie-hash: sha1
     ingress.kubernetes.io/force-ssl-redirect: "true"
+    {{- if ((.Values.ingress).certManager).clusterIssuer }}
     cert-manager.io/cluster-issuer: {{ .Values.ingress.certManager.clusterIssuer }}
+    {{- end }}
     {{- with .Values.ingress.annotations }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
@@ -22,14 +24,14 @@ spec:
   tls:
     - secretName: onms-ingress-cert
       hosts:
-        {{- if gt (((.Values).opennms).uiServers).replicaCount 0.0 }}
-        - onms.{{ .Release.Name }}.{{ .Values.domain }}
+        {{- if gt ((.Values.opennms).uiServers).replicaCount 0.0 }}
+        - onms.{{ $domain }}
         {{- end }}
-        - onms-core.{{ .Release.Name }}.{{ .Values.domain }}
-        - grafana.{{ .Release.Name }}.{{ .Values.domain }}
+        - onms-core.{{ $domain }}
+        - grafana.{{ $domain }}
   rules:
-    {{- if gt (((.Values).opennms).uiServers).replicaCount 0.0 }}
-    - host: onms.{{ .Release.Name }}.{{ .Values.domain }}
+    {{- if gt ((.Values.opennms).uiServers).replicaCount 0.0 }}
+    - host: onms.{{ $domain }}
       http:
         paths:
           - path: /
@@ -47,7 +49,7 @@ spec:
                 port:
                   number: 8980
     {{- end }}
-    - host: onms-core.{{ .Release.Name }}.{{ .Values.domain }}
+    - host: onms-core.{{ $domain }}
       http:
         paths:
           - path: /
@@ -57,7 +59,7 @@ spec:
                 name: onms-core
                 port:
                   number: 8980
-    - host: grafana.{{ .Release.Name }}.{{ .Values.domain }}
+    - host: grafana.{{ $domain }}
       http:
         paths:
           - path: /
