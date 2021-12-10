@@ -21,6 +21,10 @@ spec:
         app: grafana
         {{- include "opennms.selectorLabels" . | nindent 8 }}
     spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       initContainers:
       - name: init # Should run once (regardless of the replicas)
         image: postgres:13

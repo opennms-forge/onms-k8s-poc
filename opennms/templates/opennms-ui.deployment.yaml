@@ -22,7 +22,11 @@ spec:
         app: onms-ui
         {{- include "opennms.selectorLabels" . | nindent 8 }}
     spec:
-      terminationGracePeriodSeconds: 120
+      terminationGracePeriodSeconds: {{ .Values.opennms.uiServers.terminationGracePeriodSeconds | default 120 }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       initContainers:
       # Initializes OpenNMS Configuration
       # Requires the same image/version used at runtime

@@ -7,6 +7,10 @@ timezone: America/New_York
 domain: example.com
 storageClass: onms-share
 opennmsVersion: '29.0.1'
+
+## Optionally specify an array of imagePullSecrets.
+## Secrets must be manually created in the namespace.
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 imagePullSecrets: []
 
 dependencies:
@@ -57,6 +61,7 @@ ingress:
 
 # OpenNMS Core and UI
 opennms:
+  terminationGracePeriodSeconds: 120
   image:
     repository: opennms/horizon
     pullPolicy: IfNotPresent
@@ -81,6 +86,7 @@ opennms:
       rrd: 1000Gi
   uiServers:
     replicaCount: 2
+    terminationGracePeriodSeconds: 120
     configuration:
       database:
         pool_size: 25
@@ -95,6 +101,7 @@ opennms:
 # OpenNMS Sentinel
 sentinel:
   replicaCount: 2
+  terminationGracePeriodSeconds: 60
   image:
     repository: opennms/sentinel
     pullPolicy: IfNotPresent
