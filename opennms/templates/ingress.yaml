@@ -1,5 +1,6 @@
 {{- /* @author Alejandro Galue <agalue@opennms.com> */}}
 {{- $domain := printf "%s.%s" .Release.Name .Values.domain -}}
+{{- $use_ui := gt (((.Values.opennms).uiServers).replicaCount|int) 0 }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -24,13 +25,13 @@ spec:
   tls:
     - secretName: onms-ingress-cert
       hosts:
-        {{- if gt ((.Values.opennms).uiServers).replicaCount 0.0 }}
+        {{- if $use_ui }}
         - onms.{{ $domain }}
         {{- end }}
         - onms-core.{{ $domain }}
         - grafana.{{ $domain }}
   rules:
-    {{- if gt ((.Values.opennms).uiServers).replicaCount 0.0 }}
+    {{- if $use_ui }}
     - host: onms.{{ $domain }}
       http:
         paths:

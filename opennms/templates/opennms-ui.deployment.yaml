@@ -1,6 +1,6 @@
 {{- /* @author Alejandro Galue <agalue@opennms.com> */}}
 
-{{- if gt (((.Values).opennms).uiServers).replicaCount 0.0 }}
+{{- if gt (((.Values.opennms).uiServers).replicaCount|int) 0 }}
 {{- $image := printf "%s:%s" .Values.opennms.image.repository (.Values.opennms.image.tag | default .Values.opennmsVersion) -}}
 ---
 apiVersion: apps/v1
