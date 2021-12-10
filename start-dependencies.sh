@@ -28,6 +28,11 @@ kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/$CMV
 kubectl wait pod -l app.kubernetes.io/instance=cert-manager --for=condition=Ready --timeout=300s -n cert-manager
 kubectl apply -f ca -n cert-manager
 
+# Install Grafana Loki
+helm repo add grafana https://grafana.github.io/helm-charts
+helm repo update
+helm upgrade --install onms-loki --namespace=shared grafana/loki
+
 # Create a namespace for all the dependencies
 kubectl create namespace $NAMESPACE
 

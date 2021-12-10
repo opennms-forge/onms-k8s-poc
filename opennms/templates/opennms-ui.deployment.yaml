@@ -66,6 +66,8 @@ spec:
           mountPath: /opennms-core/etc # Must match CORE_CONFIG_DIR from onms-ui-init.sh
         - name: overlay
           mountPath: /opt/opennms-overlay
+        - name: logs
+          mountPath: /opt/opennms/logs
         - name: jks
           mountPath: /etc/java/jks
         - name: jks
@@ -109,9 +111,30 @@ spec:
             path: /opennms/login.jsp
             port: http
           periodSeconds: 60
+      {{- if ((.Values.dependencies).loki).hostname }}
+      - name: promtail
+        image: grafana/promtail
+        args:
+        - -config.file=/etc/promtail/promtail.yaml
+        volumeMounts:
+        - name: logs
+          mountPath: /opt/opennms/logs
+        - name: promtail
+          mountPath: /etc/promtail/promtail.yaml
+          subPath: promtail.onms_ui.config.yaml
+        resources:
+          limits:
+            cpu: 50m
+            memory: 64Mi
+      {{- end }}
       volumes:
       - name: overlay
         emptyDir: {}
+      - name: logs
+        emptyDir: {}
+      - name: promtail
+        configMap:
+          name: promtail-config
       - name: scripts
         configMap:
           name: app-scripts

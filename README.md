@@ -18,6 +18,8 @@ We expect `SASL_SSL` configured in Kafka using `SCRAM-SHA-512` for authenticatio
 
 ### For Kubernetes
 
+* All components on a single `namespace` represent a single OpenNMS environment or customer deployment.
+
 * A single instance of OpenNMS Core (backend) for centralized monitoring running ALEC in standalone mode.
   OpenNMS doesn't support distributed mode, meaning the `StatefulSet` cannot have more than one replica.
 
@@ -31,7 +33,7 @@ We expect `SASL_SSL` configured in Kafka using `SCRAM-SHA-512` for authenticatio
 
 * A custom `StorageClass` for shared content (Google Filestore or Azure Files) to use `ReadWriteMany`.
   * Use the same `UID` and `GID` as the OpenNMS image with proper file modes.
-  * Due to how Google Filestore works, we need to specify `securityContext.fsGroup` (not required for Azure Files).
+  * Due to how Google Filestore works, we need to specify `securityContext.fsGroup` (not required for Azure Files). Check [here](https://github.com/kubernetes-sigs/gcp-filestore-csi-driver/blob/master/docs/kubernetes/fsgroup.md) for more information.
 
 * A shared volume for the RRD files, mounted as read-write on the Core instance, and as read-only on the UI instances.
 
@@ -52,7 +54,11 @@ We expect `SASL_SSL` configured in Kafka using `SCRAM-SHA-512` for authenticatio
 
 * PostgreSQL server as the central database for OpenNMS and Grafana.
 
-* External Kafka cluster for OpenNMS-to-Minion communication.
+* Kafka cluster for OpenNMS-to-Minion communication.
+
+* Elasticsearch cluster for Flow persistence.
+
+* Grafana Loki server for log aggregation.
 
 * Google Filestore or Azure Files for the OpenNMS configuration and RRD files (managed by provider)
   The documentation recommends 1.21 or later for the CSI driver.

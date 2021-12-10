@@ -1,0 +1,41 @@
+{{- /* @author Alejandro Galue <agalue@opennms.com> */}}
+
+{{- define "opennms.promtailBaseConfig" -}}
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+clients:
+- url: {{ printf "http://%s:%d/loki/api/v1/push" ((.Values.dependencies).loki).hostname (((.Values.dependencies).loki).port | int) }}
+scrape_configs:
+- job_name: system
+  static_configs:
+  - targets:
+    - localhost
+{{- end }}
+{{- if ((.Values.dependencies).loki).hostname }}
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: promtail-config
+  namespace: {{ .Release.Name }}
+  labels:
+    {{- include "opennms.labels" . | nindent 4 }}
+data:
+  promtail.onms_core.config.yaml: |
+    {{- include "opennms.promtailBaseConfig" . | nindent 4 }}
+        labels:
+          job: opennms_core
+          __path__: /opt/opennms/logs/*.log
+  promtail.onms_ui.config.yaml: |
+    {{- include "opennms.promtailBaseConfig" . | nindent 4 }}
+        labels:
+          job: opennms_ui
+          __path__: /opt/opennms/logs/*.log
+  promtail.sentinel.config.yaml: |
+    {{- include "opennms.promtailBaseConfig" . | nindent 4 }}
+        labels:
+          job: opennms_sentinel
+          __path__: /opt/sentinel/data/logs/karaf.log
+{{- end }}

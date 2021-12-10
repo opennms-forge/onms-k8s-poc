@@ -8,6 +8,9 @@ opennmsVersion: '29.0.1'
 imagePullSecrets: []
 
 dependencies:
+  loki:
+    hostname: onms-loki.shared.svc
+    port: 3100
   kafka:
     hostname: onms-kafka-bootstrap.shared.svc # Please change it
     port: 9093

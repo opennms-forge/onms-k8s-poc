@@ -1,4 +1,5 @@
 {{- /* @author Alejandro Galue <agalue@opennms.com> */}}
+
 {{- define "opennms.grafanaDSOptions" -}}
 {{- $srv := "onms" -}}
 {{- if gt (((.Values).opennms).uiServers).replicaCount 0.0 -}}
@@ -12,6 +13,7 @@ basicAuthUser: {{ .Values.grafana.configuration.opennms.http_username }}
 secureJsonData:
   basicAuthPassword: {{ .Values.grafana.configuration.opennms.http_password }}
 {{- end }}
+
 ---
 apiVersion: v1
 kind: ConfigMap

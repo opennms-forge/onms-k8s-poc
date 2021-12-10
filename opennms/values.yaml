@@ -13,6 +13,9 @@ dependencies:
   truststore:
     content: '' # A base64 encoded content of the JKS Truststore file.
     password: '0p3nNM5'
+  loki:
+    hostname: onms-loki.shared.svc
+    port: 3100
   kafka:
     hostname: onms-kafka-bootstrap.shared.svc
     port: 9092
@@ -47,6 +50,7 @@ ingress:
   certManager:
     clusterIssuer: opennms-issuer
 
+# OpenNMS Core and UI
 opennms:
   image:
     repository: opennms/horizon
@@ -83,6 +87,7 @@ opennms:
         cpu: '2'
         memory: 4Gi
 
+# OpenNMS Sentinel
 sentinel:
   replicaCount: 2
   image:
@@ -103,6 +108,7 @@ sentinel:
       http_username: admin
       http_password: admin
 
+# OpenNMS Helm
 grafana:
   replicaCount: 2
   image:
@@ -126,7 +132,7 @@ grafana:
     opennms: # Access to the OpenNMS UI for Helm datasources
       http_username: admin
       http_password: admin
-  imageRenderer:
+  imageRenderer: # Required to generate PDF reports from OpeNNMS
     replicaCount: 2
     image:
       repository: grafana/grafana-image-renderer

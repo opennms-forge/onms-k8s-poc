@@ -79,6 +79,8 @@ spec:
           mountPath: /opt/opennms/etc
         - name: deploy
           mountPath: /opt/opennms/deploy
+        - name: logs
+          mountPath: /opt/opennms/logs
         - name: overlay
           mountPath: /opt/opennms-overlay
         - name: jks
@@ -122,14 +124,35 @@ spec:
             path: /opennms/login.jsp
             port: http
           periodSeconds: 60
+      {{- if ((.Values.dependencies).loki).hostname }}
+      - name: promtail
+        image: grafana/promtail
+        args:
+        - -config.file=/etc/promtail/promtail.yaml
+        volumeMounts:
+        - name: logs
+          mountPath: /opt/opennms/logs
+        - name: promtail
+          mountPath: /etc/promtail/promtail.yaml
+          subPath: promtail.onms_core.config.yaml
+        resources:
+          limits:
+            cpu: 50m
+            memory: 64Mi
+      {{- end }}
       volumes:
       - name: deploy
         emptyDir: {}
       - name: overlay
         emptyDir: {}
+      - name: logs
+        emptyDir: {}
       - name: scripts
         configMap:
           name: app-scripts
+      - name: promtail
+        configMap:
+          name: promtail-config
       - name: jks
         secret:
           secretName: app-jks

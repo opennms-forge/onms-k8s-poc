@@ -91,6 +91,8 @@ spec:
         volumeMounts:
         - name: etc-overlay
           mountPath: /opt/sentinel-etc-overlay
+        - name: logs
+          mountPath: /opt/sentinel/data/logs
         - name: jks
           mountPath: /etc/java/jks
         - name: jks
@@ -116,9 +118,30 @@ spec:
             command:
             - /health.sh
           periodSeconds: 60
+      {{- if ((.Values.dependencies).loki).hostname }}
+      - name: promtail
+        image: grafana/promtail
+        args:
+        - -config.file=/etc/promtail/promtail.yaml
+        volumeMounts:
+        - name: logs
+          mountPath: /opt/sentinel/data/logs
+        - name: promtail
+          mountPath: /etc/promtail/promtail.yaml
+          subPath: promtail.sentinel.config.yaml
+        resources:
+          limits:
+            cpu: 50m
+            memory: 64Mi
+      {{- end }}
       volumes:
       - name: etc-overlay
         emptyDir: {}
+      - name: logs
+        emptyDir: {}
+      - name: promtail
+        configMap:
+          name: promtail-config
       - name: scripts
         configMap:
           name: app-scripts

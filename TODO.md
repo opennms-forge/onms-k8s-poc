@@ -11,7 +11,16 @@
 
 * Test the solution with Kafka outside K8s [Optional].
 
-* Evaluate options for centralized logging based on [Grafana Loki](https://grafana.com/oss/loki/), for instance, as explained [here](https://grafana.com/docs/loki/latest/clients/promtail/installation/). I believe we should consider Loki an external dependency like PostgreSQL or Kafka.
+* Analyze the possibility to ignore the custom StorageClass when you don't need dedicated UI servers for RRD files; which asumes the default one (I believe it is `gce-pd` for Google Cloud or Azure Disk for AKS).
+  * For configuration, using a NFS-like solution could have benefits in terms of accessing the data for troubleshooting purposes without the need to have access to Kubernetes.
+
+* Integrate Grafana into the OpenNMS Core and UI to generate PDF reports and access dashboards.
+
+* Evaluate options for centralized logging based on [Grafana Loki](https://grafana.com/oss/loki/), for instance, as explained [here](https://grafana.com/docs/loki/latest/clients/promtail/installation/).
+  * We should consider the Loki Server an external dependency like PostgreSQL or Kafka.
+  * Explore adding a new Grafana Dashboard to see the logs (constrained by namespace).
+  * Explore `logcli` to extract OpenNMS logs for troubleshooting purposes.
+  * Research about handling Java Exceptions (multi-line log entries) with Loki.
 
 * Use relative/percentage size for the Java Heap, based on Pod resources (instead of fixed values) for OpenNMS.
   * For instance, `-XX:MaxRAMPercentage={{ .Values.opennms.jvm.heapPercentage }}`
