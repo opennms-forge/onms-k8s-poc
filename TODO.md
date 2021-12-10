@@ -16,8 +16,7 @@
 
 * Integrate Grafana into the OpenNMS Core and UI to generate PDF reports and access dashboards.
 
-* Evaluate options for centralized logging based on [Grafana Loki](https://grafana.com/oss/loki/), for instance, as explained [here](https://grafana.com/docs/loki/latest/clients/promtail/installation/).
-  * We should consider the Loki Server an external dependency like PostgreSQL or Kafka.
+* Test the solution against a secured [Grafana Loki](https://grafana.com/oss/loki/) server.
   * Explore adding a new Grafana Dashboard to see the logs (constrained by namespace).
   * Explore `logcli` to extract OpenNMS logs for troubleshooting purposes.
   * Research about handling Java Exceptions (multi-line log entries) with Loki.
