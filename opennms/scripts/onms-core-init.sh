@@ -32,10 +32,10 @@ umask 002
 function wait_for {
   echo "Waiting for $1"
   IFS=':' read -a data <<< $1
-  until echo -n >/dev/tcp/${data[0]}/${data[1]} 2>/dev/null; do
+  until printf "" 2>>/dev/null >>/dev/tcp/${data[0]}/${data[1]}; do
     sleep 5
   done
-  echo "done"
+  echo "Done"
 }
 
 echo "OpenNMS Core Configuration Script..."

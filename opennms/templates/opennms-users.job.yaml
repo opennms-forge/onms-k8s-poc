@@ -1,0 +1,35 @@
+{{- /* @author Alejandro Galue <agalue@opennms.com> */}}
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  creationTimestamp: null
+  name: onms-users
+  namespace: {{ .Release.Name }}
+  labels:
+    app: onms-core
+    {{- include "opennms.labels" . | nindent 4 }}
+spec:
+  ttlSecondsAfterFinished: 120
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: init
+        image: centos
+        imagePullPolicy: IfNotPresent
+        command: [ bash, /init.sh ]
+        envFrom:
+        - configMapRef:
+            name: app-settings
+        - secretRef:
+            name: app-credentials
+        volumeMounts:
+        - name: scripts
+          mountPath: /init.sh
+          subPath: onms-users-init.sh
+      volumes:
+      - name: scripts
+        configMap:
+          name: app-scripts

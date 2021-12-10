@@ -11,7 +11,7 @@ until pg_isready; do
   printf '.'
   sleep 5
 done
-echo "done"
+echo "Done"
 
 if ! psql -lqt | cut -d \| -f 1 | grep -qw "${GF_DATABASE_NAME}"; then
   echo "Creating grafana user and database on ${PGHOST}..."

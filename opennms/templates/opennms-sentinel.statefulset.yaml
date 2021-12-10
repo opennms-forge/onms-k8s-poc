@@ -35,7 +35,7 @@ spec:
       {{- end }}
       initContainers:
       - name: init
-        image: bash
+        image: centos
         imagePullPolicy: IfNotPresent
         command: [ bash, /init.sh ]
         envFrom:

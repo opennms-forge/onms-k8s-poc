@@ -19,11 +19,12 @@ We expect `SASL_SSL` configured in Kafka using `SCRAM-SHA-512` for authenticatio
 ### For Kubernetes
 
 * All components on a single `namespace` represent a single OpenNMS environment or customer deployment or a single tenant. It will be used as:
+  * Customer/Deployment identifier.
   * A prefix for the OpenNMS and Grafana databases in PostgreSQL.
   * A prefix for the index names in Elasticsearch when processing flows.
   * A prefix for the topics in Kafka (requires configuring the OpenNMS Instance ID on Minions).
   * A prefix for the Consumer Group IDs in OpenNMS and Sentinel.
-  * Part of the sub-domain used by the Ingress Controller to expose WebUIs.
+  * Part of the sub-domain used by the Ingress Controller to expose WebUIs. It should not contain special characters and must follow FQDN restrictions.
 
 * A single instance of OpenNMS Core (backend) for centralized monitoring running ALEC in standalone mode.
   OpenNMS doesn't support distributed mode, meaning the `StatefulSet` cannot have more than one replica.

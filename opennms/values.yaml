@@ -84,6 +84,10 @@ opennms:
     storage:
       etc: 1Gi
       rrd: 1000Gi
+    http:
+      rest_username: opennms
+      rest_password: 0p3nNM5
+      admin_password: 0p3nNM5
   uiServers:
     replicaCount: 2
     terminationGracePeriodSeconds: 120
@@ -116,9 +120,6 @@ sentinel:
   configuration:
     database:
       pool_size: 25
-    opennms:
-      http_username: admin
-      http_password: admin
 
 # OpenNMS Helm
 grafana:
@@ -141,9 +142,6 @@ grafana:
       sslmode: require # disable, require, verify-full
     ui:
       admin_password: 0p3nNM5
-    opennms: # Access to the OpenNMS UI for Helm datasources
-      http_username: admin
-      http_password: admin
   imageRenderer: # Required to generate PDF reports from OpeNNMS
     replicaCount: 2
     image:

@@ -17,3 +17,5 @@ data:
     {{- .Files.Get "scripts/onms-sentinel-init.sh" | nindent 4 }}
   onms-ui-init.sh: |
     {{- .Files.Get "scripts/onms-ui-init.sh" | nindent 4 }}
+  onms-users-init.sh: |
+    {{- .Files.Get "scripts/onms-users-init.sh" | nindent 4 }}
