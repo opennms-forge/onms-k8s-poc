@@ -5,7 +5,8 @@ server:
   http_listen_port: 9080
   grpc_listen_port: 0
 clients:
-- url: {{ printf "http://%s:%d/loki/api/v1/push" ((.Values.dependencies).loki).hostname (((.Values.dependencies).loki).port | int) }}
+- tenant_id: {{ .Release.Name }}
+  url: {{ printf "http://%s:%d/loki/api/v1/push" ((.Values.dependencies).loki).hostname (((.Values.dependencies).loki).port | int) }}
 scrape_configs:
 - job_name: system
   static_configs:

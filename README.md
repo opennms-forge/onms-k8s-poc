@@ -18,7 +18,7 @@ We expect `SASL_SSL` configured in Kafka using `SCRAM-SHA-512` for authenticatio
 
 ### For Kubernetes
 
-* All components on a single `namespace` represent a single OpenNMS environment or customer deployment.
+* All components on a single `namespace` represent a single OpenNMS environment or customer deployment or a single tenant.
 
 * A single instance of OpenNMS Core (backend) for centralized monitoring running ALEC in standalone mode.
   OpenNMS doesn't support distributed mode, meaning the `StatefulSet` cannot have more than one replica.
