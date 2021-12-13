@@ -10,6 +10,7 @@ COMPUTE_ZONE="${COMPUTE_ZONE-us-east1-b}"
 DOMAIN="${DOMAIN-k8s.agalue.net}"
 GCP_NODE_COUNT="${GCP_NODE_COUNT-4}"
 GCP_VM_SIZE="${GCP_VM_SIZE-n1-standard-4}"
+ROOT_PASSWORD="${ROOT_PASSWORD-P0stgr3s}" # Must match dependencies.postgresql.password
 
 gcloud config set project $PROJECT_ID
 gcloud config set compute/zone $COMPUTE_ZONE
@@ -34,4 +35,5 @@ gcloud sql instances create "$USER-opennms" \
 --database-version=POSTGRES_12 \
 --cpu=2 \
 --memory=7680MB \
---region=$REGION
+--region="$REGION" \
+--root-password="$ROOT_PASSWORD"
