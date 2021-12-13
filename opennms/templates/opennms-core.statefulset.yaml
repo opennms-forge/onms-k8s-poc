@@ -36,7 +36,7 @@ spec:
       - name: init
         image: {{ $image }}
         imagePullPolicy: {{ .Values.opennms.image.imagePullPolicy }}
-        command: [ bash, /init.sh ]
+        command: [ bash, /scripts/onms-core-init.sh ]
         envFrom:
         - configMapRef:
             name: app-settings
@@ -47,14 +47,13 @@ spec:
           value: {{ .Values.opennms.configuration.database.pool_size | default "50" | quote }}
         volumeMounts:
         - name: etc
-          mountPath: /opennms-etc # Required by the script
+          mountPath: /opennms-etc # Required by the script - CONFIG_DIR
         - name: deploy
-          mountPath: /opennms-deploy # Required by the script
+          mountPath: /opennms-deploy # Required by the script - DEPLOY_DIR
         - name: overlay
-          mountPath: /opennms-overlay # Required by the script
+          mountPath: /opt/opennms-overlay # Required by the script - OVERLAY_DIR
         - name: scripts
-          mountPath: /init.sh
-          subPath: onms-core-init.sh
+          mountPath: /scripts # Required by the script
       containers:
       - name: onms
         image: {{ $image }}

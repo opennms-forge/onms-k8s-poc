@@ -5,6 +5,7 @@ Use a StatefulSet for Sentinels to have a unique and immutable SENTINEL_ID.
 */}}
 
 {{- if gt ((.Values.sentinel).replicaCount|int) 0 }}
+{{- $image := printf "%s:%s" .Values.sentinel.image.repository (.Values.opennms.image.tag | default .Values.opennmsVersion) -}}
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -35,8 +36,8 @@ spec:
       {{- end }}
       initContainers:
       - name: init
-        image: centos
-        imagePullPolicy: IfNotPresent
+        image: {{ $image }}
+        imagePullPolicy: {{ .Values.sentinel.image.imagePullPolicy }}
         command: [ bash, /init.sh ]
         envFrom:
         - configMapRef:
@@ -48,13 +49,13 @@ spec:
           value: {{ .Values.sentinel.configuration.database.pool_size | default "50" | quote }}
         volumeMounts:
         - name: etc-overlay
-          mountPath: /opt/sentinel-etc-overlay
+          mountPath: /opt/sentinel-etc-overlay # Required by the script - OVERLAY_DIR
         - name: scripts
           mountPath: /init.sh
           subPath: onms-sentinel-init.sh
       containers:
       - name: sentinel
-        image: {{ printf "%s:%s" .Values.sentinel.image.repository (.Values.sentinel.image.tag | default .Values.opennmsVersion) }}
+        image: {{ $image }}
         imagePullPolicy: {{ .Values.sentinel.image.imagePullPolicy }}
         args:
         - -c

@@ -29,6 +29,8 @@ spec:
       - name: init # Should run once (regardless of the replicas)
         image: postgres:13
         imagePullPolicy: IfNotPresent
+        securityContext:
+          runAsUser: 999 # postgres user
         command:
         - sh
         - /init.sh

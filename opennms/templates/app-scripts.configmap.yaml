@@ -11,6 +11,8 @@ metadata:
 data:
   grafana-init.sh: |
     {{- .Files.Get "scripts/grafana-init.sh" | nindent 4 }}
+  onms-grafana-init.sh: |
+    {{- .Files.Get "scripts/onms-grafana-init.sh" | nindent 4 }}
   onms-core-init.sh: |
     {{- .Files.Get "scripts/onms-core-init.sh" | nindent 4 }}
   onms-sentinel-init.sh: |

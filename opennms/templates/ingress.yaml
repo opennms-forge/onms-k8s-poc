@@ -1,5 +1,4 @@
 {{- /* @author Alejandro Galue <agalue@opennms.com> */}}
-{{- $domain := printf "%s.%s" .Release.Name .Values.domain -}}
 {{- $use_ui := gt (((.Values.opennms).uiServers).replicaCount|int) 0 }}
 ---
 apiVersion: networking.k8s.io/v1
@@ -26,13 +25,13 @@ spec:
     - secretName: onms-ingress-cert
       hosts:
         {{- if $use_ui }}
-        - onms.{{ $domain }}
+        - onms.{{ include "opennms.domain" . }}
         {{- end }}
-        - onms-core.{{ $domain }}
-        - grafana.{{ $domain }}
+        - onms-core.{{ include "opennms.domain" . }}
+        - grafana.{{ include "opennms.domain" . }}
   rules:
     {{- if $use_ui }}
-    - host: onms.{{ $domain }}
+    - host: onms.{{ include "opennms.domain" . }}
       http:
         paths:
           - path: /
@@ -50,7 +49,7 @@ spec:
                 port:
                   number: 8980
     {{- end }}
-    - host: onms-core.{{ $domain }}
+    - host: onms-core.{{ include "opennms.domain" . }}
       http:
         paths:
           - path: /
@@ -60,7 +59,7 @@ spec:
                 name: onms-core
                 port:
                   number: 8980
-    - host: grafana.{{ $domain }}
+    - host: grafana.{{ include "opennms.domain" . }}
       http:
         paths:
           - path: /

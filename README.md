@@ -127,6 +127,8 @@ helm install -f helm-cloud.yaml \
   apex1 ./opennms
 ```
 
+> Please use your own domain
+
 Please note that `apex1` uniquely identifies the environment. That word will be used as the namespace, the OpenNMS Instance ID, and prefix the `domain` for the FQDNs used in the Ingress Controller. Ensure to use the correct hostname for your dependencies, and the same name for the `StorageClass` used when created it.
 
 Keep in mind the above is only an example. You must treat the content of `helm-cloud.yaml` as a sample for testing purposes.
@@ -154,7 +156,7 @@ Start the test dependencies:
 ./start-dependencies.sh
 ```
 
-Create the storage class:
+Create the storage class (this must be done once):
 ```bash
 ./create-storageclass.sh minikube onms-share
 ```
@@ -170,6 +172,8 @@ helm install -f helm-minikube.yaml \
   apex1 ./opennms
 ```
 
+> Please use your own domain
+
 Take a look at the documentation of [ingress-dns](https://github.com/kubernetes/minikube/tree/master/deploy/addons/ingress-dns) for more information about how to use it, to avoid messing with `/etc/hosts`.
 
 For instance, for macOS:
@@ -183,7 +187,7 @@ timeout 5
 EOF
 ```
 
-> Use your own, and ensure it matches the domain passed to OpenNMS via Helm
+> Please use your own domain, and ensure it matches the domain passed to OpenNMS via Helm
 
 ## Testing multiple OpenNMS environments
 

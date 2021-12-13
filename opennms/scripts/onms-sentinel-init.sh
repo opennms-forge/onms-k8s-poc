@@ -46,16 +46,20 @@ ELASTICSEARCH_INDEX_STRATEGY_FLOWS=${ELASTICSEARCH_INDEX_STRATEGY_FLOWS-daily}
 ELASTICSEARCH_REPLICATION_FACTOR=${ELASTICSEARCH_REPLICATION_FACTOR-2}
 ELASTICSEARCH_NUM_SHARDS=${ELASTICSEARCH_NUM_SHARDS-6}
 
-OVERLAY=/opt/sentinel-etc-overlay
+OVERLAY_DIR=/opt/sentinel-etc-overlay
 
-wait_for ${ELASTICSEARCH_SERVER}
-wait_for ${KAFKA_BOOTSTRAP_SERVER}
+if [[ ${ELASTICSEARCH_SERVER} ]]; then
+  wait_for ${ELASTICSEARCH_SERVER}
+fi
+if [[ ${KAFKA_BOOTSTRAP_SERVER} ]]; then
+  wait_for ${KAFKA_BOOTSTRAP_SERVER}
+fi
 wait_for ${POSTGRES_HOST}:${POSTGRES_PORT}
 wait_for ${OPENNMS_SERVER}:8980
 
 # Configure the instance ID and Interface-to-Node cache
 # Required when having multiple OpenNMS backends sharing a Kafka cluster or an Elasticsearch cluster.
-CUSTOM_PROPERTIES=${OVERLAY}/custom.system.properties
+CUSTOM_PROPERTIES=${OVERLAY_DIR}/custom.system.properties
 if [[ ${OPENNMS_INSTANCE_ID} ]]; then
   cat <<EOF >> ${CUSTOM_PROPERTIES}
 # Used for Kafka Topics
@@ -67,7 +71,7 @@ else
   OPENNMS_INSTANCE_ID="OpenNMS"
 fi
 
-cat <<EOF > ${OVERLAY}/org.opennms.netmgt.distributed.datasource.cfg
+cat <<EOF > ${OVERLAY_DIR}/org.opennms.netmgt.distributed.datasource.cfg
 datasource.url=jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${OPENNMS_DBNAME}?sslmode=${POSTGRES_SSL_MODE}&sslfactory=${POSTGRES_SSL_FACTORY}
 datasource.username=${OPENNMS_DBUSER}
 datasource.password=${OPENNMS_DBPASS}
@@ -75,7 +79,7 @@ datasource.databaseName=${OPENNMS_DBNAME}
 connection.pool.maxSize=${OPENNMS_DATABASE_CONNECTION_MAXPOOL}
 EOF
 
-FEATURES_DIR=${OVERLAY}/featuresBoot.d
+FEATURES_DIR=${OVERLAY_DIR}/featuresBoot.d
 mkdir -p ${FEATURES_DIR}
 cat <<EOF > ${FEATURES_DIR}/persistence.boot
 sentinel-persistence
@@ -88,21 +92,21 @@ if [[ ${ELASTICSEARCH_SERVER} ]]; then
 sentinel-flows
 EOF
 
-  cat <<EOF > ${OVERLAY}/org.opennms.features.telemetry.adapters-ipfix.cfg
+  cat <<EOF > ${OVERLAY_DIR}/org.opennms.features.telemetry.adapters-ipfix.cfg
 name=IPFIX
 adapters.0.name=IPFIX-Adapter
 adapters.0.class-name=org.opennms.netmgt.telemetry.protocols.netflow.adapter.ipfix.IpfixAdapter
 queue.threads=${NUM_LISTENER_THREADS}
 EOF
 
-  cat <<EOF > ${OVERLAY}/org.opennms.features.telemetry.adapters-netflow5.cfg
+  cat <<EOF > ${OVERLAY_DIR}/org.opennms.features.telemetry.adapters-netflow5.cfg
 name=Netflow-5
 adapters.0.name=Netflow-5-Adapter
 adapters.0.class-name=org.opennms.netmgt.telemetry.protocols.netflow.adapter.netflow5.Netflow5Adapter
 queue.threads=${NUM_LISTENER_THREADS}
 EOF
 
-  cat <<EOF > ${OVERLAY}/org.opennms.features.telemetry.adapters-netflow9.cfg
+  cat <<EOF > ${OVERLAY_DIR}/org.opennms.features.telemetry.adapters-netflow9.cfg
 name=Netflow-9
 adapters.0.name=Netflow-9-Adapter
 adapters.0.class-name=org.opennms.netmgt.telemetry.protocols.netflow.adapter.netflow9.Netflow9Adapter
@@ -110,7 +114,7 @@ queue.threads=${NUM_LISTENER_THREADS}
 EOF
 
   PREFIX=$(echo ${OPENNMS_INSTANCE_ID} | tr '[:upper:]' '[:lower:]')-
-  cat <<EOF > ${OVERLAY}/org.opennms.features.flows.persistence.elastic.cfg
+  cat <<EOF > ${OVERLAY_DIR}/org.opennms.features.flows.persistence.elastic.cfg
 elasticUrl=https://${ELASTICSEARCH_SERVER}
 globalElasticUser=${ELASTICSEARCH_USER}
 globalElasticPassword=${ELASTICSEARCH_PASSWORD}
@@ -123,7 +127,7 @@ EOF
 fi
 
 if [[ ${KAFKA_BOOTSTRAP_SERVER} ]]; then
-  FILE_PREFIX="${OVERLAY}/org.opennms.core.ipc.sink.kafka"
+  FILE_PREFIX="${OVERLAY_DIR}/org.opennms.core.ipc.sink.kafka"
   echo "sentinel-kafka" > ${FEATURES_DIR}/kafka.boot
 
   cat <<EOF > ${FILE_PREFIX}.cfg

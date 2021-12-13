@@ -1,5 +1,7 @@
 # TODO
 
+* When using RRDtool, allow configuring RRAs.
+
 * Ensure the solution works on Google Cloud.
 
 * Learn how the GKE Ingress works (in case the Nginx Ingress is not an option).

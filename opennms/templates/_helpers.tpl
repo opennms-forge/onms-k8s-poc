@@ -79,3 +79,10 @@ Define custom content for JVM_OPTS to conditionally handle Truststores
     {{- $common }}
   {{- end }}
 {{- end }}
+
+{{/*
+Define Customer/Environment Domain
+*/}}
+{{- define "opennms.domain" -}}
+{{- printf "%s.%s" .Release.Name .Values.domain -}}
+{{- end }}

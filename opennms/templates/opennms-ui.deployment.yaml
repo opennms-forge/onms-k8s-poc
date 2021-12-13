@@ -34,7 +34,7 @@ spec:
       - name: init
         image: {{ $image }}
         imagePullPolicy: {{ .Values.opennms.image.imagePullPolicy }}
-        command: [ bash, /init.sh ]
+        command: [ bash, /scripts/onms-ui-init.sh ]
         envFrom:
         - configMapRef:
             name: app-settings
@@ -42,10 +42,11 @@ spec:
             name: app-credentials
         volumeMounts:
         - name: overlay
-          mountPath: /opt/opennms-overlay
+          mountPath: /opt/opennms-overlay # Required by the script - OVERLAY_DIR
+        - name: etc-core
+          mountPath: /opennms-core/etc # Required by the script - CORE_CONFIG_DIR
         - name: scripts
-          mountPath: /init.sh
-          subPath: onms-ui-init.sh
+          mountPath: /scripts # Required by the script
       containers:
       - name: onms
         image: {{ $image }}

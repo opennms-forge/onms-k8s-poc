@@ -64,11 +64,17 @@ fi
 echo "Twin API Available? $USE_TWIN"
 
 wait_for ${POSTGRES_HOST}:${POSTGRES_PORT}
-wait_for ${KAFKA_BOOTSTRAP_SERVER}
+if [[ ${KAFKA_BOOTSTRAP_SERVER} ]]; then
+  wait_for ${KAFKA_BOOTSTRAP_SERVER}
+fi
 
-CONFIG_DIR_OVERLAY="/opennms-overlay/etc"  # Mounted externally
-CONFIG_DIR="/opennms-etc"                  # Mounted externally
-BACKUP_ETC="/opt/opennms/etc"              # Requires OpenNMS Image
+CONFIG_DIR="/opennms-etc"          # Mounted externally
+BACKUP_ETC="/opt/opennms/etc"      # Requires OpenNMS Image
+OVERLAY_DIR="/opt/opennms-overlay" # Mounted Externally
+DEPLOY_DIR="/opennms-deploy"       # Mounted Externally
+
+CONFIG_DIR_OVERLAY=${OVERLAY_DIR}/etc
+
 KARAF_FILES=( \
 "config.properties" \
 "startup.properties" \
@@ -86,6 +92,7 @@ echo "Configuration directory:"
 ls -ld ${CONFIG_DIR}
 
 # Initialize configuration directory
+# Include all the things that must be configured once
 if [ ! -f ${CONFIG_DIR}/configured ]; then
   echo "Initializing configuration directory for the first time ..."
   rsync -arO --no-perms --no-owner --no-group ${BACKUP_ETC}/ ${CONFIG_DIR}/
@@ -201,7 +208,7 @@ if [[ ${ENABLE_CORTEX} == "true" ]]; then
   if [[ ! -e /opt/opennms/deploy/opennms-cortex-tss-plugin.kar ]]; then
     KAR_VER=$(curl -s https://api.github.com/repos/OpenNMS/opennms-cortex-tss-plugin/releases/latest | grep tag_name | cut -d '"' -f 4)
     KAR_URL="https://github.com/OpenNMS/opennms-cortex-tss-plugin/releases/download/${KAR_VER}/opennms-cortex-tss-plugin.kar"
-    curl -LJ -o /opennms-deploy/opennms-cortex-tss-plugin.kar ${KAR_URL} 2>/dev/null
+    curl -LJ -o ${DEPLOY_DIR}/opennms-cortex-tss-plugin.kar ${KAR_URL} 2>/dev/null
   fi
 
   cat <<EOF > ${CONFIG_DIR_OVERLAY}/opennms.properties.d/timeseries.properties
@@ -246,7 +253,7 @@ if [[ ${ENABLE_ALEC} == "true" ]]; then
   if [[ ! -e /opt/opennms/deploy/opennms-alec-plugin.kar ]]; then
     KAR_VER=$(curl -s https://api.github.com/repos/OpenNMS/alec/releases/latest | grep tag_name | cut -d '"' -f 4)
     KAR_URL="https://github.com/OpenNMS/alec/releases/download/${KAR_VER}/opennms-alec-plugin.kar"
-    curl -LJ -o /opennms-deploy/opennms-alec-plugin.kar ${KAR_URL} 2>/dev/null
+    curl -LJ -o ${DEPLOY_DIR}/opennms-alec-plugin.kar ${KAR_URL} 2>/dev/null
   fi
 
   cat <<EOF > ${CONFIG_DIR_OVERLAY}/featuresBoot.d/alec.boot
@@ -356,3 +363,8 @@ rm -f ${CONFIG_DIR}/foreign-sources/pending/*.xml.*
 
 # Force to execute runjava and the install script
 touch ${CONFIG_DIR}/do-upgrade
+
+# Configure Grafana
+if [[ -e /scripts/onms-grafana-init.sh ]]; then
+  source /scripts/onms-grafana-init.sh
+fi

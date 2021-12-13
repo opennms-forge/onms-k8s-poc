@@ -35,26 +35,25 @@ OPENNMS_DATABASE_CONNECTION_MAXPOOL=${OPENNMS_DATABASE_CONNECTION_MAXPOOL-50}
 
 wait_for ${OPENNMS_SERVER}:8980
 
-command -v jq   >/dev/null 2>&1 || { echo >&2 "jq is required but it's not installed. Aborting.";   exit 1; }
 command -v curl >/dev/null 2>&1 || { echo >&2 "curl is required but it's not installed. Aborting."; exit 1; }
 
-CORE_CONFIG_DIR=/opennms-core/etc
-DATA_DIR=/opt/opennms-overlay
+CORE_CONFIG_DIR=/opennms-core/etc # Mounted Externally
+OVERLAY_DIR=/opt/opennms-overlay  # Mounted Externally
 
-CONFIG_DIR=${DATA_DIR}/etc
-WEB_DIR=${DATA_DIR}/jetty-webapps/opennms/WEB-INF
-TEMPLATES_DIR=${WEB_DIR}/templates
+CONFIG_DIR_OVERLAY=${OVERLAY_DIR}/etc
+WEB_DIR_OVERLAY=${OVERLAY_DIR}/jetty-webapps/opennms/WEB-INF
+TEMPLATES_DIR_OVERLAY=${WEB_DIR_OVERLAY}/templates
 
-mkdir -p ${TEMPLATES_DIR}
-mkdir -p ${CONFIG_DIR}/opennms.properties.d/
+mkdir -p ${TEMPLATES_DIR_OVERLAY}
+mkdir -p ${CONFIG_DIR_OVERLAY}/opennms.properties.d/
 
 # Ensure the install script won't be executed
-touch ${CONFIG_DIR}/configured
+touch ${CONFIG_DIR_OVERLAY}/configured
 
 # Configure the instance ID
 # Required when having multiple OpenNMS backends sharing an Elasticsearch cluster.
 if [[ ${OPENNMS_INSTANCE_ID} ]]; then
-  cat <<EOF > ${CONFIG_DIR}/opennms.properties.d/instanceid.properties
+  cat <<EOF > ${CONFIG_DIR_OVERLAY}/opennms.properties.d/instanceid.properties
 # Used for Kafka Topics and Elasticsearch Index Prefixes
 org.opennms.instance.id=${OPENNMS_INSTANCE_ID}
 EOF
@@ -63,7 +62,7 @@ else
 fi
 
 # Configure Database access
-cat <<EOF > ${CONFIG_DIR}/opennms-datasources.xml
+cat <<EOF > ${CONFIG_DIR_OVERLAY}/opennms-datasources.xml
 <?xml version="1.0" encoding="UTF-8"?>
 <datasource-configuration xmlns:this="http://xmlns.opennms.org/xsd/config/opennms-datasources"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -94,14 +93,14 @@ cat <<EOF > ${CONFIG_DIR}/opennms-datasources.xml
 EOF
 
 # Disable data choices (optional)
-cat <<EOF > ${CONFIG_DIR}/org.opennms.features.datachoices.cfg
+cat <<EOF > ${CONFIG_DIR_OVERLAY}/org.opennms.features.datachoices.cfg
 enabled=false
 acknowledged-by=admin
 acknowledged-at=Sun Mar 01 00\:00\:00 EDT 2020
 EOF
 
 # Trim down the events configuration, as event processing is not required for the WebUI
-cat <<EOF > ${CONFIG_DIR}/eventconf.xml
+cat <<EOF > ${CONFIG_DIR_OVERLAY}/eventconf.xml
 <?xml version="1.0"?>
 <events xmlns="http://xmlns.opennms.org/xsd/eventconf">
   <global>
@@ -114,13 +113,13 @@ cat <<EOF > ${CONFIG_DIR}/eventconf.xml
     </security>
   </global>
 EOF
-grep 'events\/opennms' /opt/opennms/share/etc-pristine/eventconf.xml >> ${CONFIG_DIR}/eventconf.xml
-cat <<EOF >> ${CONFIG_DIR}/eventconf.xml
+grep 'events\/opennms' /opt/opennms/share/etc-pristine/eventconf.xml >> ${CONFIG_DIR_OVERLAY}/eventconf.xml
+cat <<EOF >> ${CONFIG_DIR_OVERLAY}/eventconf.xml
 </events>
 EOF
 
 # Trim down the services/daemons configuration, as only the WebUI will be running
-cat <<EOF > ${CONFIG_DIR}/service-configuration.xml
+cat <<EOF > ${CONFIG_DIR_OVERLAY}/service-configuration.xml
 <?xml version="1.0"?>
 <service-configuration xmlns="http://xmlns.opennms.org/xsd/config/vmmgr">
   <service>
@@ -153,7 +152,7 @@ cat <<EOF > ${CONFIG_DIR}/service-configuration.xml
 EOF
 
 # Required changes in order to use HTTPS through Ingress
-cat <<EOF > ${CONFIG_DIR}/opennms.properties.d/webui.properties
+cat <<EOF > ${CONFIG_DIR_OVERLAY}/opennms.properties.d/webui.properties
 opennms.web.base-url=https://%x%c/
 opennms.report.scheduler.enabled=false
 org.opennms.security.disableLoginSuccessEvent=true
@@ -162,14 +161,14 @@ org.opennms.web.defaultGraphPeriod=last_2_hour
 EOF
 
 # RRD Strategy is enabled by default
-cat <<EOF > ${CONFIG_DIR}/opennms.properties.d/rrd.properties
+cat <<EOF > ${CONFIG_DIR_OVERLAY}/opennms.properties.d/rrd.properties
 org.opennms.rrd.storeByGroup=true
 EOF
 
 # Configure Elasticsearch to allow Helm/Grafana to access Flow data
 if [[ ${ELASTICSEARCH_SERVER} ]]; then
   PREFIX=$(echo ${OPENNMS_INSTANCE_ID} | tr '[:upper:]' '[:lower:]')-
-  cat <<EOF > ${CONFIG_DIR}/org.opennms.features.flows.persistence.elastic.cfg
+  cat <<EOF > ${CONFIG_DIR_OVERLAY}/org.opennms.features.flows.persistence.elastic.cfg
 elasticUrl=https://${ELASTICSEARCH_SERVER}
 globalElasticUser=${ELASTICSEARCH_USER}
 globalElasticPassword=${ELASTICSEARCH_PASSWORD}
@@ -187,20 +186,33 @@ CORE_FILES=(
   'surveillance-views.xml' \
   'users.xml' \
   'viewsdisplay.xml' \
+  '*datacollection-config.xml' \
+  'datacollection/*' \
+  'resource-types.d/*' \
+  'snmp-graph.properties.d/*' \
+  'jmx-datacollection-config.d/*'
 )
 for file in "${CORE_FILES[@]}"; do
-  ln -s ${CORE_CONFIG_DIR}/${file} ${CONFIG_DIR}/${file}
+  target=${file}
+  if [[ ${file} == *"/*" ]]; then
+    mkdir -p ${CONFIG_DIR_OVERLAY}/${file::-2}/
+    target=${file::-2}
+  fi
+  if [[ ${file} == "*"* ]]; then
+    target=""
+  fi
+  ln -s ${CORE_CONFIG_DIR}/${file} ${CONFIG_DIR_OVERLAY}/${target}
 done
 
 # Guard against allowing administration changes through the WebUI
-SECURITY_CONFIG=${WEB_DIR}/applicationContext-spring-security.xml
+SECURITY_CONFIG=${WEB_DIR_OVERLAY}/applicationContext-spring-security.xml
 cp /opt/opennms/jetty-webapps/opennms/WEB-INF/applicationContext-spring-security.xml ${SECURITY_CONFIG}
 sed -r -i 's/ROLE_ADMIN/ROLE_DISABLED/' ${SECURITY_CONFIG}
 sed -r -i 's/ROLE_PROVISION/ROLE_DISABLED/' ${SECURITY_CONFIG}
 sed -r -i -e '/intercept-url.*measurements/a\' -e '    <intercept-url pattern="/rest/resources/generateId" method="POST" access="ROLE_REST,ROLE_DISABLED,ROLE_USER"/>' ${SECURITY_CONFIG}
 
 # Remove links to the admin pages
-NAVBAR=${TEMPLATES_DIR}/navbar.ftl
+NAVBAR=${TEMPLATES_DIR_OVERLAY}/navbar.ftl
 cp /opt/opennms/jetty-webapps/opennms/WEB-INF/templates/navbar.ftl ${NAVBAR}
 for title in 'Flow Management' 'Quick-Add Node'; do
   sed -r -i "/$title/,+2d" ${NAVBAR}
@@ -209,7 +221,12 @@ done
 sed -r -i "/Configure OpenNMS/d" ${NAVBAR}
 
 # Enabling CORS
-WEB_CONFIG=${WEB_DIR}/web.xml
+WEB_CONFIG=${WEB_DIR_OVERLAY}/web.xml
 cp /opt/opennms/jetty-webapps/opennms/WEB-INF/web.xml ${WEB_CONFIG}
 sed -r -i '/[<][!]--/{$!{N;s/[<][!]--\n  ([<]filter-mapping)/\1/}}' ${WEB_CONFIG}
 sed -r -i '/nrt/{$!{N;N;s/(nrt.*\n  [<]\/filter-mapping[>])\n  --[>]/\1/}}' ${WEB_CONFIG}
+
+# Configure Grafana
+if [[ -e /scripts/onms-grafana-init.sh ]]; then
+  source /scripts/onms-grafana-init.sh
+fi
