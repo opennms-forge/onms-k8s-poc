@@ -29,3 +29,9 @@ gcloud container clusters create "$USER-opennms" \
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/cloud/deploy.yaml
 kubectl wait pod -l app.kubernetes.io/component=controller --for=condition=Ready --timeout=300s -n ingress-nginx
 
+echo "Starting PostgreSQL instance"
+gcloud sql instances create "$USER-opennms" \
+--database-version=POSTGRES_12 \
+--cpu=2 \
+--memory=7680MB \
+--region=$REGION
