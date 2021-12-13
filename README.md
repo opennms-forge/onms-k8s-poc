@@ -2,9 +2,19 @@
 
 This project aims to serve as a reference to implement [OpenNMS](https://www.opennms.com/) running in [Kubernetes](https://kubernetes.io/) and deployed via [Helm](https://helm.sh/), having a single Core Server and multiple read-only UI servers plus Grafana and a custom Ingress, sharing the RRD files and some configuration files.
 
-We expect Kafka, Elasticsearch, and PostgreSQL to run externally (and maintained separately from the solution).
+We expect Kafka, Elasticsearch, and PostgreSQL to run externally (and maintained separately from the solution), all with SSL enabled.
 
-We expect `SASL_SSL` configured in Kafka using `SCRAM-SHA-512` for authentication.
+**General Diagram**
+
+![Diagram](diagrams/onms-k8s-poc-diagrams.001.png)
+
+**Customer Namespace Deployment Diagram**
+
+![Diagram](diagrams/onms-k8s-poc-diagrams.002.png)
+
+**Shared Volumes Diagram**
+
+![Diagram](diagrams/onms-k8s-poc-diagrams.003.png)
 
 ## Requirements
 
@@ -96,7 +106,7 @@ When using Google Cloud, ensure that `GcpFilestoreCsiDriver` is enabled in your 
 
 ```bash
 gcloud container clusters update CLUSTER_NAME_HERE \
-   --update-addons=GcpFilestoreCsiDriver=ENABLED
+  --update-addons=GcpFilestoreCsiDriver=ENABLED
 ```
 
 Optionally, for testing purposes, use the following script to initialize all the dependencies within Kubernetes (including `cert-manager`):
