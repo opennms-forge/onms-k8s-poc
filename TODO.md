@@ -2,11 +2,7 @@
 
 * When using RRDtool, allow configuring RRAs.
 
-* Ensure the solution works on Google Cloud.
-
 * Learn how the GKE Ingress works (in case the Nginx Ingress is not an option).
-
-* Test the solution using Google SQL for PostgreSQL.
 
 * Analyze the possibility to ignore the custom `StorageClass` when you don't need dedicated UI servers for RRD files; which asumes the default one (I believe it is `gce-pd` for Google Cloud or Azure Disk for AKS).
   * For configuration, using a NFS-like solution could have benefits in terms of accessing the data for troubleshooting purposes without the need to have access to Kubernetes.
@@ -45,6 +41,3 @@
   * Private container registry
   * Kubernetes cluster
   * SQL Service for PostgreSQL
-
-* Describe a vendor-independent procedure to manage the wildcard DNS entry for the Ingress.
-  * The entry should point to the public IP of the Ingress Controller.

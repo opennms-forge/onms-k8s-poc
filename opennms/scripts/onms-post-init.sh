@@ -6,6 +6,8 @@
 # - OPENNMS_HTTP_USER
 # - OPENNMS_HTTP_PASS
 # - OPENNMS_ADMIN_PASS
+# - GRAFANA_SERVER
+# - GF_SECURITY_ADMIN_PASSWORD
 
 function wait_for {
   echo "Waiting for $1"
@@ -19,6 +21,21 @@ function wait_for {
 command -v curl >/dev/null 2>&1 || { echo >&2 "curl is required but it's not installed. Aborting."; exit 1; }
 
 wait_for ${OPENNMS_SERVER}:8980
+
+# Configure Grafana Endpoint for Reports
+ID=$(curl -u admin:admin http://${OPENNMS_SERVER}:8980/opennms/rest/endpoints/grafana 2>/dev/null | jq ".[] | select(.uid=\"$(hostname)\") | .id")
+if [[ $ID == "" ]]; then
+  GRAFANA_KEY=$(curl -u "admin:${GF_SECURITY_ADMIN_PASSWORD}" -X POST -H "Content-Type: application/json" -d '{"name":"$(hostname)","role": "Viewer"}' "http://${GRAFANA_SERVER}:3000/api/auth/keys" 2>/dev/null | jq .key - | sed 's/"//g')
+  if [[ ${GRAFANA_KEY} != "null" ]]; then
+    echo "Configuring Grafana Endpoint..."
+    curl -u  admin:admin -v -X POST \
+      -H 'Content-Type: application/json' \
+      -d "{\"uid\":\"$(hostname)\",\"apiKey\":\"${GRAFANA_KEY}\",\"url\":\"http://${GRAFANA_SERVER}:3000\"}" \
+      "http://${OPENNMS_SERVER}:8980/opennms/rest/endpoints/grafana"
+  else
+    echo "WARNING: cannot get Grafana Key"
+  fi
+fi
 
 # Add user to access ReST API for Grafana and Sentinel
 curl -u admin:admin -v -X POST \

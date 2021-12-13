@@ -69,6 +69,7 @@ We expect Kafka, Elasticsearch, and PostgreSQL to run externally (and maintained
 ### External Dependencies
 
 * PostgreSQL server as the central database for OpenNMS and Grafana.
+  * For Google Cloud, the solution was tested using Google SQL for PostgreSQL with SSL and a Private IP.
 
 * Kafka cluster for OpenNMS-to-Minion communication.
 
@@ -147,6 +148,13 @@ To tune further, edit [helm-cloud.yaml](helm-cloud.yaml).
 
 To access the cluster from external Minions, make sure to configure the DNS service correctly on your cloud provider.
 
+To test Ingress access, you must configure a wildcard DNS entry for the chosen domain on your registrar, pointing to the public IP of the Ingress Controller, obtained as follow:
+
+```bash
+kubectl get svc ingress-nginx-controller -n ingress-nginx \
+  -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
+```
+
 ## Run locally
 
 Start Minikube:
@@ -219,10 +227,6 @@ The [start-minion.sh](start-minion.sh) script is designed for the test use case.
 
 Check the script for more details.
 
-## Pending
-
-* Find a way to use the Graph Templates from the Core Server within the UI servers.
-
 ## Problems/Limitations
 
 * The WebUI sends events handled by Queued to promote updating RRD files to ensure data is available. That won't work with dedicated UI servers (as Queued is not running there).
@@ -233,3 +237,31 @@ Check the script for more details.
 * Either access the OpenNMS container via a remote shell through `kubectl`, and edit the file using `vi` (the only editor available within the OpenNMS container), or mount the NFS share from Google Filestore or Azure Files from a VM or a temporary container and make the changes.
 * Send the reload configuration event via `send-event.pl` or the Karaf Shell (not accessible within the container).
 * In case OpenNMS has to be restarted, delete the Pod (not the StatefulSet), and Kubernetes controller will recreate it again.
+
+## RRDtool performance on Google Filestore
+
+Using the `metrics-stress` command via Karaf Shell, emulating 1500 nodes and persisting 5000 metrics per second, the solution seems to stabilize around 5 minutes after having all the RRD files created (which took about 10 minutes after starting the command).
+
+Enable port forwarding to access the Karaf Shell:
+
+```bash
+kubectl port-forward -n apex1 onms-core-0 8101
+```
+
+> Ensure to use the appropriate namespace.
+
+From a different console, start the Karaf Shell:
+
+```bash
+ssh -o ServerAliveInterval=10 -p 8101 admin@localhost
+```
+
+Then,
+
+```
+opennms:stress-metrics -r 60 -n 1500 -f 20 -g 1 -a 50 -s 2 -t 100 -i 300
+```
+
+Google's Metric Explorer showed that Filestore writes were around 120 MiB/sec on average while the files were being created. After that, it decreased to about ten times less the initial throughput.
+
+Note that at 5 minutes collection interval, persisting 5000 metrics per second implies having 1.5 million unique metrics.

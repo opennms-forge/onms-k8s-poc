@@ -32,8 +32,19 @@ kubectl wait pod -l app.kubernetes.io/component=controller --for=condition=Ready
 
 echo "Starting PostgreSQL instance"
 gcloud sql instances create "$USER-opennms" \
---database-version=POSTGRES_12 \
---cpu=2 \
---memory=7680MB \
---region="$REGION" \
---root-password="$ROOT_PASSWORD"
+  --database-version=POSTGRES_12 \
+  --no-assign-ip \
+  --require-ssl \
+  --cpu=2 \
+  --memory=7680MB \
+  --region="$REGION" \
+  --root-password="$ROOT_PASSWORD"
+
+PG_ROOT_CA=jks/postgresql-gcloud-ca.crt
+gcloud sql instances describe "$USER-opennms" \
+  --format "value(serverCaCert.cert)" > $PG_ROOT_CA
+
+PG_IPADDR=$(gcloud sql instances describe "$USER-opennms" --format "value(ipAddresses[0].ipAddress)")
+echo "Google SQL for PostgreSQL IP address: $PG_IPADDR"
+echo "Root Certificate located at $PG_ROOT_CA"
+

@@ -36,6 +36,7 @@ data:
   KAFKA_SASL_MECHANISM: {{ .Values.dependencies.kafka.configuration.sasl_mechanism | quote }}
   KAFKA_SECURITY_PROTOCOL: {{ .Values.dependencies.kafka.configuration.security_protocol | quote }}
   {{- end }}
+  GRAFANA_SERVER: {{ printf "grafana.%s.svc" .Release.Name | quote }}
   GF_SERVER_DOMAIN: {{ printf "grafana.%s" (include "opennms.domain" .) | quote }} # Should match FQDN on the Ingress
   GF_SERVER_ROOT_URL: "/"
   GF_DATABASE_TYPE: "postgres"
