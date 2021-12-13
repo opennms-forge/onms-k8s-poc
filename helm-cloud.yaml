@@ -43,7 +43,7 @@ opennms:
       etc: 1Gi
       rrd: 1000Gi
   uiServers:
-    replicaCount: 1
+    replicaCount: 2
     resources:
       limits:
         cpu: '1'
@@ -53,7 +53,7 @@ opennms:
         memory: 4Gi
 
 sentinel:
-  replicaCount: 1
+  replicaCount: 2
   resources:
     limits:
       cpu: '1'
