@@ -5,11 +5,13 @@ Your release is named {{ .Release.Name }}, used for:
 - The sub-domain for the ingress controller.
 - The OpenNMS instance ID for your Minions.
 
-Resources URLS:
+Resources URLs:
 
-OpenNMS UI (read-only): onms.{{ .Release.Name }}.{{ .Values.domain }}
-OpenNMS Core: onms-core.{{ .Release.Name }}.{{ .Values.domain }}
-Grafana: grafana.{{ .Release.Name }}.{{ .Values.domain }}
+{{- if gt (((.Values.opennms).uiServers).replicaCount|int) 0 }}
+OpenNMS UI (read-only): onms.{{ include "opennms.domain" . }}
+{{- end }}
+OpenNMS Core: onms-core.{{ include "opennms.domain" . }}
+Grafana: grafana.{{ include "opennms.domain" . }}
 
 To learn more about the release, try:
 
