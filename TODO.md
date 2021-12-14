@@ -1,7 +1,7 @@
 # TODO
 
-* Analyze the possibility to ignore the custom `StorageClass` when you don't need dedicated UI servers for RRD files; which asumes the default one (I believe it is `gce-pd` for Google Cloud or Azure Disk for AKS).
-  * For configuration, using a NFS-like solution could have benefits in terms of accessing the data for troubleshooting purposes without the need to have access to Kubernetes.
+* Analyze the possibility to ignore the custom `StorageClass` when you don't need dedicated UI servers; which would use the default one (I believe it is `gce-pd` for Google Cloud or Azure Disk for AKS).
+  * However, using a NFS-like solution could have benefits in terms of accessing the data for troubleshooting purposes without the need to have access to Kubernetes.
 
 * Test the solution against a secured [Grafana Loki](https://grafana.com/oss/loki/) server.
   * Explore [logcli](https://grafana.com/docs/loki/latest/getting-started/logcli/) to extract OpenNMS logs for troubleshooting purposes.
