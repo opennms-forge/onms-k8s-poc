@@ -34,43 +34,46 @@ Keep in mind that we expect Kafka, Elasticsearch, and PostgreSQL to run external
 
 * All components on a single `namespace` represent a single OpenNMS environment or customer deployment or a single tenant. The name of the `namespace` will be used as:
   * Customer/Deployment identifier.
+  * The name of the deployed Helm application.
   * A prefix for the OpenNMS and Grafana databases in PostgreSQL.
   * A prefix for the index names in Elasticsearch when processing flows.
   * A prefix for the topics in Kafka (requires configuring the OpenNMS Instance ID on Minions).
   * A prefix for the Consumer Group IDs in OpenNMS and Sentinel.
   * Part of the sub-domain used by the Ingress Controller to expose WebUIs. It should not contain special characters and must follow FQDN restrictions.
 
-* A single instance of OpenNMS Core (backend) for centralized monitoring running ALEC in standalone mode.
+* A single instance of OpenNMS Core (backend) for centralized monitoring running ALEC in standalone mode (if enabled).
   OpenNMS doesn't support distributed mode, meaning the `StatefulSet` cannot have more than one replica.
 
 * Multiple instances of read-only OpenNMS UI (frontend).
-  * Must be stateless (unconfigurable), meaning the `Deployment` must work with multiple replicas.
+  * Must be stateless (unconfigurable).
+  * The `Deployment` must work with multiple replicas.
   * Any configuration change goes to the core server.
   
-* Multiple instances of Grafana (frontend), using PostgreSQL as the backend, pointing to the OpenNMS UI service.
-  * When UI instances are not present, the OpenNMS Helm data sources would point to the OpenNMS Core service.
+* Multiple instances of Grafana (frontend), using PostgreSQL as the backend, pointing to the OpenNMS UI service when available.
+  When UI instances are not present, the OpenNMS Helm data sources would point to the OpenNMS Core service.
 
 * Multiple instances of Sentinel to handle Flows (requires Elasticsearch as an external dependency).
   * When Sentinels are present, `Telemetryd` would be disabled on the OpenNMS Core instance.
 
 * A custom `StorageClass` for shared content (Google Filestore or Azure Files) to use `ReadWriteMany`.
   * Use the same `UID` and `GID` as the OpenNMS image with proper file modes.
-  * Due to how Google Filestore works, we need to specify `securityContext.fsGroup` (not required for Azure Files). Check [here](https://github.com/kubernetes-sigs/gcp-filestore-csi-driver/blob/master/docs/kubernetes/fsgroup.md) for more information. Keep in mind that the minimum size of a Filestore instance is 1TB.
+  * Due to how Google Filestore works, we need to specify `securityContext.fsGroup` (not required for Azure Files). Check [here](https://github.com/kubernetes-sigs/gcp-filestore-csi-driver/blob/master/docs/kubernetes/fsgroup.md) for more information.
+  * Keep in mind that the minimum size of a Google Filestore instance is 1TB.
 
 * A shared volume for the RRD files, mounted as read-write on the Core instance, and as read-only on the UI instances.
 
 * A shared volume for the core configuration files, mounted as read-only on the UI instances.
-  The purpose is to share configuration across all the OpenNMS instances (i.e., `users.xml`, `groups.xml`).
+  The purpose is to share configuration across all the OpenNMS instances (i.e., `users.xml`, `groups.xml`, among others).
 
 * `Secrets` to store the credentials, certificates and truststores.
 
 * `ConfigMaps` to store initialization scripts and standard configuration settings.
 
 * An `Ingress` to control TLS termination and provide access to all the components (using Nginx).
-  We could manage certificates using LetsEncrypt via `cert-manager`.
-  To integrate with Google Cloud DNS managed zones or Azure DNS, we need a wild-card entry.
+  * You could manage certificates using LetsEncrypt via `cert-manager`, but we only requires the name of a `ClusterIssuer`.
+  * To integrate with Google Cloud DNS managed zones or Azure DNS, we need a wild-card entry for the chosen domain against the IP of the Ingress Controller.
 
-> **Please note that unless you build custom images for OpenNMS, the latest available versions of ALEC and the TSS Cortex Plugin (when enabled) as KAR files will be downloaded directly from Github every time the container starts, as those binaries are not part of the current Docker Image for OpenNMS.**
+> **Please note that unless you build custom images for OpenNMS, the latest available versions of ALEC and the TSS Cortex Plugin (when enabled) as KAR files will be downloaded directly from Github every time the OpenNMS Core container starts, as those binaries are not part of the current Docker Image for OpenNMS.**
 
 ### External Dependencies
 
@@ -79,22 +82,25 @@ Keep in mind that we expect Kafka, Elasticsearch, and PostgreSQL to run external
 
 * Kafka cluster for OpenNMS-to-Minion communication.
 
-* Elasticsearch cluster for Flow persistence.
+* Elasticsearch cluster for flow persistence.
 
 * Grafana Loki server for log aggregation.
 
-* Google Filestore or Azure Files for the OpenNMS configuration and RRD files (managed by provider)
-  The documentation recommends 1.21 or later for the CSI driver.
+* [Google Filestore](https://cloud.google.com/filestore) or [Azure Files](https://azure.microsoft.com/en-us/services/storage/files/) for the OpenNMS configuration and RRD files (managed by provider)
+  * The documentation recommends 1.21 or later for the CSI driver.
 
 * Private Container Registry for custom Meridian Images (if applicable), in case OpenNMS Horizon is not an option.
 
 * [cert-manager](https://cert-manager.readthedocs.io/en/latest/) to provide HTTPS/TLS support to the web-based services managed by the ingress controller.
+  * A `ClusterIssuer` is required to use it across multiple independent OpenNMS installations.
 
-* Nginx Ingress Controller
+* Nginx Ingress Controller, as the solution has not been tested with other Ingress implementaions.
 
 ## Ingress
 
-When deploying the Helm Chart names `acme` (remember about the rules for the `namespace`) with a value of `k8s.agalue.net` for the `domain`, it would create an Ingress instance exposing the following resources via custom FQDNs:
+The idea of using Ingress is to facilitate access to the OpenNMS UI and Grafana. That is not required, although it is a good thing to have. Indeed, you could modify the Helm Chart to avoid Ingress altogether (or make it optional) and expose the WebUIs via `LoadBalancer` or `NodePort` services, but that won't be covered here.
+
+For example, when deploying the Helm Chart names `acme` (remember about the rules for the `namespace`) with a value of `k8s.agalue.net` for the `domain`, it would create an Ingress instance exposing the following resources via custom FQDNs:
 
 - OpenNMS UI (read-only): onms.acme.k8s.agalue.net
 - OpenNMS Core: onms-core.acme.k8s.agalue.net
@@ -108,33 +114,33 @@ Please note that it is expected to have [cert-manager](https://cert-manager.io/d
 
 The solution is based on the latest Horizon 29. It should work with older versions of Horizon that fully support Kafka and Telemetryd and Meridian 2021 or newer.
 
-Keep in mind that you need a subscription to use Meridian. With that, you would have to build the Docker images and place them on a private registry to use with this deployment. Doing that falls outside the scope of this guide.
+Keep in mind that you need a subscription to use Meridian. In this case, you would have to build the Docker images and place them on a private registry to use Meridian with this deployment. Doing that falls outside the scope of this guide.
 
 Due to how the current Docker Images were designed and implemented, the solution requires multiple specialized scripts to configure each application properly. You could build your images and move the logic from the scripts executed via `initContainers` to your custom entry point script and simplify the Helm Chart. 
 
-The scripts configure only a certain number of things. Each deployment would likely need additional configuration, which is the main reason why a Persistent Volume will back the OpenNMS Configuration Directory.
+The scripts configure only a certain number of things. Each deployment would likely need additional configuration, which is the main reason for using a Persistent Volume for the Configuration Directory of the Core OpenNMS instance.
 
-We must place the core configuration on a PVC configured as `ReadWriteMany` to allow the usage of independent UI servers so that the Core can make changes and the UI instances can read from them. Unfortunately, this imposes some restrictions on the chosen cloud provider. For example, in Google Cloud, you would have to use [Google Filestore](https://cloud.google.com/filestore), which cannot have volumes less than 1TB, exaggerated for what the configuration directory would ever haven (if UI servers are required). In contrast, that's not a problem when using [Azure Files](https://azure.microsoft.com/en-us/services/storage/files/), which has more flexibility than Google Filestore. The former exposes the volumes via SMB or NFS with essentially any size, whereas the latter only uses NFS with size restrictions.
+We must place the core configuration on a PVC configured as `ReadWriteMany` to allow the usage of independent UI servers so that the Core can make changes and the UI instances can read from them. Unfortunately, this imposes some restrictions on the chosen cloud provider. For example, in Google Cloud, you would have to use [Google Filestore](https://cloud.google.com/filestore), which cannot have volumes less than 1TB, exaggerated for what the configuration directory would ever have (if UI servers are required). In contrast, that's not a problem when using [Azure Files](https://azure.microsoft.com/en-us/services/storage/files/), which has more flexibility than Google Filestore. The former exposes the volumes via SMB or NFS with essentially any size, whereas the latter only uses NFS with size restrictions.
 
 One advantage of configuring that volume is allowing backups and access to the files without accessing the OpenNMS instances running in Kubernetes.
 
 The reasoning for the UI servers is to alleviate the Core Server from ReST and UI-only requests. Unfortunately, this makes the deployment more complex. It is a trade-off you would have to evaluate. Field tests are required to decide whether or not this is needed and how many instances would be required.
 
-Similarly, when using RRDtool instead of Newts/Cassandra or Cortex, a shared volume with `ReadWriteMany` is required for the same reasons (the Core would be writing to it, and the UI servers would be reading from it). Additionally, when switching strategies and migration is required, this can be done outside Kubernetes.
+Similarly, when using RRDtool instead of Newts/Cassandra or Cortex, a shared volume with `ReadWriteMany` is required for the same reasons (the Core would be writing to it, and the UI servers would be reading from it). Additionally, when switching strategies and migration are required, you could work outside Kubernetes.
 
-Please note that even the volumes would still be configured that way even if you decide not to use UI instances; unless you modify the logic.
+Please note that the volumes would still be configured that way even if you decide not to use UI instances; unless you modify the logic of the Helm Chart.
 
 To alleviate load from OpenNMS, you can optionally start Sentinel instances for Flow Processing. That requires having an Elasticsearch cluster available. When Sentinels are present, Telemetryd would be disabled in OpenNMS.
 
 The OpenNMS Core and Sentinels would be backed by a `StatefulSet` but keep in mind that there can be one and only one Core instance. To have multiple Sentinels, make sure to have enough partitions for the Flow topics in your Kafka clusters, as all of them would be part of the same consumer group.
 
-As the current OpenNMS instances are not friendly in accessing logs, the solution allows you to configure [Grafana Loki](https://grafana.com/oss/loki/) to centralize all the log messages. When the Loki server is configured, the Core instance, the UI instances, and the Sentinel instances will be forwarding logs to Loki. The current solution uses the sidecar pattern using [Grafana Promtail](https://grafana.com/docs/loki/latest/clients/promtail/) to deliver the logs.
+The current OpenNMS instances are not friendly when accessing log files. The Helm Chart allows you to configure [Grafana Loki](https://grafana.com/oss/loki/) to centralize all the log messages. When the Loki server is configured, the Core instance, the UI instances, and the Sentinel instances will be forwarding logs to Loki. The current solution uses the sidecar pattern using [Grafana Promtail](https://grafana.com/docs/loki/latest/clients/promtail/) to deliver the logs.
 
 All the Docker Images can be customizable via Helm Values. The solution allows you to configure custom Docker Registries to access your custom images, or when all the images you're planning to use won't be in Docker Hub or your Kubernetes cluster won't have Internet Access. Please keep in mind that your custom images should be based on those currently in use.
 
 If you plan to use ALEC or the TSS Cortex plugin, the current solution will download the KAR files from GitHub every time the containers start. If your cluster doesn't have Internet access, you must build custom images with the KAR files.
 
-Also, the Helm Chart assumes that all external dependencies are running somewhere else. None of them would be initialized or maintained here. Those are Loki, PostgreSQL, Elasticsearch, and Kafka.
+Also, the Helm Chart assumes that all external dependencies are running somewhere else. None of them would be initialized or maintained here. Those are Loki, PostgreSQL, Elasticsearch, Kafka and Cortex (when applies).
 
 ## Run in the cloud
 
@@ -163,9 +169,9 @@ Create the Storage Class in Google Cloud, using `onms-share` as the name of the 
 ./create-storageclass.sh gke onms-share
 ```
 
-For Azure, replace `gke` with `aks`. On GKE, please keep in mind that it uses the standard tier and the default network/VPC, refer to Google's documentation for a custom networks/VPC, whereas on Azure it uses `Standard_LRS`.
+For Azure, replace `gke` with `aks`. On GKE, please keep in mind that it uses the standard tier and the default network/VPC. Refer to Google's documentation to use a custom network/VPC. On Azure, it uses `Standard_LRS`. Similarly, additional cases require updating the above script.
 
-Start the OpenNMS environment on your cloud environment:
+Start the OpenNMS environment on your Kubernetes cluster in the cloud using Helm:
 
 ```bash
 helm install -f helm-cloud.yaml \
@@ -179,15 +185,11 @@ helm install -f helm-cloud.yaml \
   apex1 ./opennms
 ```
 
-> Please use your own domain
+> Please note that `apex1` uniquely identifies the environment. As mentioned, that word will be used as the namespace, the OpenNMS Instance ID, and prefix the `domain` for the FQDNs used in the Ingress Controller, among other things. Ensure to use the correct domain, hostname for your dependencies, name for the `StorageClass` that allows `ReadWriteMany`, and all the credentials.
 
-Please note that `apex1` uniquely identifies the environment. That word will be used as the namespace, the OpenNMS Instance ID, and prefix the `domain` for the FQDNs used in the Ingress Controller. Ensure to use the correct hostname for your dependencies, and the same name for the `StorageClass` used when created it.
+Keep in mind the above is only an example. You must treat the content of [helm-cloud.yaml](helm-cloud.yaml) as a sample for testing purposes. Make sure to tune it properly (that way, you could avoid overriding settings via `--set`).
 
-Keep in mind the above is only an example. You must treat the content of `helm-cloud.yaml` as a sample for testing purposes.
-
-To tune further, edit [helm-cloud.yaml](helm-cloud.yaml).
-
-To access the cluster from external Minions, make sure to configure the DNS service correctly on your cloud provider.
+To access the cluster from external Minions, make sure to configure the DNS service correctly on your cloud provider. Depending on the version you would need access not only to Kafka but also to the ReST API of the Core OpenNMS instance.
 
 To test Ingress access, you must configure a wildcard DNS entry for the chosen domain on your registrar, pointing to the public IP of the Ingress Controller, obtained as follow:
 
@@ -232,8 +234,6 @@ helm install -f helm-minikube.yaml \
   apex1 ./opennms
 ```
 
-> Please use your own domain
-
 Take a look at the documentation of [ingress-dns](https://github.com/kubernetes/minikube/tree/master/deploy/addons/ingress-dns) for more information about how to use it, to avoid messing with `/etc/hosts`.
 
 For instance, for macOS:
@@ -249,7 +249,7 @@ timeout 5
 EOF
 ```
 
-> Please use your own domain, and ensure it matches the domain passed to OpenNMS via Helm
+> Even if the above is running on your machine, please use your own domain.
 
 ## Testing multiple OpenNMS environments
 
@@ -259,7 +259,7 @@ The current approach allows you to start multiple independent OpenNMS environmen
 
 ## Start an external Minion
 
-The [start-minion.sh](start-minion.sh) script is designed for the test use case. To tune it for your use case, you can alter all the environment variables with argument flags, for instance:
+The [start-minion.sh](start-minion.sh) script is designed for the test use case. To tune it for your use case, you can alter all all its internal variables with argument flags, for instance:
 
 ```bash
 ./start-minion.sh \
@@ -275,6 +275,7 @@ Check the script for more details.
 
 * The WebUI sends events handled by Queued to promote updating RRD files to ensure data is available. That won't work with dedicated UI servers (as Queued is not running there).
 * When using Newts, the resource cache won't exist on the UI servers (maintained by Collectd), meaning all requests will hit Cassandra, slowing down the graph generation. The same applies when using Grafana via the UI servers.
+* Using Google Filestore or Azure Files might impact performance, so make sure to perform various field tests (you'll find a dedicated section for this topic later).
 
 ## Manual configuration changes
 
