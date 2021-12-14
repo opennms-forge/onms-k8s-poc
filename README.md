@@ -1,8 +1,12 @@
 # OpenNMS K8s PoC
 
-This project aims to serve as a reference to implement [OpenNMS](https://www.opennms.com/) running in [Kubernetes](https://kubernetes.io/) and deployed via [Helm](https://helm.sh/), having a single Core Server and multiple read-only UI servers plus Grafana and a custom Ingress, sharing the RRD files and some configuration files.
+The objective of this project is to serve as a reference to implement [OpenNMS](https://www.opennms.com/) running in [Kubernetes](https://kubernetes.io/), deployed via [Helm](https://helm.sh/).
 
-We expect Kafka, Elasticsearch, and PostgreSQL to run externally (and maintained separately from the solution), all with SSL enabled.
+Each deployment would have a single Core Server, multiple read-only UI servers plus Grafana and a custom Ingress, sharing the RRD files and some configuration files, and Sentinels for flow processing.
+
+Keep in mind that we expect Kafka, Elasticsearch, and PostgreSQL to run externally (and maintained separately from the solution), all with SSL enabled.
+
+> *This is one way to approach the solution, without saying this is the only one or the best one. You should carefully study the content of this Helm Chart and tune it for your needs*.
 
 **General Diagram**
 
@@ -28,7 +32,7 @@ We expect Kafka, Elasticsearch, and PostgreSQL to run externally (and maintained
 
 ### For Kubernetes
 
-* All components on a single `namespace` represent a single OpenNMS environment or customer deployment or a single tenant. It will be used as:
+* All components on a single `namespace` represent a single OpenNMS environment or customer deployment or a single tenant. The name of the `namespace` will be used as:
   * Customer/Deployment identifier.
   * A prefix for the OpenNMS and Grafana databases in PostgreSQL.
   * A prefix for the index names in Elasticsearch when processing flows.
@@ -88,20 +92,55 @@ We expect Kafka, Elasticsearch, and PostgreSQL to run externally (and maintained
 
 * Nginx Ingress Controller
 
-## Deployment
+## Ingress
 
-* Use` Terraform` or your preferred methodology to deploy the Kubernetes Cluster and the shared infrastructure in Google Cloud or Azure.
+When deploying the Helm Chart names `acme` (remember about the rules for the `namespace`) with a value of `k8s.agalue.net` for the `domain`, it would create an Ingress instance exposing the following resources via custom FQDNs:
 
-* Use `kubectl` to deploy the Kubernetes components (applications).
-  We could offer to create a `Helm` chart in the future to simplify the deployment.
+- OpenNMS UI (read-only): onms.acme.k8s.agalue.net
+- OpenNMS Core: onms-core.acme.k8s.agalue.net
+- Grafana: grafana.acme.k8s.agalue.net
 
-* Use `initContainers` to initialize the mandatory configuration settings.
-  That should take care of OpenNMS upgrades in the Core instance.
-  WebUI servers are stateless, so they don't need configuration life-cycle management.
+To customize behavior, you could pass custom annotations via `ingress.annotations` when deploying the Helm Chart.
+
+Please note that it is expected to have [cert-manager](https://cert-manager.io/docs/) deployed on your Kubernetes cluster as that would be used to manage the certificates (configured via `ingress.certManager.clusterIssuer`).
+
+## Design
+
+The solution is based on the latest Horizon 29. It should work with older versions of Horizon that fully support Kafka and Telemetryd and Meridian 2021 or newer.
+
+Keep in mind that you need a subscription to use Meridian. With that, you would have to build the Docker images and place them on a private registry to use with this deployment. Doing that falls outside the scope of this guide.
+
+Due to how the current Docker Images were designed and implemented, the solution requires multiple specialized scripts to configure each application properly. You could build your images and move the logic from the scripts executed via `initContainers` to your custom entry point script and simplify the Helm Chart. 
+
+The scripts configure only a certain number of things. Each deployment would likely need additional configuration, which is the main reason why a Persistent Volume will back the OpenNMS Configuration Directory.
+
+We must place the core configuration on a PVC configured as `ReadWriteMany` to allow the usage of independent UI servers so that the Core can make changes and the UI instances can read from them. Unfortunately, this imposes some restrictions on the chosen cloud provider. For example, in Google Cloud, you would have to use [Google Filestore](https://cloud.google.com/filestore), which cannot have volumes less than 1TB, exaggerated for what the configuration directory would ever haven (if UI servers are required). In contrast, that's not a problem when using [Azure Files](https://azure.microsoft.com/en-us/services/storage/files/), which has more flexibility than Google Filestore. The former exposes the volumes via SMB or NFS with essentially any size, whereas the latter only uses NFS with size restrictions.
+
+One advantage of configuring that volume is allowing backups and access to the files without accessing the OpenNMS instances running in Kubernetes.
+
+The reasoning for the UI servers is to alleviate the Core Server from ReST and UI-only requests. Unfortunately, this makes the deployment more complex. It is a trade-off you would have to evaluate. Field tests are required to decide whether or not this is needed and how many instances would be required.
+
+Similarly, when using RRDtool instead of Newts/Cassandra or Cortex, a shared volume with `ReadWriteMany` is required for the same reasons (the Core would be writing to it, and the UI servers would be reading from it). Additionally, when switching strategies and migration is required, this can be done outside Kubernetes.
+
+Please note that even the volumes would still be configured that way even if you decide not to use UI instances; unless you modify the logic.
+
+To alleviate load from OpenNMS, you can optionally start Sentinel instances for Flow Processing. That requires having an Elasticsearch cluster available. When Sentinels are present, Telemetryd would be disabled in OpenNMS.
+
+The OpenNMS Core and Sentinels would be backed by a `StatefulSet` but keep in mind that there can be one and only one Core instance. To have multiple Sentinels, make sure to have enough partitions for the Flow topics in your Kafka clusters, as all of them would be part of the same consumer group.
+
+As the current OpenNMS instances are not friendly in accessing logs, the solution allows you to configure [Grafana Loki](https://grafana.com/oss/loki/) to centralize all the log messages. When the Loki server is configured, the Core instance, the UI instances, and the Sentinel instances will be forwarding logs to Loki. The current solution uses the sidecar pattern using [Grafana Promtail](https://grafana.com/docs/loki/latest/clients/promtail/) to deliver the logs.
+
+All the Docker Images can be customizable via Helm Values. The solution allows you to configure custom Docker Registries to access your custom images, or when all the images you're planning to use won't be in Docker Hub or your Kubernetes cluster won't have Internet Access. Please keep in mind that your custom images should be based on those currently in use.
+
+If you plan to use ALEC or the TSS Cortex plugin, the current solution will download the KAR files from GitHub every time the containers start. If your cluster doesn't have Internet access, you must build custom images with the KAR files.
+
+Also, the Helm Chart assumes that all external dependencies are running somewhere else. None of them would be initialized or maintained here. Those are Loki, PostgreSQL, Elasticsearch, and Kafka.
 
 ## Run in the cloud
 
-The following assumes that you already have an AKS or GKE cluster up and running with Nginx Ingress Controller and `cert-manager`, and `kubectl` is correctly configured on your machine to access the cluster. At a minimum, it should have three instances with 4 Cores and 16GB of RAM on each of them.
+The following assumes that you already have an AKS or GKE cluster up and running with [Nginx Ingress](https://kubernetes.github.io/ingress-nginx/) Controller and [cert-manager](https://cert-manager.io/docs/), and `kubectl` is correctly configured on your machine to access the cluster.
+
+At a minimum, the cluster should have three instances with 4 Cores and 16GB of RAM on each of them.
 
 > **Place the Java Truststore with the CA Certificate Chain of your Kafka cluster, your Elasticsearch cluster, and your PostgreSQL server/cluster on a JKS file located at `jks/truststore.jks`, and also the Root CA used for your PostgreSQL server certificate on a PKCS12 file located at `jks/postgresql-ca.crt`. Then, pass them to OpenNMS via Helm (set the JKS password or update the values file).**
 
