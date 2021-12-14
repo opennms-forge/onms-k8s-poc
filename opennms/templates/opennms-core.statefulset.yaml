@@ -135,6 +135,8 @@ spec:
         volumeMounts:
         - name: logs
           mountPath: /opt/opennms/logs
+        - name: jks
+          mountPath: /etc/jks
         - name: promtail
           mountPath: /etc/promtail/promtail.yaml
           subPath: promtail.onms_core.config.yaml

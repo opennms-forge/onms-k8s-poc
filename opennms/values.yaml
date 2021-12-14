@@ -26,12 +26,15 @@ dependencies:
     password: '0p3nNM5'
   loki:
     hostname: onms-loki.shared.svc
+    username: ''
+    password: ''
+    ca_cert: '' # A base64 encoded content of the CA Certificate (assumes HTTPS for Loki's URL)
     port: 3100
     promtail:
       repository: grafana/promtail
       pullPolicy: IfNotPresent
       tag: latest
-  kafka:
+  kafka: # TLS uses Truststore
     hostname: onms-kafka-bootstrap.shared.svc
     port: 9092
     username: opennms
@@ -39,7 +42,7 @@ dependencies:
     configuration:
       sasl_mechanism: SCRAM-SHA-512
       security_protocol: SASL_SSL
-  elasticsearch:
+  elasticsearch: # TLS uses Truststore
     hostname: onms-es-http.shared.svc
     port: 9200
     username: elastic
@@ -56,7 +59,7 @@ dependencies:
     password: P0stgr3s
     sslmode: require # disable, allow, prefer, require, verify-ca, verify-full
     sslfactory: org.postgresql.ssl.LibPQFactory # LibPQFactory, DefaultJavaSSLFactory, NonValidatingFactory
-    ca_cert: '' # A base64 encoded content of the Server Certificate
+    ca_cert: '' # A base64 encoded content of the CA Certificate
   cortex: # Not production ready - use for test/dev purposes only
     baseUrl: '' # Used only when opennms.enable_cortex=true
 

@@ -134,6 +134,8 @@ spec:
         volumeMounts:
         - name: logs
           mountPath: /opt/sentinel/data/logs
+        - name: jks
+          mountPath: /etc/jks
         - name: promtail
           mountPath: /etc/promtail/promtail.yaml
           subPath: promtail.sentinel.config.yaml

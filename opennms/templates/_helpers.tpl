@@ -81,6 +81,36 @@ Define custom content for JVM_OPTS to conditionally handle Truststores
 {{- end }}
 
 {{/*
+Define common content for Grafana Promtail
+*/}}
+{{- define "opennms.promtailBaseConfig" -}}
+{{- $scheme := "http" -}}
+{{- if ((.Values.dependencies).loki).ca_cert -}}
+  {{- $scheme := "https" -}}
+{{- end -}}
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+clients:
+- tenant_id: {{ .Release.Name }}
+  url: {{ printf "%s://%s:%d/loki/api/v1/push" $scheme ((.Values.dependencies).loki).hostname (((.Values.dependencies).loki).port | int) }}
+  {{- if and ((.Values.dependencies).loki).username ((.Values.dependencies).loki).password }}
+  basic_auth:
+    username: {{ .Values.dependencies.loki.username }}
+    password: {{ .Values.dependencies.loki.password }}
+  {{- end }}
+  {{- if ((.Values.dependencies).loki).ca_cert }}
+  tls_config:
+    ca_file: /etc/jks/loki-ca.cert
+  {{- end }}
+scrape_configs:
+- job_name: system
+  static_configs:
+  - targets:
+    - localhost
+{{- end }}
+
+{{/*
 Define Customer/Environment Domain
 */}}
 {{- define "opennms.domain" -}}
