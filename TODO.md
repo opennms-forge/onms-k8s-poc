@@ -5,14 +5,14 @@
 
 * Test the solution against a secured [Grafana Loki](https://grafana.com/oss/loki/) server.
   * Explore [logcli](https://grafana.com/docs/loki/latest/getting-started/logcli/) to extract OpenNMS logs for troubleshooting purposes.
-  * Review documentaion about handling Java Exceptions ([multiline](https://grafana.com/docs/loki/latest/clients/promtail/stages/multiline/) log entries).
 
 * Use relative/percentage size for the Java Heap, based on Pod resources (instead of fixed values) for OpenNMS.
   * For instance, `-XX:MaxRAMPercentage={{ .Values.opennms.jvm.heapPercentage }}`
   * We could let the user choose between discrete assignments via Xms/Xmx or percentage.
 
 * Evaluate and test solutions with private container registries ([Google Artifact Registry](https://cloud.google.com/artifact-registry/docs/overview), [Azure Container Registry](https://azure.microsoft.com/en-us/services/container-registry/)).
-  Allows us to use Meridian instead of Horizon.
+  * Allows us to use Meridian instead of Horizon.
+  * Allows us to move initialization logic from the Helm Chart to the entry point (and potentially add more custom configuration files).
 
 * Start monitoring a local network with Flow processing and verify usage of the UI/Grafana servers, ensuring everything works.
 

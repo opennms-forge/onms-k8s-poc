@@ -88,6 +88,8 @@ sentinel-blobstore-noop
 EOF
 
 if [[ ${ELASTICSEARCH_SERVER} ]]; then
+  echo "Configuring Elasticsearch and Flows..."
+
   cat <<EOF > ${FEATURES_DIR}/flows.boot
 sentinel-flows
 EOF
@@ -127,6 +129,8 @@ EOF
 fi
 
 if [[ ${KAFKA_BOOTSTRAP_SERVER} ]]; then
+  echo "Configuring Kafka for Flows..."
+
   FILE_PREFIX="${OVERLAY_DIR}/org.opennms.core.ipc.sink.kafka"
   echo "sentinel-kafka" > ${FEATURES_DIR}/kafka.boot
 

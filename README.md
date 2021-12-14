@@ -216,6 +216,7 @@ Start the test dependencies:
 ```
 
 Create the storage class (this must be done once):
+
 ```bash
 ./create-storageclass.sh minikube onms-share
 ```
@@ -238,8 +239,10 @@ Take a look at the documentation of [ingress-dns](https://github.com/kubernetes/
 For instance, for macOS:
 
 ```bash
-cat <<EOF | sudo tee /etc/resolver/minikube-default-test
-domain k8s.agalue.net
+DOMAIN="k8s.agalue.net"
+
+cat <<EOF | sudo tee /etc/resolver/minikube-$DOMAIN
+domain $DOMAIN
 nameserver $(minikube ip)
 search_order 1
 timeout 5

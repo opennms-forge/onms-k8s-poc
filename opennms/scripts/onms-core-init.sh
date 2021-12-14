@@ -277,7 +277,7 @@ EOF
 
 # Configure Sink and RPC to use Kafka, and the Kafka Producer.
 if [[ ${KAFKA_BOOTSTRAP_SERVER} ]]; then
-  echo "Configuring Kafka..."
+  echo "Configuring Kafka for IPC..."
 
   cat <<EOF > ${CONFIG_DIR_OVERLAY}/opennms.properties.d/amq.properties
 org.opennms.activemq.broker.disable=true
@@ -347,6 +347,7 @@ fi
 
 # Configure Elasticsearch to allow Helm/Grafana to access Flow data
 if [[ ${ELASTICSEARCH_SERVER} ]]; then
+  echo "Configuring Elasticsearch for Flows..."
   PREFIX=$(echo ${OPENNMS_INSTANCE_ID} | tr '[:upper:]' '[:lower:]')-
   cat <<EOF > ${CONFIG_DIR_OVERLAY}/org.opennms.features.flows.persistence.elastic.cfg
 elasticUrl=https://${ELASTICSEARCH_SERVER}
@@ -359,6 +360,7 @@ fi
 
 # Configure RRAs
 if [[ ${OPENNMS_RRAS} ]]; then
+  echo "Configuring RRAs..."
   IFS=';' read -a RRAS <<< ${OPENNMS_RRAS}
   RRACFG=""
   for RRA in ${RRAS[@]}; do

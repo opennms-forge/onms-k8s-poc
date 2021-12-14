@@ -105,6 +105,10 @@ clients:
   {{- end }}
 scrape_configs:
 - job_name: system
+  pipeline_stages:
+  - multiline:
+      firstline: '^\d{4}-\d{2}-\d{2}'
+      max_wait_time: 3s
   static_configs:
   - targets:
     - localhost
