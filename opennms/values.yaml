@@ -117,9 +117,9 @@ opennms:
       etc: 1Gi # Google Filestore enforces 1TB at a minimum
       rrd: 1000Gi
     http: # Credentials to access the WebUI
-      rest_username: opennms
+      rest_username: opennms # ReST user for Grafana/Helm, Sentinel and Minions (when Twin API is not available)
       rest_password: 0p3nNM5
-      admin_password: 0p3nNM5
+      admin_password: 0p3nNM5 # Password for the default admin account
   uiServers: # Optional
     replicaCount: 2 # Use 0 to disable
     terminationGracePeriodSeconds: 120
