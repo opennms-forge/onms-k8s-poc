@@ -1,5 +1,7 @@
 #!env bash
 # @author Alejandro Galue <agalue@opennms.com>
+#
+# A StorageClass is a cluster-level resource. It must be created once.
 
 set -e
 
