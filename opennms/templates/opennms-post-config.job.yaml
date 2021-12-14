@@ -17,7 +17,7 @@ spec:
       restartPolicy: Never
       containers:
       - name: init
-        image: centos
+        image: {{ printf "%s:%s" .Values.opennms.image.repository (.Values.opennms.image.tag | default .Values.opennmsVersion) }}
         imagePullPolicy: IfNotPresent
         command: [ bash, /scripts/onms-post-init.sh ]
         envFrom:

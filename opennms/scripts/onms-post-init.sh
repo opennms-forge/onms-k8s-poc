@@ -19,6 +19,7 @@ function wait_for {
 }
 
 command -v curl >/dev/null 2>&1 || { echo >&2 "curl is required but it's not installed. Aborting."; exit 1; }
+command -v jq >/dev/null 2>&1   || { echo >&2 "jq is required but it's not installed. Aborting.";   exit 1; }
 
 wait_for ${OPENNMS_SERVER}:8980
 
