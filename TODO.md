@@ -2,12 +2,8 @@
 
 * When using RRDtool, allow configuring RRAs.
 
-* Learn how the GKE Ingress works (in case the Nginx Ingress is not an option).
-
 * Analyze the possibility to ignore the custom `StorageClass` when you don't need dedicated UI servers for RRD files; which asumes the default one (I believe it is `gce-pd` for Google Cloud or Azure Disk for AKS).
   * For configuration, using a NFS-like solution could have benefits in terms of accessing the data for troubleshooting purposes without the need to have access to Kubernetes.
-
-* Integrate Grafana into the OpenNMS Core and UI to generate PDF reports and access dashboards.
 
 * Test the solution against a secured [Grafana Loki](https://grafana.com/oss/loki/) server.
   * Explore [logcli](https://grafana.com/docs/loki/latest/getting-started/logcli/) to extract OpenNMS logs for troubleshooting purposes.
@@ -34,6 +30,8 @@
   * Use the `lookup` function to ensure that the `StorageClass` exists and fail if it doesn't. Or use it to only create it if it doesn't exist (and reduce requirements).
 
 ## Optional
+
+* Learn how the GKE Ingress works, in case the Nginx Ingress is not an option.
 
 * Consider `NetworkPolicies` to isolate resources on a given namespace.
 

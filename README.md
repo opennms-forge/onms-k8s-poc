@@ -43,13 +43,15 @@ We expect Kafka, Elasticsearch, and PostgreSQL to run externally (and maintained
   * Must be stateless (unconfigurable), meaning the `Deployment` must work with multiple replicas.
   * Any configuration change goes to the core server.
   
-* Multiple instances of Grafana (frontend), using PostgreSQL as the backend, pointing to the UI service.
+* Multiple instances of Grafana (frontend), using PostgreSQL as the backend, pointing to the OpenNMS UI service.
+  * When UI instances are not present, the OpenNMS Helm data sources would point to the OpenNMS Core service.
 
 * Multiple instances of Sentinel to handle Flows (requires Elasticsearch as an external dependency).
+  * When Sentinels are present, `Telemetryd` would be disabled on the OpenNMS Core instance.
 
 * A custom `StorageClass` for shared content (Google Filestore or Azure Files) to use `ReadWriteMany`.
   * Use the same `UID` and `GID` as the OpenNMS image with proper file modes.
-  * Due to how Google Filestore works, we need to specify `securityContext.fsGroup` (not required for Azure Files). Check [here](https://github.com/kubernetes-sigs/gcp-filestore-csi-driver/blob/master/docs/kubernetes/fsgroup.md) for more information.
+  * Due to how Google Filestore works, we need to specify `securityContext.fsGroup` (not required for Azure Files). Check [here](https://github.com/kubernetes-sigs/gcp-filestore-csi-driver/blob/master/docs/kubernetes/fsgroup.md) for more information. Keep in mind that the minimum size of a Filestore instance is 1TB.
 
 * A shared volume for the RRD files, mounted as read-write on the Core instance, and as read-only on the UI instances.
 
@@ -222,7 +224,7 @@ The [start-minion.sh](start-minion.sh) script is designed for the test use case.
   --instance_id Texas \
   --minion_id minion01 \
   --minion_location Houston \
-  --kafka_boostrap kafka1.example.com:9044
+  --kafka_boostrap kafka1.example.com:9092
 ```
 
 Check the script for more details.
