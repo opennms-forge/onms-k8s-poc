@@ -13,6 +13,7 @@
 # OPENNMS_DBUSER
 # OPENNMS_DBPASS
 # OPENNMS_INSTANCE_ID
+# OPENNMS_RRAS
 # ENABLE_ALEC
 # ENABLE_ACLS
 # ENABLE_TELEMETRYD
@@ -36,6 +37,14 @@ function wait_for {
     sleep 5
   done
   echo "Done"
+}
+
+function update_rras {
+  if grep -q "[<]rrd" $1; then
+    echo "Processing $1"
+    sed -i -r "/[<]rra/d" $1
+    sed -i -r "/[<]rrd/a $2" $1
+  fi
 }
 
 echo "OpenNMS Core Configuration Script..."
@@ -348,6 +357,25 @@ indexPrefix=${PREFIX}
 EOF
 fi
 
+# Configure RRAs
+if [[ ${OPENNMS_RRAS} ]]; then
+  IFS=';' read -a RRAS <<< ${OPENNMS_RRAS}
+  RRACFG=""
+  for RRA in ${RRAS[@]}; do
+    RRACFG+="<rra>${RRA}</rra>"
+  done
+  echo ${RRACFG}
+  for XML in $(find ${CONFIG_DIR} -name *datacollection*.xml -or -name *datacollection*.d); do
+    if [ -d $XML ]; then
+      for XML in $(find ${XML} -name *.xml); do
+        update_rras ${XML} ${RRACFG}
+      done
+    else
+      update_rras ${XML} ${RRACFG}
+    fi
+  done
+fi
+
 # Enable Syslogd
 sed -r -i '/enabled="false"/{$!{N;s/ enabled="false"[>]\n(.*OpenNMS:Name=Syslogd.*)/>\n\1/}}' ${CONFIG_DIR}/service-configuration.xml
 
@@ -357,7 +385,7 @@ if [[ ${ENABLE_TELEMETRYD} == "false" ]]; then
   sed -i 'N;s/service.*\n\(.*Telemetryd\)/service enabled="false">\n\1/;P;D' ${CONFIG_DIR}/service-configuration.xml
 fi
 
-# Cleanup temporary requisition files:
+# Cleanup temporary requisition files
 rm -f ${CONFIG_DIR}/imports/pending/*.xml.*
 rm -f ${CONFIG_DIR}/foreign-sources/pending/*.xml.*
 

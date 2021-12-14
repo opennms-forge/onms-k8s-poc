@@ -30,9 +30,11 @@ spec:
         {{- include "opennms.selectorLabels" . | nindent 8 }}
     spec:
       terminationGracePeriodSeconds: {{ .Values.sentinel.terminationGracePeriodSeconds | default 60 }}
-      {{- with .Values.imagePullSecrets }}
+      {{- if .Values.imagePullSecrets }}
       imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
+        {{- range $k, $r := .Values.imagePullSecrets }}
+        - name: {{ $r.name }}
+        {{- end }}
       {{- end }}
       initContainers:
       - name: init

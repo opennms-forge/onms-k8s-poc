@@ -15,13 +15,16 @@ data:
   POSTGRES_PORT: {{ .Values.dependencies.postgresql.port | quote }}
   POSTGRES_SSL_MODE: {{ .Values.dependencies.postgresql.sslmode | quote }}
   POSTGRES_SSL_FACTORY: {{ .Values.dependencies.postgresql.sslfactory | quote }}
-  ENABLE_ALEC: {{ .Values.opennms.configuration.enable_alec | default "false" | quote }}
-  ENABLE_ACLS: {{ .Values.opennms.configuration.enable_acls | default "false" | quote }}
+  ENABLE_ALEC: {{ ((.Values.opennms).configuration).enable_alec | default "false" | quote }}
+  ENABLE_ACLS: {{ ((.Values.opennms).configuration).enable_acls | default "false" | quote }}
   ENABLE_TELEMETRYD: {{ if gt ((.Values.sentinel).replicaCount|int) 0 }}"false"{{ else }}"true"{{ end }}
-  ENABLE_CORTEX: {{ .Values.opennms.configuration.enable_cortex | quote }}
+  ENABLE_CORTEX: {{ ((.Values.opennms).configuration).enable_cortex | quote }}
   OPENNMS_INSTANCE_ID: {{ .Release.Name | quote }}
   OPENNMS_SERVER: {{ printf "onms-core.%s.svc" .Release.Name | quote }}
   OPENNMS_DBNAME: {{ printf "%s_opennms" .Release.Name | quote }}
+  {{- if ((.Values.opennms).configuration).rras }}
+  OPENNMS_RRAS: {{ join ";" .Values.opennms.configuration.rras }}
+  {{- end }}
   {{- if ((.Values.dependencies).cortex).cortex }}
   CORTEX_BASE_URL: {{ .Values.dependencies.cortex.cortex | quote }}
   {{- end }}
@@ -32,7 +35,7 @@ data:
   ELASTICSEARCH_NUM_SHARDS: {{ .Values.dependencies.elasticsearch.configuration.flows.num_shards | quote }}
   {{- end }}
   {{- if ((.Values.dependencies).kafka).hostname }}
-  KAFKA_BOOTSTRAP_SERVER: {{ printf "%s:%d" .Values.dependencies.kafka.hostname (.Values.dependencies.kafka.port | int) | quote }}
+  KAFKA_BOOTSTRAP_SERVER: {{ printf "%s:%d" .Values.dependencies.kafka.hostname (.Values.dependencies.kafka.port | default "9092" | int) | quote }}
   KAFKA_SASL_MECHANISM: {{ .Values.dependencies.kafka.configuration.sasl_mechanism | quote }}
   KAFKA_SECURITY_PROTOCOL: {{ .Values.dependencies.kafka.configuration.security_protocol | quote }}
   {{- end }}
@@ -41,6 +44,6 @@ data:
   GF_SERVER_ROOT_URL: "/"
   GF_DATABASE_TYPE: "postgres"
   GF_DATABASE_NAME: {{ printf "%s_grafana" .Release.Name | quote }}
-  GF_DATABASE_SSL_MODE: {{ .Values.grafana.configuration.database.sslmode | quote }}
+  GF_DATABASE_SSL_MODE: {{ (((.Values.grafana).configuration).database).sslmode | default "disable" | quote }}
   GF_DATABASE_CA_CERT_PATH: "/etc/java/jks/postgresql-ca.crt"
   GF_SESSION_PROVIDER: "postgres"

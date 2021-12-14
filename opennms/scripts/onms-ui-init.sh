@@ -190,7 +190,9 @@ CORE_FILES=(
   'datacollection/*' \
   'resource-types.d/*' \
   'snmp-graph.properties.d/*' \
-  'jmx-datacollection-config.d/*'
+  'jmx-datacollection-config.d/*' \
+  'prometheus-datacollection.d/*' \
+  'wsman-datacollection.d/*'
 )
 for file in "${CORE_FILES[@]}"; do
   target=${file}

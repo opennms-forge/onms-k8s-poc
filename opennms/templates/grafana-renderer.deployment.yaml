@@ -21,9 +21,11 @@ spec:
         app: grafana-renderer
         {{- include "opennms.selectorLabels" . | nindent 8 }}
     spec:
-      {{- with .Values.imagePullSecrets }}
+      {{- if .Values.imagePullSecrets }}
       imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
+        {{- range $k, $r := .Values.imagePullSecrets }}
+        - name: {{ $r.name }}
+        {{- end }}
       {{- end }}
       containers:
       - name: grafana-renderer

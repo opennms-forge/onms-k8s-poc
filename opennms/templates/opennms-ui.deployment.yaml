@@ -24,9 +24,11 @@ spec:
         {{- include "opennms.selectorLabels" . | nindent 8 }}
     spec:
       terminationGracePeriodSeconds: {{ .Values.opennms.uiServers.terminationGracePeriodSeconds | default 120 }}
-      {{- with .Values.imagePullSecrets }}
+      {{- if .Values.imagePullSecrets }}
       imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
+        {{- range $k, $r := .Values.imagePullSecrets }}
+        - name: {{ $r.name }}
+        {{- end }}
       {{- end }}
       initContainers:
       # Initializes OpenNMS Configuration

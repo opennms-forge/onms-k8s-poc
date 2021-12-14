@@ -26,9 +26,11 @@ spec:
       securityContext:
         fsGroup: 10001 # Required for Google Fileshare (might impact performance)
       terminationGracePeriodSeconds: {{ .Values.opennms.terminationGracePeriodSeconds | default 120 }}
-      {{- with .Values.imagePullSecrets }}
+      {{- if .Values.imagePullSecrets }}
       imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
+        {{- range $k, $r := .Values.imagePullSecrets }}
+        - name: {{ $r.name }}
+        {{- end }}
       {{- end }}
       initContainers:
       # Initializes/Updates OpenNMS Configuration

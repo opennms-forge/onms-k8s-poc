@@ -8,10 +8,17 @@ domain: example.com
 storageClass: onms-share
 opennmsVersion: '29.0.1'
 
-## Optionally specify an array of imagePullSecrets.
-## Secrets must be manually created in the namespace.
-## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+# Optionally specify an array of imagePullSecrets.
+# Secrets must be manually created in the namespace.
+# ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 imagePullSecrets: []
+# Example:
+# imagePullSecrets:
+# - name: customerRegistry
+#   dockerServer: registry.k8s.agalue.net
+#   dockerUsername: admin
+#   dockerPassword: admin
+#   dockerEmail: admin@agalue.net
 
 dependencies:
   truststore:
@@ -74,9 +81,15 @@ opennms:
       cpu: '2'
       memory: 4Gi
   configuration:
-    enable_alec: true    # Download KAR from Github when the container starts if it doesn't exist on the image
-    enable_cortex: false # Download KAR from Github when the container starts if it doesn't exist on the image
+    enable_alec: true    # Downloads KAR from Github when the container starts if it doesn't exist on the image
+    enable_cortex: false # Downloads KAR from Github when the container starts if it doesn't exist on the image
     enable_acls: false
+    rras: # Affects Pollerd and Collectd
+    - RRA:AVERAGE:0.5:1:4032
+    - RRA:AVERAGE:0.5:12:1488
+    - RRA:AVERAGE:0.5:288:366
+    - RRA:MAX:0.5:288:366
+    - RRA:MIN:0.5:288:366
     database:
       username: opennms
       password: 0p3nNM5

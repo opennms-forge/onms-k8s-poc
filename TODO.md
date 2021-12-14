@@ -1,7 +1,5 @@
 # TODO
 
-* When using RRDtool, allow configuring RRAs.
-
 * Analyze the possibility to ignore the custom `StorageClass` when you don't need dedicated UI servers for RRD files; which asumes the default one (I believe it is `gce-pd` for Google Cloud or Azure Disk for AKS).
   * For configuration, using a NFS-like solution could have benefits in terms of accessing the data for troubleshooting purposes without the need to have access to Kubernetes.
 
