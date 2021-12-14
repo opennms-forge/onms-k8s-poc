@@ -29,8 +29,8 @@ spec:
       {{- end }}
       initContainers:
       - name: init # Should run once (regardless of the replicas)
-        image: postgres:13
-        imagePullPolicy: IfNotPresent
+        image: {{ printf "%s:%s" (((.Values.grafana.configuration.database).image).repository | default "postgres") (((.Values.grafana.configuration.database).image).tag | default "12") }}
+        imagePullPolicy: {{ ((.Values.grafana.configuration.database).image).imagePullPolicy | default "IfNotPresent" }}
         securityContext:
           runAsUser: 999 # postgres user
         command:
