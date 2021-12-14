@@ -21,9 +21,47 @@ imagePullSecrets: []
 #   dockerEmail: admin@agalue.net
 
 dependencies:
+
+  # A common JKS to white-list all CA certificates for all the dependencies OpenNMS or Sentinel uses.
   truststore:
     content: '' # A base64 encoded content of the JKS Truststore file.
     password: '0p3nNM5'
+
+  # The main OpenNMS database requires PostgreSQL (this is mandatory).
+  postgresql:
+    hostname: onms-db.shared.svc
+    port: 5432
+    username: postgres
+    password: P0stgr3s
+    sslmode: require # disable, allow, prefer, require, verify-ca, verify-full
+    sslfactory: org.postgresql.ssl.LibPQFactory # LibPQFactory, DefaultJavaSSLFactory, NonValidatingFactory
+    ca_cert: '' # A base64 encoded content of the CA Certificate
+
+  # The chosen broker technology for the Minion-to-OpenNMS communication (this is mandatory).
+  # For TLS with private CA, use the common Truststore.
+  kafka:
+    hostname: onms-kafka-bootstrap.shared.svc
+    port: 9092
+    username: opennms
+    password: 0p3nNM5
+    configuration:
+      sasl_mechanism: SCRAM-SHA-512
+      security_protocol: SASL_SSL
+
+  # Persisting flows requires Elasticsearch
+  # For TLS with private CA, use the common Truststore.
+  elasticsearch:
+    hostname: onms-es-http.shared.svc
+    port: 9200
+    username: elastic
+    password: 31@st1c
+    configuration:
+      flows:
+        index_strategy: daily
+        replication_factor: 0
+        num_shards: 1
+
+  # The chosen solution for log aggregation (OpenNMS and Sentinel will forward logs to it via Promtail)
   loki:
     hostname: onms-loki.shared.svc
     username: ''
@@ -34,42 +72,20 @@ dependencies:
       repository: grafana/promtail
       pullPolicy: IfNotPresent
       tag: latest
-  kafka: # TLS uses Truststore
-    hostname: onms-kafka-bootstrap.shared.svc
-    port: 9092
-    username: opennms
-    password: 0p3nNM5
-    configuration:
-      sasl_mechanism: SCRAM-SHA-512
-      security_protocol: SASL_SSL
-  elasticsearch: # TLS uses Truststore
-    hostname: onms-es-http.shared.svc
-    port: 9200
-    username: elastic
-    password: 31@st1c
-    configuration:
-      flows:
-        index_strategy: daily
-        replication_factor: 0
-        num_shards: 1
-  postgresql:
-    hostname: onms-db.shared.svc
-    port: 5432
-    username: postgres
-    password: P0stgr3s
-    sslmode: require # disable, allow, prefer, require, verify-ca, verify-full
-    sslfactory: org.postgresql.ssl.LibPQFactory # LibPQFactory, DefaultJavaSSLFactory, NonValidatingFactory
-    ca_cert: '' # A base64 encoded content of the CA Certificate
-  cortex: # Not production ready - use for test/dev purposes only
+
+  # The metrics persistence layer as an alternative to RRDtool.
+  # Not production-ready - use for test/dev purposes only.
+  cortex:
     baseUrl: '' # Used only when opennms.enable_cortex=true
 
+# The Ingress to expose the OpenNMS UI and Grafana.
 ingress:
   className: nginx
   annotations: {}
   certManager:
     clusterIssuer: opennms-issuer
 
-# OpenNMS Core and UI
+# OpenNMS Core and UI Instances.
 opennms:
   terminationGracePeriodSeconds: 120
   image:
@@ -104,8 +120,8 @@ opennms:
       rest_username: opennms
       rest_password: 0p3nNM5
       admin_password: 0p3nNM5
-  uiServers:
-    replicaCount: 2
+  uiServers: # Optional
+    replicaCount: 2 # Use 0 to disable
     terminationGracePeriodSeconds: 120
     configuration:
       database:
@@ -118,9 +134,9 @@ opennms:
         cpu: '2'
         memory: 4Gi
 
-# OpenNMS Sentinel
+# OpenNMS Sentinel for flow processing (Optional)
 sentinel:
-  replicaCount: 2
+  replicaCount: 2 # Use 0 to disable
   terminationGracePeriodSeconds: 60
   image:
     repository: opennms/sentinel
@@ -138,6 +154,7 @@ sentinel:
       pool_size: 25
 
 # OpenNMS Helm
+# Do not use Grafana images, or you'd have to manually install the Helm Plugin from Github every time the container starts.
 grafana:
   replicaCount: 2
   image:

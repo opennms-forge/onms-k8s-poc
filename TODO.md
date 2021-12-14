@@ -24,7 +24,6 @@
 
 * Improve Helm Chart for OpenNMS and relatives (no external dependencies).
   * Make readiness/liveness probes configurable (DB migration time could impact behavior). Or keep them fixed and expose settings for the startup probe.
-  * Improve variables documentation in `values.yaml`.
   * Use the `lookup` function to ensure that the `StorageClass` exists and fail if it doesn't. Or use it to only create it if it doesn't exist (and reduce requirements).
 
 ## Optional
