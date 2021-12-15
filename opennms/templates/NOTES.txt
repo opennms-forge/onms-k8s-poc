@@ -1,17 +1,21 @@
 Thank you for installing OpenNMS {{ .Values.opennms.image.tag | default .Values.opennmsVersion }}.
 
-Your release is named {{ .Release.Name }}, used for:
+Your release is named "{{ .Release.Name }}", used for:
+- Customer/Deployment identifier.
 - The namespace for all the resources.
 - The sub-domain for the ingress controller.
-- The OpenNMS instance ID for your Minions.
+- The OpenNMS instance ID for your Minions (prefix for Kafka topics).
+- Prefix for Elasticsearch indices.
+- Prefix for PostgreSQL database names.
+- Prefix for Kafka consumer groups.
 
 Resources URLs:
 
 {{- if gt (((.Values.opennms).uiServers).replicaCount|int) 0 }}
-OpenNMS UI (read-only): onms.{{ include "opennms.domain" . }}
+OpenNMS UI (read-only): https://onms.{{ include "opennms.domain" . }}/opennms/
 {{- end }}
-OpenNMS Core: onms-core.{{ include "opennms.domain" . }}
-Grafana: grafana.{{ include "opennms.domain" . }}
+OpenNMS Core: https://onms-core.{{ include "opennms.domain" . }}/openns/
+Grafana: https://grafana.{{ include "opennms.domain" . }}/
 
 To learn more about the release, try:
 
