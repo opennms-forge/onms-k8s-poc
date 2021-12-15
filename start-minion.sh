@@ -1,7 +1,8 @@
 #!env bash
 # @author Alejandro Galue <agalue@opennms.com>
 
-minion_version="29.0.1" # Must match the version chosen for OpenNMS
+minion_repository="opennms/minion"
+minion_version="29.0.3" # Must match the version chosen for OpenNMS
 minion_location="Apex"
 minion_id="minion-1"
 instance_id="apex1"  # Must match name of the Helm instance (or the Kubernetes namespace)
@@ -115,5 +116,5 @@ docker run --name ${minion_id} -it --rm \
  -p ${flow_port}:${flow_port}/udp \
  -v ${jks_path}:/etc/java/${jks_file} \
  -v $yaml:/opt/minion/minion-config.yaml \
- opennms/minion:${minion_version} -c
+ ${minion_repository}:${minion_version} -c
 rm -f $yaml
