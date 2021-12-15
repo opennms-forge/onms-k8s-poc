@@ -127,8 +127,8 @@ spec:
           periodSeconds: 60
       {{- if ((.Values.dependencies).loki).hostname }}
       - name: promtail
-        image: {{ printf "%s:%s" .Values.dependencies.loki.promtail.repository (.Values.dependencies.loki.promtail.tag | default "latest") }}
-        imagePullPolicy: {{ .Values.dependencies.loki.promtail.pullPolicy }}
+        image: {{ printf "%s:%s" .Values.promtail.image.repository (.Values.promtail.image.tag | default "latest") }}
+        imagePullPolicy: {{ .Values.promtail.image.pullPolicy }}
         args:
         - -config.file=/etc/promtail/promtail.yaml
         volumeMounts:
@@ -139,10 +139,10 @@ spec:
         - name: promtail
           mountPath: /etc/promtail/promtail.yaml
           subPath: promtail.sentinel.config.yaml
+        {{- with .Values.promtail.resources }}
         resources:
-          limits:
-            cpu: 50m
-            memory: 64Mi
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
       {{- end }}
       volumes:
       - name: etc-overlay

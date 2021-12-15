@@ -68,10 +68,6 @@ dependencies:
     password: ''
     ca_cert: '' # A base64 encoded content of the CA Certificate (assumes HTTPS for Loki's URL)
     port: 3100
-    promtail:
-      repository: grafana/promtail
-      pullPolicy: IfNotPresent
-      tag: latest
 
   # The metrics persistence layer as an alternative to RRDtool.
   # Not production-ready - use for test/dev purposes only.
@@ -192,3 +188,14 @@ grafana:
       requests:
         cpu: 100m
         memory: 128Mi
+
+# Log aggregator configured as a sidecar for OpenNMS and Sentinel
+promtail:
+  image:
+    repository: grafana/promtail
+    pullPolicy: IfNotPresent
+    tag: latest
+  resources:
+    limits:
+      cpu: 50m
+      memory: 64Mi
