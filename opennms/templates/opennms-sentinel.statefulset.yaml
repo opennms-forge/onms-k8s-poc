@@ -103,7 +103,7 @@ spec:
         - name: jks
           mountPath: /etc/java/jks
         - name: jks
-          mountPath: /opt/opennms/.postgresql/root.crt
+          mountPath: /opt/sentinel/.postgresql/root.crt
           subPath: postgresql-ca.crt
         {{- with .Values.sentinel.resources }}
         resources:
