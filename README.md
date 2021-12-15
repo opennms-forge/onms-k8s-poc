@@ -59,6 +59,7 @@ Keep in mind that we expect Kafka, Elasticsearch, and PostgreSQL to run external
   * Use the same `UID` and `GID` as the OpenNMS image with proper file modes.
   * Due to how Google Filestore works, we need to specify `securityContext.fsGroup` (not required for Azure Files). Check [here](https://github.com/kubernetes-sigs/gcp-filestore-csi-driver/blob/master/docs/kubernetes/fsgroup.md) for more information.
   * Keep in mind that the minimum size of a Google Filestore instance is 1TB.
+  * Keep in mind that a new PVC will be in place if the environment gets recreated, meaning new Filestore instances.
 
 * A shared volume for the RRD files, mounted as read-write on the Core instance, and as read-only on the UI instances.
 
@@ -85,6 +86,7 @@ Keep in mind that we expect Kafka, Elasticsearch, and PostgreSQL to run external
 * Elasticsearch cluster for flow persistence.
 
 * Grafana Loki server for log aggregation.
+  * [logcli](https://grafana.com/docs/loki/latest/getting-started/logcli/) helps extract OpenNMS logs from the command line for troubleshooting purposes.
 
 * [Google Filestore](https://cloud.google.com/filestore) or [Azure Files](https://azure.microsoft.com/en-us/services/storage/files/) for the OpenNMS configuration and RRD files (managed by provider)
   * The documentation recommends 1.21 or later for the CSI driver.
@@ -415,7 +417,7 @@ Check the script for more details.
 
 ## RRDtool performance on Google Filestore
 
-Using the `metrics-stress` command via Karaf Shell, emulating 1500 nodes and persisting 5000 metrics per second, the solution seems to stabilize around 5 minutes after having all the RRD files created (which took about 10 minutes after starting the command).
+Using the `metrics-stress` command via Karaf Shell, emulating 1500 nodes and persisting 5000 numeric metrics per second (and 200 string attributes per second), the solution seems to stabilize around 5 minutes after having all the RRD files created (which took about 10 minutes after starting the command).
 
 Enable port forwarding to access the Karaf Shell:
 
@@ -435,6 +437,12 @@ Then,
 
 ```
 opennms:stress-metrics -r 60 -n 1500 -f 20 -g 1 -a 50 -s 2 -t 100 -i 300
+```
+
+For RRDtool, you could pass a list of RRAs to test specific scenarios, for instance:
+
+```
+opennms:stress-metrics -r 60 -n 1500 -f 20 -g 1 -a 50 -s 2 -t 100 -i 300 -x RRA:AVERAGE:0.5:1:4032 -x RRA:AVERAGE:0.5:12:1488 -x RRA:AVERAGE:0.5:288:366 -x RRA:MAX:0.5:288:366 -x RRA:MIN:0.5:288:366
 ```
 
 Google's Metric Explorer showed that Filestore writes were around 120 MiB/sec on average while the files were being created. After that, it decreased to about ten times less the initial throughput.

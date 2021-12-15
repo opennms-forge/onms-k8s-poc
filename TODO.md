@@ -26,7 +26,6 @@
 * Consider `NetworkPolicies` to isolate resources on a given namespace.
 
 * Test the solution against a secured [Grafana Loki](https://grafana.com/oss/loki/) server.
-  * Explore [logcli](https://grafana.com/docs/loki/latest/getting-started/logcli/) to extract OpenNMS logs for troubleshooting purposes.
 
 * Build Terraform recipes for the Cloud Infrastructure resources.
   * Private container registry
