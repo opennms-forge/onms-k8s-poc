@@ -126,6 +126,8 @@ One advantage of configuring that volume is allowing backups and access to the f
 
 The reasoning for the UI servers is to alleviate the Core Server from ReST and UI-only requests. Unfortunately, this makes the deployment more complex. It is a trade-off you would have to evaluate. Field tests are required to decide whether or not this is needed and how many instances would be required.
 
+The UI servers need to access multiple files from the Core server to serve multiple requests (including the ReST API). For this reason, a solution based on symlinks is in place via the initialization scripts. Also, to reduce the complexity, the UI servers are forced to be read-only, meaning even users with `ROLD_ADMIN` cannot make any changes (not even through ReST). You should apply any configuration change via the Core Instance.
+
 Similarly, when using RRDtool instead of Newts/Cassandra or Cortex, a shared volume with `ReadWriteMany` is required for the same reasons (the Core would be writing to it, and the UI servers would be reading from it). Additionally, when switching strategies and migration are required, you could work outside Kubernetes.
 
 Please note that the volumes would still be configured that way even if you decide not to use UI instances; unless you modify the logic of the Helm Chart.
