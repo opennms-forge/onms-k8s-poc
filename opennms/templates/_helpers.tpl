@@ -103,6 +103,8 @@ clients:
   tls_config:
     ca_file: /etc/jks/loki-ca.cert
   {{- end }}
+  external_labels:
+    namespace: {{ .Release.Name }}
 scrape_configs:
 - job_name: system
   pipeline_stages:
