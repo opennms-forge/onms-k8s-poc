@@ -199,6 +199,73 @@ kubectl get svc ingress-nginx-controller -n ingress-nginx \
   -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
 ```
 
+### Test Meridian in Google Cloud
+
+We recommend reviewing the [documentation](https://cloud.google.com/artifact-registry/docs/integrate-gke) for Google Artifact Registry. From there, you can see that there is no need to set up `imagePullSecrets` when using recent versions of GKE, even if the registry and the GKE cluster are on different projects (although in that case, some you need to configure some permissions).
+
+That means, once the images are available, you can just set the `opennms.image.repository` and `opennms.image.tag` appropriately (same for Sentinel), and that's it when deploying OpenNMS via Helm.
+
+To create a registry:
+
+```bash
+gcloud artifacts repositories create opennms \
+  --repository-format=docker \
+  --location=us-east1 \
+  --description="Docker Repository for OpenNMS Images"
+```
+
+Then, configure Docker:
+
+```bash
+gcloud auth configure-docker us-east1-docker.pkg.dev
+```
+
+> Note that the location/region must match.
+
+Upload Meridian Images:
+
+```bash
+docker image load -i ~/Downloads/meridian.oci
+docker image load -i ~/Downloads/sentinel.oci
+```
+
+Tag and upload images to the Artifact Registry:
+
+```bash
+PROJECT_NAME="OpenNMS"
+PROJECT_ID=$(gcloud projects list | grep $PROJECT_NAME | awk '{print $1}')
+REGISTRY_PATH="us-east1-docker.pkg.dev/$PROJECT_ID/opennms"
+
+docker image tag meridian:latest $REGISTRY_PATH/meridian:M2021
+docker image push $REGISTRY_PATH/meridian:M2021
+
+docker image tag meridian-sentinel:latest $REGISTRY_PATH/meridian-sentinel:M2021
+docker push $REGISTRY_PATH/meridian-sentinel:M2021
+```
+
+> Note that the name of the repository must match, and ensure to use the appropriate Project ID.
+
+Finally, install Meridian via Helm:
+
+```
+helm upgrade --install -f helm-cloud.yaml \
+  --set opennms.image.repository=$REGISTRY_PATH/meridian \
+  --set opennms.image.tag=M2021 \
+  --set sentinel.image.repository=$REGISTRY_PATH/meridian-sentinel \
+  --set sentinel.image.tag=M2021 \
+  --set domain=k8s.agalue.net \
+  --set storageClass=onms-share \
+  --set ingress.certManager.clusterIssuer=opennms-issuer \
+  --set dependencies.truststore.content=$(cat jks/truststore.jks | base64) \
+  --set dependencies.postgresql.ca_cert=$(cat jks/postgresql-ca.crt | base64) \
+  --set dependencies.postgresql.hostname=onms-db.shared.svc \
+  --set dependencies.kafka.hostname=onms-kafka-bootstrap.shared.svc \
+  --set dependencies.elasticsearch.hostname=onms-es-http.shared.svc \
+  apex1 ./opennms
+```
+
+> Note the usage of the same `REGISTRY_PATH` created before.
+
 ## Run locally
 
 Start Minikube:
@@ -270,11 +337,12 @@ Then, SSH into the Minikube VM:
 minikube ssh
 ```
 
-Within the Minikube VM, tag and upload images to the local registry:
+Within the Minikube VM, tag and upload the images to the local registry:
 
 ```bash
 docker image tag meridian:latest localhost:5000/meridian:M2021
 docker image push localhost:5000/meridian:M2021
+
 docker image tag meridian-sentinel:latest localhost:5000/meridian-sentinel:M2021
 docker push localhost:5000/meridian-sentinel:M2021
 ```

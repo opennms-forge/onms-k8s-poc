@@ -5,7 +5,7 @@
 
 set -e
 
-PROJECT_ID="${PROJECT_ID-k8s-playground-334616}"
+PROJECT_ID="${PROJECT_ID-OpenNMS}"
 COMPUTE_ZONE="${COMPUTE_ZONE-us-east1-b}"
 DOMAIN="${DOMAIN-k8s.agalue.net}"
 GCP_NODE_COUNT="${GCP_NODE_COUNT-4}"
@@ -33,7 +33,6 @@ kubectl wait pod -l app.kubernetes.io/component=controller --for=condition=Ready
 echo "Starting PostgreSQL instance"
 gcloud sql instances create "$USER-opennms" \
   --database-version=POSTGRES_12 \
-  --no-assign-ip \
   --require-ssl \
   --cpu=2 \
   --memory=7680MB \
