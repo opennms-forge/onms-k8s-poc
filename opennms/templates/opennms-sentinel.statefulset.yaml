@@ -99,7 +99,7 @@ spec:
         - name: etc-overlay
           mountPath: /opt/sentinel-etc-overlay
         - name: logs
-          mountPath: /opt/sentinel/data/logs
+          mountPath: /opt/sentinel/data/log
         - name: jks
           mountPath: /etc/java/jks
         - name: jks
@@ -133,7 +133,7 @@ spec:
         - -config.file=/etc/promtail/promtail.yaml
         volumeMounts:
         - name: logs
-          mountPath: /opt/sentinel/data/logs
+          mountPath: /opt/sentinel/data/log
         - name: jks
           mountPath: /etc/jks
         - name: promtail
