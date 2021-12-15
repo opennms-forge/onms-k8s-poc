@@ -1,9 +1,5 @@
 # TODO
 
-* Evaluate and test the solution with private container registries. For Google Cloud, [Google Container Registry (GCR)](https://cloud.google.com/container-registry) or [Google Artifact Registry](https://cloud.google.com/artifact-registry/docs/overview). For Azure, [Azure Container Registry (ACR)](https://azure.microsoft.com/en-us/services/container-registry/).
-  * Allows us to use Meridian instead of Horizon.
-  * Allows us to move initialization logic from the Helm Chart to the entry point (and potentially add more custom configuration files).
-
 * Use relative/percentage size for the Java Heap, based on Pod resources (instead of fixed values) for OpenNMS.
   * For instance, `-XX:MaxRAMPercentage={{ .Values.opennms.jvm.heapPercentage }}`
   * We could let the user choose between discrete assignments via Xms/Xmx or percentage.
