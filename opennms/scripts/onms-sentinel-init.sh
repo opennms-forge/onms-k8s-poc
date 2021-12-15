@@ -1,7 +1,10 @@
 #!/bin/bash
 # @author Alejandro Galue <agalue@opennms.com>
 #
-# External environment variables:
+# Intended to be used as part of an InitContainer
+# Designed for Horizon 29 or Meridian 2021 and 2022. Newer or older versions are not supported.
+#
+# External environment variables used by this script:
 # POSTGRES_HOST
 # POSTGRES_PORT
 # POSTGRES_SSL_MODE
@@ -38,6 +41,7 @@ function wait_for {
 
 echo "OpenNMS Sentinel Configuration Script..."
 
+# Defaults
 OPENNMS_DATABASE_CONNECTION_MAXPOOL=${OPENNMS_DATABASE_CONNECTION_MAXPOOL-50}
 NUM_LISTENER_THREADS=${NUM_LISTENER_THREADS-6}
 KAFKA_SASL_MECHANISM=${KAFKA_SASL_MECHANISM-PLAIN}
@@ -46,8 +50,7 @@ ELASTICSEARCH_INDEX_STRATEGY_FLOWS=${ELASTICSEARCH_INDEX_STRATEGY_FLOWS-daily}
 ELASTICSEARCH_REPLICATION_FACTOR=${ELASTICSEARCH_REPLICATION_FACTOR-2}
 ELASTICSEARCH_NUM_SHARDS=${ELASTICSEARCH_NUM_SHARDS-6}
 
-OVERLAY_DIR=/opt/sentinel-etc-overlay
-
+# Wait for Dependencies
 if [[ ${ELASTICSEARCH_SERVER} ]]; then
   wait_for ${ELASTICSEARCH_SERVER}
 fi
@@ -56,6 +59,8 @@ if [[ ${KAFKA_BOOTSTRAP_SERVER} ]]; then
 fi
 wait_for ${POSTGRES_HOST}:${POSTGRES_PORT}
 wait_for ${OPENNMS_SERVER}:8980
+
+OVERLAY_DIR=/opt/sentinel-etc-overlay
 
 # Configure the instance ID and Interface-to-Node cache
 # Required when having multiple OpenNMS backends sharing a Kafka cluster or an Elasticsearch cluster.

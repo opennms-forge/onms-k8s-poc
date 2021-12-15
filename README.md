@@ -112,9 +112,9 @@ Please note that it is expected to have [cert-manager](https://cert-manager.io/d
 
 ## Design
 
-The solution is based on the latest Horizon 29. It should work with older versions of Horizon that fully support Kafka and Telemetryd and Meridian 2021 or newer.
+The solution is based and tested against the latest Horizon 29 and should work with Meridian 2021 and 2022. However, versions newer than that won't work without modifying the logic of the Helm Chart and initialization scripts.
 
-Keep in mind that you need a subscription to use Meridian. In this case, you would have to build the Docker images and place them on a private registry to use Meridian with this deployment. Doing that falls outside the scope of this guide.
+Keep in mind that you need a subscription to use Meridian. In this case, you would have to build the Docker images and place them on a private registry to use Meridian with this deployment. Doing that falls outside the scope of this repository, but the main GitHub Repository for OpenNMS offers a [guide](https://github.com/OpenNMS/opennms/tree/master/opennms-container) that you could use as a reference.
 
 Due to how the current Docker Images were designed and implemented, the solution requires multiple specialized scripts to configure each application properly. You could build your images and move the logic from the scripts executed via `initContainers` to your custom entry point script and simplify the Helm Chart. 
 
@@ -144,7 +144,7 @@ Also, the Helm Chart assumes that all external dependencies are running somewher
 
 ## Run in the cloud
 
-The following assumes that you already have an AKS or GKE cluster up and running with [Nginx Ingress](https://kubernetes.github.io/ingress-nginx/) Controller and [cert-manager](https://cert-manager.io/docs/), and `kubectl` is correctly configured on your machine to access the cluster.
+The following assumes that you already have an AKS or GKE cluster up and running with [Nginx Ingress](https://kubernetes.github.io/ingress-nginx/) Controller and [cert-manager](https://cert-manager.io/docs/) (with a `ClusterIssuer` available for the Ingress), and `kubectl` is correctly configured on your machine to access the cluster.
 
 At a minimum, the cluster should have three instances with 4 Cores and 16GB of RAM on each of them.
 
@@ -177,6 +177,7 @@ Start the OpenNMS environment on your Kubernetes cluster in the cloud using Helm
 helm install -f helm-cloud.yaml \
   --set domain=k8s.agalue.net \
   --set storageClass=onms-share \
+  --set ingress.certManager.clusterIssuer=opennms-issuer \
   --set dependencies.truststore.content=$(cat jks/truststore.jks | base64) \
   --set dependencies.postgresql.ca_cert=$(cat jks/postgresql-ca.crt | base64) \
   --set dependencies.postgresql.hostname=onms-db.shared.svc \
@@ -185,7 +186,7 @@ helm install -f helm-cloud.yaml \
   apex1 ./opennms
 ```
 
-> Please note that `apex1` uniquely identifies the environment. As mentioned, that word will be used as the namespace, the OpenNMS Instance ID, and prefix the `domain` for the FQDNs used in the Ingress Controller, among other things. Ensure to use the correct domain, hostname for your dependencies, name for the `StorageClass` that allows `ReadWriteMany`, and all the credentials.
+> Please note that `apex1` uniquely identifies the environment. As mentioned, that word will be used as the namespace, the OpenNMS Instance ID, and prefix the `domain` for the FQDNs used in the Ingress Controller, among other things. Ensure to use the correct domain, hostname for your dependencies, name for the `StorageClass` that allows `ReadWriteMany`, the `ClusterIssuer` to create certificates for the hosts managed by the Ingress, and all the credentials.
 
 Keep in mind the above is only an example. You must treat the content of [helm-cloud.yaml](helm-cloud.yaml) as a sample for testing purposes. Make sure to tune it properly (that way, you could avoid overriding settings via `--set`).
 

@@ -1,21 +1,14 @@
 #!/bin/bash
 # @author Alejandro Galue <agalue@opennms.com>
 #
-# External environment variables:
-# POSTGRES_HOST
-# POSTGRES_PORT
-# POSTGRES_USER
-# POSTGRES_PASSWORD
-# POSTGRES_SSL_MODE
-# POSTGRES_SSL_FACTORY
+# Intended to be used as part of an InitContainer expecting the same Container Image as OpenNMS
+# Designed for Horizon 29 or Meridian 2021 and 2022. Newer or older versions are not supported.
+#
+# External environment variables used by this script:
+# OPENNMS_INSTANCE_ID (initialized by onms-common-init.sh)
 # OPENNMS_DATABASE_CONNECTION_MAXPOOL
-# OPENNMS_DBNAME
-# OPENNMS_DBUSER
-# OPENNMS_DBPASS
-# OPENNMS_INSTANCE_ID
 # OPENNMS_RRAS
 # ENABLE_ALEC
-# ENABLE_ACLS
 # ENABLE_TELEMETRYD
 # ENABLE_CORTEX
 # CORTEX_BASE_URL
@@ -24,9 +17,6 @@
 # KAFKA_SASL_PASSWORD
 # KAFKA_SASL_MECHANISM
 # KAFKA_SECURITY_PROTOCOL
-# ELASTICSEARCH_SERVER
-# ELASTICSEARCH_USER
-# ELASTICSEARCH_PASSWORD
 
 umask 002
 
@@ -49,15 +39,24 @@ function update_rras {
 
 echo "OpenNMS Core Configuration Script..."
 
+# Requirements
+command -v rsync >/dev/null 2>&1 || { echo >&2 "rsync is required but it's not installed. Aborting."; exit 1; }
+command -v rpm   >/dev/null 2>&1 || { echo >&2 "rpm is required but it's not installed. Aborting."; exit 1; }
+if [[ ! -e /scripts/onms-common-init.sh ]]; then
+  echo >&2 "onms-common-init.sh required but it's not present. Aborting."; exit 1;
+fi
+
+# Defaults
 OPENNMS_DATABASE_CONNECTION_MAXPOOL=${OPENNMS_DATABASE_CONNECTION_MAXPOOL-50}
 KAFKA_SASL_MECHANISM=${KAFKA_SASL_MECHANISM-PLAIN}
 KAFKA_SECURITY_PROTOCOL=${KAFKA_SECURITY_PROTOCOL-SASL_PLAINTEXT}
 
-command -v rsync >/dev/null 2>&1 || { echo >&2 "rsync is required but it's not installed. Aborting."; exit 1; }
-
+# Parse OpenNMS version
 PKG=$(rpm -qa | egrep '(meridian|opennms)-core')
 VERSION=$(rpm -q --queryformat '%{VERSION}' $PKG)
 MAJOR=${VERSION%%.*}
+
+# Verify if Twin API is available
 USE_TWIN="false"
 if [[ "$PKG" == *"meridian"* ]]; then
   echo "OpenNMS Meridian $MAJOR detected"
@@ -72,6 +71,7 @@ else
 fi
 echo "Twin API Available? $USE_TWIN"
 
+# Wait for dependencies
 wait_for ${POSTGRES_HOST}:${POSTGRES_PORT}
 if [[ ${KAFKA_BOOTSTRAP_SERVER} ]]; then
   wait_for ${KAFKA_BOOTSTRAP_SERVER}
@@ -101,17 +101,10 @@ echo "Configuration directory:"
 ls -ld ${CONFIG_DIR}
 
 # Initialize configuration directory
-# Include all the things that must be configured once
+# Include all the configuration files that must be added once but could change after the first run
 if [ ! -f ${CONFIG_DIR}/configured ]; then
   echo "Initializing configuration directory for the first time ..."
   rsync -arO --no-perms --no-owner --no-group ${BACKUP_ETC}/ ${CONFIG_DIR}/
-
-  echo "Disabling data choices"
-  cat <<EOF > ${CONFIG_DIR}/org.opennms.features.datachoices.cfg
-enabled=false
-acknowledged-by=admin
-acknowledged-at=Sun Mar 01 00\:00\:00 EDT 2020
-EOF
 
   echo "Initialize default foreign source definition"
   cat <<EOF > ${CONFIG_DIR}/default-foreign-source.xml
@@ -165,96 +158,13 @@ rsync -aO --no-perms --no-owner --no-group ${MANDATORY}/ ${CONFIG_DIR}/
 # Initialize overlay
 mkdir -p ${CONFIG_DIR_OVERLAY}/opennms.properties.d ${CONFIG_DIR_OVERLAY}/featuresBoot.d
 
-# Configure the instance ID
-# Required when having multiple OpenNMS backends sharing a Kafka cluster or an Elasticsearch cluster.
-if [[ ${OPENNMS_INSTANCE_ID} ]]; then
-  cat <<EOF > ${CONFIG_DIR_OVERLAY}/opennms.properties.d/instanceid.properties
-# Used for Kafka Topics and Elasticsearch Index Prefixes
-org.opennms.instance.id=${OPENNMS_INSTANCE_ID}
-EOF
-else
-  OPENNMS_INSTANCE_ID="OpenNMS"
-fi
-
-# Configure Database access
-cat <<EOF > ${CONFIG_DIR_OVERLAY}/opennms-datasources.xml
-<?xml version="1.0" encoding="UTF-8"?>
-<datasource-configuration xmlns:this="http://xmlns.opennms.org/xsd/config/opennms-datasources"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://xmlns.opennms.org/xsd/config/opennms-datasources
-  http://www.opennms.org/xsd/config/opennms-datasources.xsd ">
-
-  <connection-pool factory="org.opennms.core.db.HikariCPConnectionFactory"
-    idleTimeout="600"
-    loginTimeout="3"
-    minPool="50"
-    maxPool="50"
-    maxSize="${OPENNMS_DATABASE_CONNECTION_MAXPOOL}" />
-
-  <jdbc-data-source name="opennms"
-                    database-name="${OPENNMS_DBNAME}"
-                    class-name="org.postgresql.Driver"
-                    url="jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${OPENNMS_DBNAME}?sslmode=${POSTGRES_SSL_MODE}&amp;sslfactory=${POSTGRES_SSL_FACTORY}"
-                    user-name="${OPENNMS_DBUSER}"
-                    password="${OPENNMS_DBPASS}" />
-
-  <jdbc-data-source name="opennms-admin"
-                    database-name="template1"
-                    class-name="org.postgresql.Driver"
-                    url="jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/template1?sslmode=${POSTGRES_SSL_MODE}&amp;sslfactory=${POSTGRES_SSL_FACTORY}"
-                    user-name="${POSTGRES_USER}"
-                    password="${POSTGRES_PASSWORD}"/>
-</datasource-configuration>
-EOF
-
-# RRD Strategy is enabled by default
-cat <<EOF > ${CONFIG_DIR_OVERLAY}/opennms.properties.d/rrd.properties
-org.opennms.rrd.storeByGroup=true
-EOF
-
-# Configure Timeseries for Cortex
-if [[ ${ENABLE_CORTEX} == "true" ]]; then
-  if [[ ! -e /opt/opennms/deploy/opennms-cortex-tss-plugin.kar ]]; then
-    KAR_VER=$(curl -s https://api.github.com/repos/OpenNMS/opennms-cortex-tss-plugin/releases/latest | grep tag_name | cut -d '"' -f 4)
-    KAR_URL="https://github.com/OpenNMS/opennms-cortex-tss-plugin/releases/download/${KAR_VER}/opennms-cortex-tss-plugin.kar"
-    curl -LJ -o ${DEPLOY_DIR}/opennms-cortex-tss-plugin.kar ${KAR_URL} 2>/dev/null
-  fi
-
-  cat <<EOF > ${CONFIG_DIR_OVERLAY}/opennms.properties.d/timeseries.properties
-org.opennms.timeseries.strategy=integration
-org.opennms.timeseries.tin.metatags.tag.node=\${node:label}
-org.opennms.timeseries.tin.metatags.tag.location=\${node:location}
-org.opennms.timeseries.tin.metatags.tag.geohash=\${node:geohash}
-org.opennms.timeseries.tin.metatags.tag.ifDescr=\${interface:if-description}
-org.opennms.timeseries.tin.metatags.tag.label=\${resource:label}
-EOF
-
-  cat <<EOF > ${CONFIG_DIR_OVERLAY}/org.opennms.plugins.tss.cortex.cfg
-writeUrl=${CORTEX_BASE_URL}/api/prom/push
-readUrl=${CORTEX_BASE_URL}/prometheus/api/v1
-maxConcurrentHttpConnections=100
-writeTimeoutInMs=1000
-readTimeoutInMs=1000
-metricCacheSize=1000
-bulkheadMaxWaitDurationInMs=9223372036854775807
-EOF
-
-  cat <<EOF > ${CONFIG_DIR_OVERLAY}/featuresBoot.d/cortex.boot
-opennms-plugins-cortex-tss wait-for-kar=opennms-cortex-tss-plugin
-EOF
-fi
+# Apply common OpenNMS configuration settings
+source /scripts/onms-common-init.sh
 
 # Collectd Optimizations
 cat <<EOF > ${CONFIG_DIR_OVERLAY}/opennms.properties.d/collectd.properties
 # To get data as close as possible to PDP
 org.opennms.netmgt.collectd.strictInterval=true
-EOF
-
-# Required changes in order to use HTTPS through Ingress
-cat <<EOF > ${CONFIG_DIR_OVERLAY}/opennms.properties.d/webui.properties
-opennms.web.base-url=https://%x%c/
-org.opennms.security.disableLoginSuccessEvent=true
-org.opennms.web.defaultGraphPeriod=last_2_hour
 EOF
 
 # Enable ALEC standalone
@@ -270,13 +180,13 @@ alec-opennms-standalone wait-for-kar=opennms-alec-plugin
 EOF
 fi
 
-# Enable ACLs
-cat <<EOF > ${CONFIG_DIR_OVERLAY}/opennms.properties.d/acl.properties
-org.opennms.web.aclsEnabled=${ENABLE_ACLS}
-EOF
-
 # Configure Sink and RPC to use Kafka, and the Kafka Producer.
 if [[ ${KAFKA_BOOTSTRAP_SERVER} ]]; then
+  if [[ ${OPENNMS_INSTANCE_ID} == "" ]]; then
+    echo >&2 "OPENNMS_INSTANCE_ID cannot be empty. Aborting."
+    exit 1
+  fi
+
   echo "Configuring Kafka for IPC..."
 
   cat <<EOF > ${CONFIG_DIR_OVERLAY}/opennms.properties.d/amq.properties
@@ -345,19 +255,6 @@ EOF
   fi
 fi
 
-# Configure Elasticsearch to allow Helm/Grafana to access Flow data
-if [[ ${ELASTICSEARCH_SERVER} ]]; then
-  echo "Configuring Elasticsearch for Flows..."
-  PREFIX=$(echo ${OPENNMS_INSTANCE_ID} | tr '[:upper:]' '[:lower:]')-
-  cat <<EOF > ${CONFIG_DIR_OVERLAY}/org.opennms.features.flows.persistence.elastic.cfg
-elasticUrl=https://${ELASTICSEARCH_SERVER}
-globalElasticUser=${ELASTICSEARCH_USER}
-globalElasticPassword=${ELASTICSEARCH_PASSWORD}
-elasticIndexStrategy=${ELASTICSEARCH_INDEX_STRATEGY_FLOWS}
-indexPrefix=${PREFIX}
-EOF
-fi
-
 # Configure RRAs
 if [[ ${OPENNMS_RRAS} ]]; then
   echo "Configuring RRAs..."
@@ -397,4 +294,6 @@ touch ${CONFIG_DIR}/do-upgrade
 # Configure Grafana
 if [[ -e /scripts/onms-grafana-init.sh ]]; then
   source /scripts/onms-grafana-init.sh
+else
+  echo "Warning: cannot find onms-grafana-init.sh"
 fi

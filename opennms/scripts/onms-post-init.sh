@@ -1,13 +1,13 @@
 #!/bin/bash
 # @author Alejandro Galue <agalue@opennms.com>
 #
-# External environment variables:
-# - OPENNMS_SERVER
-# - OPENNMS_HTTP_USER
-# - OPENNMS_HTTP_PASS
-# - OPENNMS_ADMIN_PASS
-# - GRAFANA_SERVER
-# - GF_SECURITY_ADMIN_PASSWORD
+# External environment variables used by this script:
+# OPENNMS_SERVER
+# OPENNMS_HTTP_USER
+# OPENNMS_HTTP_PASS
+# OPENNMS_ADMIN_PASS
+# GRAFANA_SERVER
+# GF_SECURITY_ADMIN_PASSWORD
 
 function wait_for {
   echo "Waiting for $1"
@@ -18,9 +18,13 @@ function wait_for {
   echo "Done"
 }
 
+echo "OpenNMS Post-Initialization Script..."
+
+# Requirements
 command -v curl >/dev/null 2>&1 || { echo >&2 "curl is required but it's not installed. Aborting."; exit 1; }
 command -v jq >/dev/null 2>&1   || { echo >&2 "jq is required but it's not installed. Aborting.";   exit 1; }
 
+# Wait for dependencies
 wait_for ${OPENNMS_SERVER}:8980
 
 # Configure Grafana Endpoint for Reports
@@ -40,11 +44,11 @@ else
   echo "WARNING: Grafana Endpoint already configured"
 fi
 
-# Add user to access ReST API for Grafana and Sentinel
+# Add user to access ReST API for Grafana, Sentinels and Minions
 echo "Adding user ${OPENNMS_HTTP_USER} (for Grafana and Sentinels)"
 curl -u admin:admin -v -X POST \
   -H "Content-Type: application/xml" \
-  -d "<user><user-id>${OPENNMS_HTTP_USER}</user-id><password>${OPENNMS_HTTP_PASS}</password><role>ROLE_REST</role></user>" \
+  -d "<user><user-id>${OPENNMS_HTTP_USER}</user-id><password>${OPENNMS_HTTP_PASS}</password><role>ROLE_REST</role><role>ROLE_MINION</role></user>" \
   "http://${OPENNMS_SERVER}:8980/opennms/rest/users?hashPassword=true"
 
 # Change password for the admin account

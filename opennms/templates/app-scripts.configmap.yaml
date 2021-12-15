@@ -11,13 +11,15 @@ metadata:
 data:
   grafana-init.sh: |
     {{- .Files.Get "scripts/grafana-init.sh" | nindent 4 }}
-  onms-grafana-init.sh: |
-    {{- .Files.Get "scripts/onms-grafana-init.sh" | nindent 4 }}
+  onms-common-init.sh: |
+    {{- .Files.Get "scripts/onms-common-init.sh" | nindent 4 }}
   onms-core-init.sh: |
     {{- .Files.Get "scripts/onms-core-init.sh" | nindent 4 }}
+  onms-grafana-init.sh: |
+    {{- .Files.Get "scripts/onms-grafana-init.sh" | nindent 4 }}
+  onms-post-init.sh: |
+    {{- .Files.Get "scripts/onms-post-init.sh" | nindent 4 }}
   onms-sentinel-init.sh: |
     {{- .Files.Get "scripts/onms-sentinel-init.sh" | nindent 4 }}
   onms-ui-init.sh: |
     {{- .Files.Get "scripts/onms-ui-init.sh" | nindent 4 }}
-  onms-post-init.sh: |
-    {{- .Files.Get "scripts/onms-post-init.sh" | nindent 4 }}
