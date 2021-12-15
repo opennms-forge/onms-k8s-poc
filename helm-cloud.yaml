@@ -4,7 +4,7 @@
 timezone: America/New_York
 domain: example.com # Please use a valid domain
 storageClass: onms-share
-opennmsVersion: '29.0.1'
+opennmsVersion: '29.0.3'
 imagePullSecrets: []
 
 dependencies:

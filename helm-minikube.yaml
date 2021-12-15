@@ -4,7 +4,7 @@
 timezone: America/New_York
 domain: k8s.agalue.net
 storageClass: onms-share
-opennmsVersion: '29.0.1'
+opennmsVersion: '29.0.3'
 imagePullSecrets: []
 
 dependencies:
