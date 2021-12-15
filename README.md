@@ -206,10 +206,11 @@ Start Minikube:
 ```bash
 minikube start --cpus=4 --memory=24g \
   --cni=calico \
-  --container-runtime=containerd \
   --addons=ingress \
   --addons=ingress-dns \
-  --addons=metrics-server
+  --addons=metrics-server \
+  --addons=registry \
+  --insecure-registry "10.0.0.0/24"
 ```
 
 Start the test dependencies:
@@ -251,6 +252,64 @@ EOF
 ```
 
 > Even if the above is running on your machine, please use your own domain.
+
+### Test Meridian in Minikube
+
+As OpenNMS doesn't publish Meridian Images to Docker Hub as using Meridian requires a subscription, you can try the following, assuming you built the images and generated OCI files. Note that we started `minikube` with the `registry` addon.
+
+First, upload Meridian Images:
+
+```bash
+minikube image load ~/Downloads/meridian.oci
+minikube image load ~/Downloads/sentinel.oci
+```
+
+Then, SSH into the Minikube VM:
+
+```bash
+minikube ssh
+```
+
+Within the Minikube VM, tag and upload images to the local registry:
+
+```bash
+docker image tag meridian:latest localhost:5000/meridian:M2021
+docker image push localhost:5000/meridian:M2021
+docker image tag meridian-sentinel:latest localhost:5000/meridian-sentinel:M2021
+docker push localhost:5000/meridian-sentinel:M2021
+```
+
+Optionally, you can verify they are present there:
+
+```bash
+$ curl http://localhost:5000/v2/_catalog
+{"repositories":["meridian","meridian-sentinel"]}
+```
+
+Finally, install Meridian via Helm:
+
+```
+helm upgrade --install -f helm-minikube.yaml \
+  --set opennms.image.repository=localhost:5000/meridian \
+  --set opennms.image.tag=M2021 \
+  --set opennms.image.pullPolicy=Never \
+  --set sentinel.image.repository=localhost:5000/meridian-sentinel \
+  --set sentinel.image.tag=M2021 \
+  --set sentinel.image.pullPolicy=Never \
+  --set domain=k8s.agalue.net \
+  --set storageClass=onms-share \
+  --set dependencies.truststore.content=$(cat jks/truststore.jks | base64) \
+  --set dependencies.postgresql.ca_cert=$(cat jks/postgresql-ca.crt | base64) \
+  apex1 ./opennms
+```
+
+The above proves that the Helm Chart works with M2021 and Horizon 29 (the reference implementation).
+
+To test Minion, you can use the publicly available [meridian-minion](https://hub.docker.com/repository/docker/opennms/meridian-minion) image, for instance:
+
+```bash
+./start-minion.sh --minion_repository opennms/meridian-minion --minion_version 2021.1.8
+```
 
 ## Testing multiple OpenNMS environments
 
