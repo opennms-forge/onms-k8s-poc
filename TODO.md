@@ -1,18 +1,15 @@
 # TODO
 
-* Analyze the possibility to ignore the custom `StorageClass` when you don't need dedicated UI servers; which would use the default one (I believe it is `gce-pd` for Google Cloud or Azure Disk for AKS).
-  * However, using a NFS-like solution could have benefits in terms of accessing the data for troubleshooting purposes without the need to have access to Kubernetes.
-
-* Test the solution against a secured [Grafana Loki](https://grafana.com/oss/loki/) server.
-  * Explore [logcli](https://grafana.com/docs/loki/latest/getting-started/logcli/) to extract OpenNMS logs for troubleshooting purposes.
+* Evaluate and test the solution with private container registries. For Google Cloud, [Google Container Registry (GCR)](https://cloud.google.com/container-registry) or [Google Artifact Registry](https://cloud.google.com/artifact-registry/docs/overview). For Azure, [Azure Container Registry (ACR)](https://azure.microsoft.com/en-us/services/container-registry/).
+  * Allows us to use Meridian instead of Horizon.
+  * Allows us to move initialization logic from the Helm Chart to the entry point (and potentially add more custom configuration files).
 
 * Use relative/percentage size for the Java Heap, based on Pod resources (instead of fixed values) for OpenNMS.
   * For instance, `-XX:MaxRAMPercentage={{ .Values.opennms.jvm.heapPercentage }}`
   * We could let the user choose between discrete assignments via Xms/Xmx or percentage.
 
-* Evaluate and test solutions with private container registries ([Google Artifact Registry](https://cloud.google.com/artifact-registry/docs/overview), [Azure Container Registry](https://azure.microsoft.com/en-us/services/container-registry/)).
-  * Allows us to use Meridian instead of Horizon.
-  * Allows us to move initialization logic from the Helm Chart to the entry point (and potentially add more custom configuration files).
+* Analyze the possibility to ignore the custom `StorageClass` when you don't need dedicated UI servers; which would use the default one (I believe it is `gce-pd` for Google Cloud or Azure Disk for AKS).
+  * However, using a NFS-like solution could have benefits in terms of backups or accessing the data for troubleshooting or management purposes without the need to have access to Kubernetes.
 
 * Start monitoring a local network with Flow processing and verify usage of the UI/Grafana servers, ensuring everything works.
 
@@ -31,6 +28,9 @@
 * Learn how the GKE Ingress works, in case the Nginx Ingress is not an option.
 
 * Consider `NetworkPolicies` to isolate resources on a given namespace.
+
+* Test the solution against a secured [Grafana Loki](https://grafana.com/oss/loki/) server.
+  * Explore [logcli](https://grafana.com/docs/loki/latest/getting-started/logcli/) to extract OpenNMS logs for troubleshooting purposes.
 
 * Build Terraform recipes for the Cloud Infrastructure resources.
   * Private container registry
