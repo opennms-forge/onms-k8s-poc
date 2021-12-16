@@ -1,15 +1,13 @@
 # TODO
 
+* Start monitoring a local network with Flow processing and verify usage of the UI/Grafana servers, ensuring everything works.
+
 * Use relative/percentage size for the Java Heap, based on Pod resources (instead of fixed values) for OpenNMS.
   * For instance, `-XX:MaxRAMPercentage={{ .Values.opennms.jvm.heapPercentage }}`
   * We could let the user choose between discrete assignments via Xms/Xmx or percentage.
 
 * Analyze the possibility to ignore the custom `StorageClass` when you don't need dedicated UI servers; which would use the default one (I believe it is `gce-pd` for Google Cloud or Azure Disk for AKS).
   * However, using a NFS-like solution could have benefits in terms of backups or accessing the data for troubleshooting or management purposes without the need to have access to Kubernetes.
-
-* Start monitoring a local network with Flow processing and verify usage of the UI/Grafana servers, ensuring everything works.
-
-* Perform stress tests using the `opennms:metrics-stress` command to ensure performance using RRD and shared volumes. This is crucial for GKE as ownership is configured via `securityContext.fsGroup` (not required for AKS).
 
 * Evaluate the idea of having custom entry point scripts replacing the initialization scripts.
   * The less invasive option to expand our possibility without building custom images.
