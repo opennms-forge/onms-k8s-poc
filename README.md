@@ -176,7 +176,7 @@ If you're planning to have dedicated UI instances, create the Storage Class in G
 
 For Azure, replace `gke` with `aks`. On GKE, please keep in mind that it uses the standard tier and the default network/VPC. Refer to Google's documentation to use a custom network/VPC. On Azure, it uses `Standard_LRS`. Similarly, additional cases require updating the above script.
 
-> The custom storage class is ignored if `opennms.uiServers.replicaCount` is equal to `0`.
+> The custom storage class is ignored if `opennms.uiServers.replicaCount` is equal to `0` (the default behavior).
 
 Start the OpenNMS environment on your Kubernetes cluster in the cloud using Helm:
 
@@ -299,7 +299,7 @@ If you're planning to have dedicated UI instances, create the storage class (thi
 ./create-storageclass.sh minikube onms-share
 ```
 
-> The custom storage class is ignored if `opennms.uiServers.replicaCount` is equal to `0`.
+> The custom storage class is ignored if `opennms.uiServers.replicaCount` is equal to `0` (the default behavior).
 
 Start OpenNMS:
 

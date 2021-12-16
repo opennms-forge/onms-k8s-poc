@@ -29,7 +29,6 @@ opennms:
       rrd: 100Gi
   uiServers:
     replicaCount: 1
-    resources: null
 
 sentinel:
   replicaCount: 1

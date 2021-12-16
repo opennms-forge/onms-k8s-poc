@@ -19,7 +19,11 @@ data:
     {{- .Files.Get "scripts/onms-grafana-init.sh" | nindent 4 }}
   onms-post-init.sh: |
     {{- .Files.Get "scripts/onms-post-init.sh" | nindent 4 }}
+{{- if gt ((.Values.sentinel).replicaCount|int) 0 }}
   onms-sentinel-init.sh: |
     {{- .Files.Get "scripts/onms-sentinel-init.sh" | nindent 4 }}
+{{- end }}
+{{- if gt (((.Values.opennms).uiServers).replicaCount|int) 0 }}
   onms-ui-init.sh: |
     {{- .Files.Get "scripts/onms-ui-init.sh" | nindent 4 }}
+{{- end }}

@@ -117,7 +117,7 @@ opennms:
       rest_password: 0p3nNM5
       admin_password: 0p3nNM5 # Password for the default admin account
   uiServers: # Optional
-    replicaCount: 2 # Use 0 to disable
+    replicaCount: 0 # Disabled by default. Requires using ReadWriteMany volumes
     terminationGracePeriodSeconds: 120
     configuration:
       database:
