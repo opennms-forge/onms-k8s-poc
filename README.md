@@ -56,6 +56,7 @@ Keep in mind that we expect Kafka, Elasticsearch, and PostgreSQL to run external
   * When Sentinels are present, `Telemetryd` would be disabled on the OpenNMS Core instance.
 
 * A custom `StorageClass` for shared content (Google Filestore or Azure Files) to use `ReadWriteMany`.
+  * Only required when having dedicated OpenNMS UI instances; otherwise, the default `StorageClass` is used (for example, for Google Cloud, it would be `standard` based on `kubernetes.io/gce-pd`.)
   * Use the same `UID` and `GID` as the OpenNMS image with proper file modes.
   * Due to how Google Filestore works, we need to specify `securityContext.fsGroup` (not required for Azure Files). Check [here](https://github.com/kubernetes-sigs/gcp-filestore-csi-driver/blob/master/docs/kubernetes/fsgroup.md) for more information.
   * Keep in mind that the minimum size of a Google Filestore instance is 1TB.
@@ -167,13 +168,15 @@ Optionally, for testing purposes, use the following script to initialize all the
 ./start-dependencies.sh
 ```
 
-Create the Storage Class in Google Cloud, using `onms-share` as the name of the `StorageClass`:
+If you're planning to have dedicated UI instances, create the Storage Class in Google Cloud, using `onms-share` as the name of the `StorageClass`:
 
 ```bash
 ./create-storageclass.sh gke onms-share
 ```
 
 For Azure, replace `gke` with `aks`. On GKE, please keep in mind that it uses the standard tier and the default network/VPC. Refer to Google's documentation to use a custom network/VPC. On Azure, it uses `Standard_LRS`. Similarly, additional cases require updating the above script.
+
+> The custom storage class is ignored if `opennms.uiServers.replicaCount` is equal to `0`.
 
 Start the OpenNMS environment on your Kubernetes cluster in the cloud using Helm:
 
@@ -190,7 +193,7 @@ helm install -f helm-cloud.yaml \
   apex1 ./opennms
 ```
 
-> Please note that `apex1` uniquely identifies the environment. As mentioned, that word will be used as the namespace, the OpenNMS Instance ID, and prefix the `domain` for the FQDNs used in the Ingress Controller, among other things. Ensure to use the correct domain, hostname for your dependencies, name for the `StorageClass` that allows `ReadWriteMany`, the `ClusterIssuer` to create certificates for the hosts managed by the Ingress, and all the credentials.
+> Please note that `apex1` uniquely identifies the environment. As mentioned, that word will be used as the namespace, the OpenNMS Instance ID, and prefix the `domain` for the FQDNs used in the Ingress Controller, among other things. Ensure to use the correct domain, hostname for your dependencies, name for the `StorageClass` that allows `ReadWriteMany` (if needed), the `ClusterIssuer` to create certificates for the hosts managed by the Ingress, and all the credentials.
 
 Keep in mind the above is only an example. You must treat the content of [helm-cloud.yaml](helm-cloud.yaml) as a sample for testing purposes. Make sure to tune it properly (that way, you could avoid overriding settings via `--set`).
 
@@ -290,11 +293,13 @@ Start the test dependencies:
 ./start-dependencies.sh
 ```
 
-Create the storage class (this must be done once):
+If you're planning to have dedicated UI instances, create the storage class (this must be done once):
 
 ```bash
 ./create-storageclass.sh minikube onms-share
 ```
+
+> The custom storage class is ignored if `opennms.uiServers.replicaCount` is equal to `0`.
 
 Start OpenNMS:
 

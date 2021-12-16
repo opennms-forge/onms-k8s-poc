@@ -6,9 +6,6 @@
   * For instance, `-XX:MaxRAMPercentage={{ .Values.opennms.jvm.heapPercentage }}`
   * We could let the user choose between discrete assignments via Xms/Xmx or percentage.
 
-* Analyze the possibility to ignore the custom `StorageClass` when you don't need dedicated UI servers; which would use the default one (I believe it is `gce-pd` for Google Cloud or Azure Disk for AKS).
-  * However, using a NFS-like solution could have benefits in terms of backups or accessing the data for troubleshooting or management purposes without the need to have access to Kubernetes.
-
 * Evaluate the idea of having custom entry point scripts replacing the initialization scripts.
   * The less invasive option to expand our possibility without building custom images.
   * There are limitations with `confd` in OpenNMS, besides other restrictions inside the `entrypoint.sh` script in OpenNMS and Sentinel that prevents enabling certain features.

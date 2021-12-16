@@ -5,7 +5,7 @@
 
 timezone: America/New_York
 domain: example.com # The common domain for the Ingress resource.
-storageClass: onms-share # The name of the StorageClass that allows ReadWriteMany for RRDs and Core configuration.
+storageClass: onms-share # The name of the StorageClass that allows ReadWriteMany for RRDs and Core configuration (when using dedicated UI instances).
 opennmsVersion: '29.0.4'
 
 # Optionally specify an array of imagePullSecrets.
@@ -99,8 +99,8 @@ opennms:
     enable_alec: true    # Downloads KAR from Github when the container starts if it doesn't exist on the image
     enable_cortex: false # Downloads KAR from Github when the container starts if it doesn't exist on the image
     enable_acls: false
-    rras: # Affects Pollerd and Collectd
-    - RRA:AVERAGE:0.5:1:4032
+    rras: # To optionally replace the RRDtool aggregations (pass [] to keep defaults). Affects Pollerd and Collectd
+    - RRA:AVERAGE:0.5:1:2016
     - RRA:AVERAGE:0.5:12:1488
     - RRA:AVERAGE:0.5:288:366
     - RRA:MAX:0.5:288:366

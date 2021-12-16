@@ -11,9 +11,14 @@ metadata:
     tier: storage
     {{- include "opennms.labels" . | nindent 4 }}
 spec:
+  {{- if gt (((.Values.opennms).uiServers).replicaCount|int) 0 }}
   storageClassName: {{ required "A ReadWriteMany StorageClass is required!" .Values.storageClass }}
   accessModes:
   - ReadWriteMany # Mandatory
+  {{- else }}
+  accessModes: # Assumes default StorageClass
+  - ReadWriteOnce
+  {{- end }}
   resources:
     requests:
       storage: {{ .Values.opennms.configuration.storage.etc | default "1Gi" }}
