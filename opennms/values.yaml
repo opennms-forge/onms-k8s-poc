@@ -6,7 +6,7 @@
 timezone: America/New_York
 domain: example.com # The common domain for the Ingress resource.
 storageClass: onms-share # The name of the StorageClass that allows ReadWriteMany for RRDs and Core configuration.
-opennmsVersion: '29.0.3'
+opennmsVersion: '29.0.4'
 
 # Optionally specify an array of imagePullSecrets.
 # Secrets must be manually created in the namespace.

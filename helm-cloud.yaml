@@ -1,12 +1,6 @@
 # @author Alejandro Galue <agalue@opennms.com>
 # Example content for the Helm Chart values with modest resources for a Cloud Deployment
 
-timezone: America/New_York
-domain: example.com # Please use a valid domain
-storageClass: onms-share
-opennmsVersion: '29.0.3'
-imagePullSecrets: []
-
 dependencies:
   loki:
     hostname: onms-loki.shared.svc

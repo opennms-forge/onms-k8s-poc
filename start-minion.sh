@@ -2,7 +2,7 @@
 # @author Alejandro Galue <agalue@opennms.com>
 
 minion_repository="opennms/minion"
-minion_version="29.0.3" # Must match the version chosen for OpenNMS
+minion_version="29.0.4" # Must match the version chosen for OpenNMS
 minion_location="Apex"
 minion_id="minion-1"
 instance_id="apex1"  # Must match name of the Helm instance (or the Kubernetes namespace)
