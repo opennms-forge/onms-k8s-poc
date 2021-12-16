@@ -44,28 +44,28 @@ Keep in mind that we expect Kafka, Elasticsearch, and PostgreSQL to run external
 * A single instance of OpenNMS Core (backend) for centralized monitoring running ALEC in standalone mode (if enabled).
   OpenNMS doesn't support distributed mode, meaning the `StatefulSet` cannot have more than one replica.
 
-* Multiple instances of read-only OpenNMS UI (frontend).
+* [Optional] Multiple instances of read-only OpenNMS UI (frontend).
   * Must be stateless (unconfigurable).
   * The `Deployment` must work with multiple replicas.
   * Any configuration change goes to the core server.
-  
-* Multiple instances of Grafana (frontend), using PostgreSQL as the backend, pointing to the OpenNMS UI service when available.
-  When UI instances are not present, the OpenNMS Helm data sources would point to the OpenNMS Core service.
 
-* Multiple instances of Sentinel to handle Flows (requires Elasticsearch as an external dependency).
+* [Optional] Multiple instances of Sentinel to handle Flows (requires Elasticsearch as an external dependency).
   * When Sentinels are present, `Telemetryd` would be disabled on the OpenNMS Core instance.
 
-* A custom `StorageClass` for shared content (Google Filestore or Azure Files) to use `ReadWriteMany`.
+* [Optional] A custom `StorageClass` for shared content (Google Filestore or Azure Files) to use `ReadWriteMany`.
   * Only required when having dedicated OpenNMS UI instances; otherwise, the default `StorageClass` is used (for example, for Google Cloud, it would be `standard` based on `kubernetes.io/gce-pd`.)
   * Use the same `UID` and `GID` as the OpenNMS image with proper file modes.
   * Due to how Google Filestore works, we need to specify `securityContext.fsGroup` (not required for Azure Files). Check [here](https://github.com/kubernetes-sigs/gcp-filestore-csi-driver/blob/master/docs/kubernetes/fsgroup.md) for more information.
   * Keep in mind that the minimum size of a Google Filestore instance is 1TB.
   * Keep in mind that a new PVC will be in place if the environment gets recreated, meaning new Filestore instances.
 
-* A shared volume for the RRD files, mounted as read-write on the Core instance, and as read-only on the UI instances.
+* A shared volume for the RRD files, mounted as read-write on the Core instance, and as read-only on the UI instances if applies.
 
-* A shared volume for the core configuration files, mounted as read-only on the UI instances.
+* A shared volume for the core configuration files, mounted as read-only on the UI instances if applies.
   The purpose is to share configuration across all the OpenNMS instances (i.e., `users.xml`, `groups.xml`, among others).
+
+* Multiple instances of Grafana (frontend), using PostgreSQL as the backend, pointing to the OpenNMS UI service when available.
+  When UI instances are not present, the OpenNMS Helm data sources would point to the OpenNMS Core service.
 
 * `Secrets` to store the credentials, certificates and truststores.
 
@@ -91,6 +91,7 @@ Keep in mind that we expect Kafka, Elasticsearch, and PostgreSQL to run external
 
 * [Google Filestore](https://cloud.google.com/filestore) or [Azure Files](https://azure.microsoft.com/en-us/services/storage/files/) for the OpenNMS configuration and RRD files (managed by provider)
   * The documentation recommends 1.21 or later for the CSI driver.
+  * Only applicable when using dedicated OpenNMS UI instances.
 
 * Private Container Registry for custom Meridian Images (if applicable), in case OpenNMS Horizon is not an option.
 
@@ -105,9 +106,9 @@ The idea of using Ingress is to facilitate access to the OpenNMS UI and Grafana.
 
 For example, when deploying the Helm Chart names `acme` (remember about the rules for the `namespace`) with a value of `k8s.agalue.net` for the `domain`, it would create an Ingress instance exposing the following resources via custom FQDNs:
 
-- OpenNMS UI (read-only): onms.acme.k8s.agalue.net
-- OpenNMS Core: onms-core.acme.k8s.agalue.net
-- Grafana: grafana.acme.k8s.agalue.net
+- OpenNMS UI (read-only): `onms.acme.k8s.agalue.net`
+- OpenNMS Core: `onms-core.acme.k8s.agalue.net`
+- Grafana: `grafana.acme.k8s.agalue.net`
 
 To customize behavior, you could pass custom annotations via `ingress.annotations` when deploying the Helm Chart.
 
