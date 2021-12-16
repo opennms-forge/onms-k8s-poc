@@ -36,21 +36,20 @@ GRAFANA_AUTH="admin:${GF_SECURITY_ADMIN_PASSWORD}"
 # Configure Flow Dashboard Link
 FLOW_DASHBOARD=$(curl -u "${GRAFANA_AUTH}" "http://${GRAFANA_SERVER}:3000/api/search?query=flow" 2>/dev/null | jq '.[0].url' | sed 's/"//g')
 echo "Flow Dashboard: ${FLOW_DASHBOARD}"
-if [ "${FLOW_DASHBOARD}" != "null" ]; then
+if [ "${FLOW_DASHBOARD}" == "null" ]; then
+  echo "WARNING: cannot get Dashboard URL for the Deep Dive Tool"
+else
   cat <<EOF > ${CONFIG_DIR_OVERLAY}/org.opennms.netmgt.flows.rest.cfg
 flowGraphUrl=https://${GF_SERVER_DOMAIN}${FLOW_DASHBOARD}?node=\$nodeId&interface=\$ifIndex
 EOF
-else
-  echo "WARNING: cannot get Dashboard URL for the Deep Dive Tool"
 fi
 
 # Delete Grafana API Key if exists
-KEY_ID=$(curl -u "${GRAFANA_AUTH}" "http://${GRAFANA_SERVER}:3000/api/auth/keys" 2>/dev/null | jq ".[] | select(.name=\"$(hostname)\") | .id")
+KEY_ID=$(curl -u "${GRAFANA_AUTH}" "http://${GRAFANA_SERVER}:3000/api/auth/keys" 2>/dev/null | jq ".[] | select(.name==\"$(hostname)\") | .id")
 if [ "${KEY_ID}" != "" ]; then
-  echo "WARNING: API Key exist for $(hostname), deleting it prior re-creating it again"
+  echo "WARNING: API Key ${KEY_ID} exist for $(hostname), deleting it prior re-creating it again"
   curl -XDELETE -u "${GRAFANA_AUTH}" "http://${GRAFANA_SERVER}:3000/api/auth/keys/${KEY_ID}" 2>/dev/null
   echo ""
-  sleep 5
 fi
 
 # Create Grafana API Key and configure Grafana Box
