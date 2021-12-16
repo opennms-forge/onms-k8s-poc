@@ -50,6 +50,8 @@ spec:
         - name: scripts
           mountPath: /init.sh
           subPath: grafana-init.sh
+        - name: jks
+          mountPath: /etc/java/jks
       containers:
       - name: grafana-helm
         image: {{ printf "%s:%s" .Values.grafana.image.repository .Values.grafana.image.tag }}

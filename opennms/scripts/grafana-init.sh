@@ -16,6 +16,8 @@ export PGHOST=${POSTGRES_HOST}
 export PGPORT=${POSTGRES_PORT}
 export PGUSER=${POSTGRES_USER}
 export PGPASSWORD=${POSTGRES_PASSWORD}
+export PGSSLMODE=require
+export PGSSLROOTCERT=/etc/java/jks/postgresql-ca.cert
 
 echo "Grafana Database Initialization Script..."
 

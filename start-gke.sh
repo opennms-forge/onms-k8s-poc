@@ -33,7 +33,7 @@ kubectl wait pod -l app.kubernetes.io/component=controller --for=condition=Ready
 echo "Starting PostgreSQL instance"
 gcloud sql instances create "$USER-opennms" \
   --database-version=POSTGRES_12 \
-  --require-ssl \
+  --authorized-networks="0.0.0.0/0" \
   --cpu=2 \
   --memory=7680MB \
   --region="$REGION" \
