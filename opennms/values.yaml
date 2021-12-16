@@ -110,8 +110,8 @@ opennms:
       password: 0p3nNM5
       pool_size: 50
     storage: # Sizes for RRDs and configuration
-      etc: 1Gi # Google Filestore enforces 1TB at a minimum
-      rrd: 1000Gi
+      etc: 1Gi # Warning Google Filestore enforces 1TB at a minimum
+      rrd: 1000Gi # Depends on how many files you are planning to have (each installation is different)
     http: # Credentials to access the WebUI
       rest_username: opennms # ReST user for Grafana/Helm, Sentinel and Minions (when Twin API is not available)
       rest_password: 0p3nNM5
