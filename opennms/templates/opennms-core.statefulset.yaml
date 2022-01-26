@@ -116,16 +116,19 @@ spec:
             port: http
           failureThreshold: 30
           periodSeconds: 60
+          timeoutSeconds: 5
         readinessProbe:
           httpGet:
             path: /opennms/login.jsp
             port: http
           periodSeconds: 15
+          timeoutSeconds: 5
         livenessProbe:
           httpGet:
             path: /opennms/login.jsp
             port: http
           periodSeconds: 60
+          timeoutSeconds: 5
       {{- if ((.Values.dependencies).loki).hostname }}
       - name: promtail
         image: {{ printf "%s:%s" .Values.promtail.image.repository (.Values.promtail.image.tag | default "latest") }}
