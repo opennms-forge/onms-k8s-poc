@@ -6,7 +6,7 @@
 timezone: America/New_York
 domain: example.com # The common domain for the Ingress resource.
 storageClass: onms-share # The name of the StorageClass that allows ReadWriteMany for RRDs and Core configuration (when using dedicated UI instances).
-opennmsVersion: '29.0.4'
+opennmsVersion: '29.0.5'
 
 # Optionally specify an array of imagePullSecrets.
 # Secrets must be manually created in the namespace.
@@ -29,7 +29,7 @@ dependencies:
 
   # The main OpenNMS database requires PostgreSQL (this is mandatory).
   postgresql:
-    hostname: onms-db.shared.svc
+    hostname: onms-db.shared.svc # IP or FQDN of the external PostgreSQL server
     port: 5432
     username: postgres
     password: P0stgr3s
@@ -40,18 +40,18 @@ dependencies:
   # The chosen broker technology for the Minion-to-OpenNMS communication (this is mandatory).
   # For TLS with private CA, use the common Truststore.
   kafka:
-    hostname: onms-kafka-bootstrap.shared.svc
+    hostname: onms-kafka-bootstrap.shared.svc # IP or FQDN of the external Kafka server
     port: 9092
     username: opennms
     password: 0p3nNM5
     configuration:
       sasl_mechanism: SCRAM-SHA-512
-      security_protocol: SASL_SSL
+      security_protocol: SASL_SSL # PLAINTEXT, SSL, SASL_PLAINTEXT, SASL_SSL
 
   # Persisting flows requires Elasticsearch
   # For TLS with private CA, use the common Truststore.
   elasticsearch:
-    hostname: onms-es-http.shared.svc
+    hostname: onms-es-http.shared.svc # IP or FQDN of the external Elasticsearch server
     port: 9200
     username: elastic
     password: 31@st1c
@@ -63,7 +63,7 @@ dependencies:
 
   # The chosen solution for log aggregation (OpenNMS and Sentinel will forward logs to it via Promtail)
   loki:
-    hostname: onms-loki.shared.svc
+    hostname: onms-loki.shared.svc # IP or FQDN of the external Loki server
     username: ''
     password: ''
     ca_cert: '' # A base64 encoded content of the CA Certificate (assumes HTTPS for Loki's URL)
@@ -74,7 +74,7 @@ dependencies:
   cortex:
     baseUrl: '' # Used only when opennms.enable_cortex=true
 
-# The Ingress to expose the OpenNMS UI and Grafana.
+# The Ingress to expose the OpenNMS and Grafana.
 ingress:
   className: nginx
   annotations: {}
@@ -175,7 +175,7 @@ grafana:
         repository: postgres
         pullPolicy: IfNotPresent
         tag: '12'
-  imageRenderer: # Required to generate PDF reports from OpeNNMS
+  imageRenderer: # Required to generate PDF reports from OpenNMS
     replicaCount: 2
     image:
       repository: grafana/grafana-image-renderer

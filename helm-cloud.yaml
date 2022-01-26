@@ -35,7 +35,7 @@ opennms:
     enable_alec: true
     storage:
       etc: 1Gi
-      rrd: 1000Gi
+      rrd: 100Gi
   uiServers:
     replicaCount: 0
 

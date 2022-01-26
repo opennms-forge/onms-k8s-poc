@@ -22,6 +22,8 @@ Keep in mind that we expect Kafka, Elasticsearch, and PostgreSQL to run external
 
 ## Requirements
 
+* **Ensure you have a deep understanding of how Kubernetes and Helm works.**
+
 ### Local
 
 * Have `kubectl` installed on your machine.
@@ -30,7 +32,11 @@ Keep in mind that we expect Kafka, Elasticsearch, and PostgreSQL to run external
 
 * When using Cloud Resources, `az` for Azure, or `gcloud` for Google Cloud.
 
+* Optionally, have `minikube` installed for testing purposes.
+
 ### For Kubernetes
+
+* Use Kubernetes version 1.20 or newer.
 
 * All components on a single `namespace` represent a single OpenNMS environment or customer deployment or a single tenant. The name of the `namespace` will be used as:
   * Customer/Deployment identifier.
@@ -169,6 +175,8 @@ Optionally, for testing purposes, use the following script to initialize all the
 ./start-dependencies.sh
 ```
 
+> It is advised to have the dependencies outside Kubernetes.
+
 If you're planning to have dedicated UI instances, create the Storage Class in Google Cloud, using `onms-share` as the name of the `StorageClass`:
 
 ```bash
@@ -195,6 +203,10 @@ helm install -f helm-cloud.yaml \
 ```
 
 > Please note that `apex1` uniquely identifies the environment. As mentioned, that word will be used as the namespace, the OpenNMS Instance ID, and prefix the `domain` for the FQDNs used in the Ingress Controller, among other things. Ensure to use the correct domain, hostname for your dependencies, name for the `StorageClass` that allows `ReadWriteMany` (if needed), the `ClusterIssuer` to create certificates for the hosts managed by the Ingress, and all the credentials.
+
+> Make sure to use your domain.
+
+> Make sure to adjust `helm-cloud.yaml` to your needs. You could avoid using `--set` if all the values are correct on the values file. Using `--set` overrides what's passed via `-f`, which in turn overrides the Chart defaults (`values.yaml`, or the output of `helm show values ./opennms`).
 
 Keep in mind the above is only an example. You must treat the content of [helm-cloud.yaml](helm-cloud.yaml) as a sample for testing purposes. Make sure to tune it properly (that way, you could avoid overriding settings via `--set`).
 
@@ -274,7 +286,7 @@ helm upgrade --install -f helm-cloud.yaml \
 
 > Note the usage of the same `REGISTRY_PATH` created before.
 
-## Run locally
+## Run locally for testing purposes
 
 Start Minikube:
 
