@@ -16,15 +16,16 @@ gcloud config set project $PROJECT_ID
 gcloud config set compute/zone $COMPUTE_ZONE
 
 REGION="${COMPUTE_ZONE::-2}"
-CHANNEL="regular"
-VERSION=$(gcloud container get-server-config --region $REGION --format "value(channels[1].validVersions[0])")
+
+if [[ "${VERSION}" == "" ]]; then
+  VERSION=$(gcloud container get-server-config --region $REGION --format "value(channels[1].validVersions[0])")
+fi
 
 echo "Starting Kubernetes version $VERSION"
 gcloud container clusters create "$USER-opennms" \
   --addons=GcpFilestoreCsiDriver \
   --num-nodes=$GCP_NODE_COUNT \
   --cluster-version=$VERSION \
-  --release-channel=$CHANNEL \
   --machine-type=$GCP_VM_SIZE
 
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/cloud/deploy.yaml
