@@ -1,5 +1,6 @@
 {{- /* @author Alejandro Galue <agalue@opennms.com> */}}
 
+{{- if gt (((.Values.grafana).imageRenderer).replicaCount|int) 0 }}
 ---
 apiVersion: v1
 kind: Service
@@ -16,3 +17,4 @@ spec:
   selector:
     app: grafana-renderer
     {{- include "opennms.selectorLabels" . | nindent 4 }}
+{{ end }}

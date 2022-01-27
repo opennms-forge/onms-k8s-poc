@@ -69,10 +69,12 @@ spec:
           value: $(POSTGRES_HOST):$(POSTGRES_PORT)
         - name: GF_SESSION_PROVIDER_CONFIG
           value: dbname=$(GF_DATABASE_NAME) user=$(GF_DATABASE_USER) password=$(GF_DATABASE_PASSWORD) host=$(POSTGRES_HOST) port=$(POSTGRES_PORT) sslmode=$(GF_DATABASE_SSL_MODE)
+        {{- if gt (((.Values.grafana).imageRenderer).replicaCount|int) 0 }}
         - name: GF_RENDERING_SERVER_URL
           value: http://grafana-renderer.{{ .Release.Name }}:8081/render
         - name: GF_RENDERING_CALLBACK_URL
           value: http://grafana.{{ .Release.Name }}:3000/
+        {{- end }}
         volumeMounts:
         - name: config
           mountPath: /etc/grafana/provisioning/plugins/helm.yaml
