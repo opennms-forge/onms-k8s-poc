@@ -1,7 +1,7 @@
 {{- /* @author Alejandro Galue <agalue@opennms.com> */}}
 
 {{- define "opennms.grafanaDSOptions" -}}
-{{- $srv := "onms" -}}
+{{- $srv := "onms-core" -}}
 {{- if gt (((.Values.opennms).uiServers).replicaCount|int) 0 }}
 {{- $srv = "onms-ui" -}}
 {{- end -}}
