@@ -18,7 +18,11 @@ Keep in mind that we expect Kafka, Elasticsearch, and PostgreSQL to run external
 
 **Shared Volumes Diagram**
 
+The following describes the use case when having dedicated OpenNMS UI instances:
+
 ![Diagram](diagrams/onms-k8s-poc-diagrams.003.png)
+
+The above doesn't apply when creating an environment without UI instances, meaning the Helm Chart won't use the custom `StorageClass`. Instead, it assumes the usage of the default from your Kubernetes cluster. For example, on GKE, it is called `standard` and uses `kubernetes.io/gce-pd`.
 
 ## Requirements
 
