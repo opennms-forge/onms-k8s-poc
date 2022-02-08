@@ -23,7 +23,7 @@ NGINX_POD=$(kubectl get pod -n ingress-nginx -l app.kubernetes.io/component=cont
 kubectl delete pod/$NGINX_POD -n ingress-nginx
 
 # Install Cert-Manager
-CMVER=$(curl -s https://api.github.com/repos/jetstack/cert-manager/releases/latest | grep tag_name | cut -d '"' -f 4)
+CMVER=$(curl -s https://api.github.com/repositories/92313258/releases/latest | grep tag_name | cut -d '"' -f 4)
 kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/$CMVER/cert-manager.yaml
 kubectl wait pod -l app.kubernetes.io/instance=cert-manager --for=condition=Ready --timeout=300s -n cert-manager
 kubectl apply -f ca -n cert-manager
