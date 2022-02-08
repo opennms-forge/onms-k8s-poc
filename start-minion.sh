@@ -86,17 +86,12 @@ telemetry:
 ipc:
 EOF
 
+modules="rpc sink"
 if [[ "${http_url}" == "" ]]; then
-    cat <<EOF >> $yaml
-  kafka:
-    bootstrap.servers: ${kafka_boostrap}
-    security.protocol: SASL_SSL
-    sasl.mechanism: SCRAM-SHA-512
-    sasl.jaas.config: org.apache.kafka.common.security.scram.ScramLoginModule required username="${kafka_user}" password="${kafka_passwd}";
-EOF
-else
-  for module in rpc sink; do
-    cat <<EOF >> $yaml
+  modules="twin ${modules}"
+fi
+for module in ${modules}; do
+  cat <<EOF >> $yaml
   $module:
     kafka:
       bootstrap.servers: ${kafka_boostrap}
@@ -104,8 +99,7 @@ else
       sasl.mechanism: SCRAM-SHA-512
       sasl.jaas.config: org.apache.kafka.common.security.scram.ScramLoginModule required username="${kafka_user}" password="${kafka_passwd}";
 EOF
-  done
-fi
+done
 
 if [[ "${debug}" != "0" ]]; then
   cat $yaml
