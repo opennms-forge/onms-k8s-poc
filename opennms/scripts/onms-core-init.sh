@@ -234,25 +234,27 @@ org.opennms.core.ipc.rpc.kafka.acks=0
 org.opennms.core.ipc.rpc.kafka.linger.ms=5
 EOF
 
-  if [[ ${KAFKA_SASL_USERNAME} && ${KAFKA_SASL_PASSWORD} ]]; then
-    JAAS_CLASS="org.apache.kafka.common.security.plain.PlainLoginModule"
-    if [[ "${KAFKA_SASL_MECHANISM}" == *"SCRAM"* ]]; then
-      JAAS_CLASS="org.apache.kafka.common.security.scram.ScramLoginModule"
-    fi
-    MODULES="rpc sink"
-    if [[ "$USE_TWIN" == "true" ]]; then
-      MODULES="twin $MODULES"
-    fi
-    for module in $MODULES; do
-      cat <<EOF >> ${CONFIG_DIR_OVERLAY}/opennms.properties.d/kafka.properties
+  MODULES="rpc sink"
+  if [[ "$USE_TWIN" == "true" ]]; then
+    MODULES="twin $MODULES"
+  fi
+  for module in $MODULES; do
+    cat <<EOF >> ${CONFIG_DIR_OVERLAY}/opennms.properties.d/kafka.properties
 
 # ${module^^} Security
 org.opennms.core.ipc.$module.kafka.security.protocol=${KAFKA_SECURITY_PROTOCOL}
 org.opennms.core.ipc.$module.kafka.sasl.mechanism=${KAFKA_SASL_MECHANISM}
+EOF
+    if [[ ${KAFKA_SASL_USERNAME} && ${KAFKA_SASL_PASSWORD} ]]; then
+      JAAS_CLASS="org.apache.kafka.common.security.plain.PlainLoginModule"
+      if [[ "${KAFKA_SASL_MECHANISM}" == *"SCRAM"* ]]; then
+        JAAS_CLASS="org.apache.kafka.common.security.scram.ScramLoginModule"
+      fi
+      cat <<EOF >> ${CONFIG_DIR_OVERLAY}/opennms.properties.d/kafka.properties
 org.opennms.core.ipc.$module.kafka.sasl.jaas.config=${JAAS_CLASS} required username="${KAFKA_SASL_USERNAME}" password="${KAFKA_SASL_PASSWORD}";
 EOF
-    done
-  fi
+    fi
+  done
 fi
 
 # Configure RRAs

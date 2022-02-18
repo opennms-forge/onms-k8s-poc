@@ -152,18 +152,20 @@ bootstrap.servers=${KAFKA_BOOTSTRAP_SERVER}
 max.partition.fetch.bytes=5000000
 EOF
 
-  if [[ ${KAFKA_SASL_USERNAME} && ${KAFKA_SASL_PASSWORD} ]]; then
-    JAAS_CLASS="org.apache.kafka.common.security.plain.PlainLoginModule"
-    if [[ "${KAFKA_SASL_MECHANISM}" == *"SCRAM"* ]]; then
-      JAAS_CLASS="org.apache.kafka.common.security.scram.ScramLoginModule"
-    fi
-    for f in ${FILE_PREFIX}.cfg ${FILE_PREFIX}.consumer.cfg; do
-      cat <<EOF >> $f
+  for f in ${FILE_PREFIX}.cfg ${FILE_PREFIX}.consumer.cfg; do
+    cat <<EOF >> $f
 # Security
 security.protocol=${KAFKA_SECURITY_PROTOCOL}
 sasl.mechanism=${KAFKA_SASL_MECHANISM}
+EOF
+    if [[ ${KAFKA_SASL_USERNAME} && ${KAFKA_SASL_PASSWORD} ]]; then
+      JAAS_CLASS="org.apache.kafka.common.security.plain.PlainLoginModule"
+      if [[ "${KAFKA_SASL_MECHANISM}" == *"SCRAM"* ]]; then
+        JAAS_CLASS="org.apache.kafka.common.security.scram.ScramLoginModule"
+      fi
+      cat <<EOF >> $f
 sasl.jaas.config=${JAAS_CLASS} required username="${KAFKA_SASL_USERNAME}" password="${KAFKA_SASL_PASSWORD}";
 EOF
-    done
-  fi
+    fi
+  done
 fi

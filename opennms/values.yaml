@@ -42,10 +42,10 @@ dependencies:
   kafka:
     hostname: onms-kafka-bootstrap.shared.svc # IP or FQDN of the external Kafka server
     port: 9092
-    username: opennms
-    password: 0p3nNM5
+    username: opennms # Pass empty username when using sasl_mechanism=PLAIN
+    password: 0p3nNM5 # Pass empty password when using sasl_mechanism=PLAIN
     configuration:
-      sasl_mechanism: SCRAM-SHA-512
+      sasl_mechanism: SCRAM-SHA-512 # PLAIN, SCRAM-SHA-512
       security_protocol: SASL_SSL # PLAINTEXT, SSL, SASL_PLAINTEXT, SASL_SSL
 
   # Persisting flows requires Elasticsearch

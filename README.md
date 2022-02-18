@@ -336,11 +336,9 @@ For instance, for macOS:
 ```bash
 DOMAIN="k8s.agalue.net"
 
-cat <<EOF | sudo tee /etc/resolver/minikube-$DOMAIN
+cat <<EOF | sudo tee /etc/resolver/$DOMAIN
 domain $DOMAIN
 nameserver $(minikube ip)
-search_order 1
-timeout 5
 EOF
 ```
 

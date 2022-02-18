@@ -28,7 +28,7 @@ spec:
     version: 3.0.0
     replicas: 1
     listeners:
-    - name: plain
+    - name: simple
       port: 9092
       type: internal
       tls: false
@@ -53,6 +53,10 @@ spec:
         brokers:
         - broker: 0
           host: kafka-0.k8s.agalue.net
+    - name: plain
+      port: 9095
+      type: internal
+      tls: false
     config:
       offsets.topic.replication.factor: 1
       transaction.state.log.replication.factor: 1
