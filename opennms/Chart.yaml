@@ -1,7 +1,7 @@
 apiVersion: v2
 name: opennms
 description: A Helm chart for running OpenNMS in Kubernetes
-home: https://github.com/agalue/onms-k8s-poc
+home: https://github.com/opennms-forge/onms-k8s-poc
 icon: https://www.opennms.com/favicon.ico
 
 # A chart can be either an 'application' or a 'library' chart.
