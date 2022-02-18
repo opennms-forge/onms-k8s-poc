@@ -4,7 +4,7 @@ This to solve the device source IP in UDP datagram being overwritten by a K8s en
 
 The following is an example of deploying from Mac to Azure's K8s AKS instance.
 
-# Setup Azure Components 
+## Setup Azure Components 
 
 Other env vars: 
 ```
@@ -46,7 +46,7 @@ Authenticate to aks:
 az aks get-credentials --resource-group "$RESOURCE_GROUP" --name "$USER-opennms" --overwrite-existing 
 ```
 
-# Setup Ingress & update DNS 
+## Setup Ingress & update DNS 
 
 Ingress: 
 ```
@@ -61,7 +61,7 @@ export NGINX_EXTERNAL_IP=$(kubectl get svc ingress-nginx-controller -n ingress-n
 az network dns record-set a add-record -g "cloud-ops" -z "<domain1>" -n "*.<subdomain1>" -a $NGINX_EXTERNAL_IP 
 ```
 
-# Deploy Dependencies 
+## Deploy Dependencies 
 
 Make sure to cd into root dir of repo.
 
@@ -81,7 +81,7 @@ Run Scripts:
 ./create-storageclass.sh aks onms-share 
 ```
 
-# Change yaml Configs before Deploying OpenNMS
+## Change yaml Configs before Deploying OpenNMS
 
 Change the following for test.
 
@@ -97,7 +97,7 @@ In helm-cloud.yaml
 In dependencies/kafka.yaml, change the following:
 * host: kafka.<sud_domain1>.<domain1>
 
-# Deploy OpenNMS Instance
+## Deploy OpenNMS Instance
 
 Run:
 ```
@@ -127,7 +127,7 @@ The ssl is self-signed.
 
 Port forward to and ssh to karaf, run this, shows what is running: $ kafka-sink-topics
 
-# Deploy Minion
+## Deploy Minion
 
 Update minion.yaml secret:
 ```
@@ -154,7 +154,7 @@ Run
 kubectl apply -f minion.yaml
 ```
 
-# Source IP through Minion Using Node Port
+## Source IP through Minion Using Node Port
 
 ```
 kubectl -n minion1 expose pod/minion --port=1162 --protocol=UDP --type=NodePort --name=udp-server
@@ -187,7 +187,7 @@ The ip address showing up in the opennms node events is the same from the follow
 dig -4 TXT +short o-o.myaddr.l.google.com @ns1.google.com 
 ```
 
-# Deploy UDP Ingress - Does not work for our purposes for information purposes only
+## Deploy UDP Ingress - Does not work for our purposes for information purposes only
 
 This shows a typical UDP deployment through ingress-nginx, but it will not preserve the source IP in the UDP datagram of the SNMP Trap.
 
