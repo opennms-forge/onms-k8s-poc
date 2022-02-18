@@ -1,0 +1,183 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    app.kubernetes.io/instance: minion1
+    app.kubernetes.io/name: opennms
+    app.kubernetes.io/version: 0.1.0
+    kubernetes.io/metadata.name: minion1
+  name: minion1
+spec:
+  finalizers:
+  - kubernetes
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: minion
+  namespace: minion1
+  labels:
+    app: minion1
+    app.kubernetes.io/instance: minion1
+    app.kubernetes.io/name: opennms
+    app.kubernetes.io/version: 0.1.0
+    kubernetes.io/metadata.name: minion1
+spec:
+  containers:
+  - name: minion
+    image: opennms/minion:29.0.5
+    env:
+    - name: JAVA_OPTS
+      value: -XX:+AlwaysPreTouch -XX:+UseG1GC -XX:+UseStringDeduplication -Djavax.net.ssl.trustStore=/etc/java/jks/truststore.jks -Djavax.net.ssl.trustStorePassword=0p3nNM5
+      # docker run --name minion-2 -it --rm -e TZ=America/New_York -e JAVA_OPTS=-XX:+AlwaysPreTouch -XX:+UseG1GC -XX:+UseStringDeduplication -Djavax.net.ssl.trustStore=/etc/java/jks/truststore.jks -Djavax.net.ssl.trustStorePassword=0p3nNM5 -p 8201:8201 -p 1514:1514/udp -p 1162:1162/udp -p 8877:8877/udp -v /Users/jaberry/Documents/research.onms-k8s-poc/onms-k8s-poc/jks/truststore.jks:/etc/java/jks/truststore.jks -v /tmp/_minion-1-1644872188.yaml:/opt/minion/minion-config.yaml opennms/minion:29.0.5 -c
+    ports:
+    - name: snmp
+      containerPort: 1162
+      protocol: UDP
+    - name: minion
+      containerPort: 80
+      protocol: TCP
+    volumeMounts:
+    - mountPath: /opt/minion/minion-config.yaml
+      name: minion-settings
+      subPath: minion-config.yaml
+    - mountPath: /etc/java/jks
+      name: jks
+  # May need an init container for the following:
+  # /tmp/_minion-1-1644871378.yaml:/opt/minion/minion-config.yaml,
+  # /Users/jaberry/Documents/research.onms-k8s-poc/onms-k8s-poc/jks/truststore.jks:/etc/java/jks/truststore.jks
+  volumes:
+  - configMap:
+      defaultMode: 420
+      name: app-settings
+    name: minion-settings
+  - name: jks
+    secret:
+      defaultMode: 420
+      secretName: app-jks
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: snmpnodeport
+  namespace: minion1
+  labels:
+    app: minion1
+    app.kubernetes.io/instance: minion1
+    app.kubernetes.io/name: opennms
+    app.kubernetes.io/version: 0.1.0
+spec:
+  clusterIP: None
+  ports:
+  - name: traps
+    protocol: UDP
+    port: 1162
+    targetPort: snmp
+  selector:
+    app: minion1
+    #app.kubernetes.io/instance: minion1
+    #app.kubernetes.io/name: minion1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: snmp
+  namespace: minion1
+  labels:
+    app: minion1
+    app.kubernetes.io/instance: minion1
+    app.kubernetes.io/name: opennms
+    app.kubernetes.io/version: 0.1.0
+spec:
+  clusterIP: None
+  ports:
+  - name: traps
+    protocol: UDP
+    port: 1162
+    targetPort: snmp
+  selector:
+    app: minion1
+    #app.kubernetes.io/instance: minion1
+    #app.kubernetes.io/name: minion1
+---
+apiVersion: v1
+kind: Secret
+type: Opaque
+metadata:
+  name: app-jks
+  namespace: minion1
+  labels:
+    app.kubernetes.io/instance: minion1
+    app.kubernetes.io/name: opennms
+    app.kubernetes.io/version: 0.1.0
+data: # To be mounted at /etc/java/jks
+  truststore.jks: |
+    <base64_output_from_jks_truststore>
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/instance: minion1
+    app.kubernetes.io/name: opennms
+    app.kubernetes.io/version: 0.1.0
+  name: app-settings
+  namespace: minion1
+data:
+  minion-config.yaml: |
+    id: minion-1
+    location: Apex
+    system:
+      properties:
+        org.opennms.instance.id: apex1
+    telemetry:
+      flows:
+        listeners:
+          Flow-Listener:
+            class-name: "org.opennms.netmgt.telemetry.listeners.UdpListener"
+            parameters:
+              port: 8877
+            parsers:
+              Netflow-9:
+                class-name: "org.opennms.netmgt.telemetry.protocols.netflow.parser.Netflow9UdpParser"
+                queue:
+                  use-routing-key: "true"
+                parameters:
+                  dnsLookupsEnabled: "false"
+              Netflow-5:
+                class-name: "org.opennms.netmgt.telemetry.protocols.netflow.parser.Netflow5UdpParser"
+                queue:
+                  use-routing-key: "true"
+                parameters:
+                  dnsLookupsEnabled: "false"
+              IPFIX:
+                class-name: "org.opennms.netmgt.telemetry.protocols.netflow.parser.IpfixUdpParser"
+                queue:
+                  use-routing-key: "true"
+                parameters:
+                  dnsLookupsEnabled: "false"
+              SFlow:
+                class-name: "org.opennms.netmgt.telemetry.protocols.sflow.parser.SFlowUdpParser"
+                queue:
+                  use-routing-key: "true"
+                parameters:
+                  dnsLookupsEnabled: "false"
+    ipc:
+      twin:
+        kafka:
+          bootstrap.servers: kafka-0.<subdomain1>.<domain1>:443
+          security.protocol: SASL_SSL
+          sasl.mechanism: SCRAM-SHA-512
+          sasl.jaas.config: org.apache.kafka.common.security.scram.ScramLoginModule required username="opennms" password="0p3nNM5";
+      rpc:
+        kafka:
+          bootstrap.servers: kafka-0.<subdomain1>.<domain1>:443
+          security.protocol: SASL_SSL
+          sasl.mechanism: SCRAM-SHA-512
+          sasl.jaas.config: org.apache.kafka.common.security.scram.ScramLoginModule required username="opennms" password="0p3nNM5";
+      sink:
+        kafka:
+          bootstrap.servers: kafka-0.<subdomain1>.<domain1>:443
+          security.protocol: SASL_SSL
+          sasl.mechanism: SCRAM-SHA-512
+          sasl.jaas.config: org.apache.kafka.common.security.scram.ScramLoginModule required username="opennms" password="0p3nNM5";

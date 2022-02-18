@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: minion-ingress
+  namespace: minion1
+spec:
+  ingressClassName: nginx-udp
+  rules:
+  - host: minion2.<subdomain2>.<domain1>
+    http:
+      paths:
+      - backend:
+          service:
+            name: snmp
+            port:
+              number: 1162
+        path: /
+        pathType: Prefix

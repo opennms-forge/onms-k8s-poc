@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: minion1
+    app.kubernetes.io/instance: minion1
+    app.kubernetes.io/name: opennms
+    app.kubernetes.io/version: 0.1.0
+    helm.sh/chart: opennms-0.1.0
+  name: minion-nodeport-udp
+  namespace: minion1
+spec:
+  #clusterIP: None
+  # Not sure if this is necessary, these are the service ClusterIPs.
+  #clusterIP: 10.0.144.212
+  #clusterIPs:
+  #- 10.0.144.212
+  externalTrafficPolicy: Cluster
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: traps
+    protocol: UDP
+    port: 1162
+    targetPort: snmp
+  selector:
+    app: minion1
+    app.kubernetes.io/instance: minion1
+    app.kubernetes.io/name: minion1
+  sessionAffinity: None
+  type: NodePort
