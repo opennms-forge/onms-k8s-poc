@@ -33,6 +33,15 @@ spec:
         {{- end }}
       {{- end }}
       initContainers:
+      {{- if .Values.opennms.configuration.enable_alec }}
+      - name: alec
+        image: {{ .Values.opennms.configuration.alecImage.repository }}:{{ .Values.opennms.configuration.alecImage.tag }}
+        imagePullPolicy: {{ .Values.opennms.configuration.alecImage.imagePullPolicy }}
+        command: [ cp, /plugins/opennms-alec-plugin.kar, /opennms-deploy ]
+        volumeMounts:
+        - name: deploy
+          mountPath: /opennms-deploy # Required by the init script - DEPLOY_DIR
+      {{- end }}
       # Initializes/Updates OpenNMS Configuration
       # Requires the same image/version used at runtime
       - name: init
