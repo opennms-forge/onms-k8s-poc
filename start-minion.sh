@@ -2,7 +2,7 @@
 # @author Alejandro Galue <agalue@opennms.com>
 
 minion_repository="opennms/minion"
-minion_version="29.0.4" # Must match the version chosen for OpenNMS (careful with NMS-13610)
+minion_version="29.0.6" # The script won't work with an older version.
 minion_location="Apex"
 minion_id="minion-1"
 instance_id="apex1"  # Must match name of the Helm instance (or the Kubernetes namespace)
@@ -86,20 +86,13 @@ telemetry:
 ipc:
 EOF
 
-modules="rpc sink"
-if [[ "${http_url}" == "" ]]; then
-  modules="twin ${modules}"
-fi
-for module in ${modules}; do
-  cat <<EOF >> $yaml
-  $module:
-    kafka:
-      bootstrap.servers: ${kafka_boostrap}
-      security.protocol: SASL_SSL
-      sasl.mechanism: SCRAM-SHA-512
-      sasl.jaas.config: org.apache.kafka.common.security.scram.ScramLoginModule required username="${kafka_user}" password="${kafka_passwd}";
+cat <<EOF >> $yaml
+  kafka:
+    bootstrap.servers: ${kafka_boostrap}
+    security.protocol: SASL_SSL
+    sasl.mechanism: SCRAM-SHA-512
+    sasl.jaas.config: org.apache.kafka.common.security.scram.ScramLoginModule required username="${kafka_user}" password="${kafka_passwd}";
 EOF
-done
 
 if [[ "${debug}" != "0" ]]; then
   cat $yaml
