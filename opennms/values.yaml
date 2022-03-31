@@ -6,7 +6,7 @@
 timezone: America/New_York
 domain: example.com # The common domain for the Ingress resource.
 storageClass: onms-share # The name of the StorageClass that allows ReadWriteMany for RRDs and Core configuration (when using dedicated UI instances).
-opennmsVersion: '29.0.5'
+opennmsVersion: '29.0.6'
 
 # Optionally specify an array of imagePullSecrets.
 # Secrets must be manually created in the namespace.
@@ -105,6 +105,10 @@ opennms:
     - RRA:AVERAGE:0.5:288:366
     - RRA:MAX:0.5:288:366
     - RRA:MIN:0.5:288:366
+    alecImage:
+      repository: opennms/alec
+      pullPolicy: IfNotPresent
+      tag: v1.1.1
     database: # Access to the OpenNMS database
       username: opennms
       password: 0p3nNM5
