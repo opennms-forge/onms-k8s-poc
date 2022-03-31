@@ -38,6 +38,9 @@ spec:
         image: {{ .Values.opennms.configuration.alecImage.repository }}:{{ .Values.opennms.configuration.alecImage.tag }}
         imagePullPolicy: {{ .Values.opennms.configuration.alecImage.imagePullPolicy }}
         command: [ cp, /plugins/opennms-alec-plugin.kar, /opennms-deploy ]
+        securityContext: # To guarantee ownership of the KAR file so that OpenNMS won't complain.
+          runAsUser: 10001
+          runAsGroup: 10001
         volumeMounts:
         - name: deploy
           mountPath: /opennms-deploy # Required by the init script - DEPLOY_DIR
