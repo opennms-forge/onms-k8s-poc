@@ -172,6 +172,7 @@ if [[ ${ENABLE_ALEC} == "true" ]]; then
   if [[ ! -e /opt/opennms/deploy/opennms-alec-plugin.kar ]] && [[ ! -e ${DEPLOY_DIR}/opennms-alec-plugin.kar ]]; then
     KAR_VER=$(curl -s https://api.github.com/repos/OpenNMS/alec/releases/latest | grep tag_name | cut -d '"' -f 4)
     KAR_URL="https://github.com/OpenNMS/alec/releases/download/${KAR_VER}/opennms-alec-plugin.kar"
+    echo "Downloading ALEC $KAR_VER from GitHub..."
     curl -LJ -o ${DEPLOY_DIR}/opennms-alec-plugin.kar ${KAR_URL} 2>/dev/null
   fi
 

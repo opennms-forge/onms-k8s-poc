@@ -108,7 +108,7 @@ opennms:
     alecImage:
       repository: opennms/alec
       pullPolicy: IfNotPresent
-      tag: 'latest'
+      tag: v1.1.1
     database: # Access to the OpenNMS database
       username: opennms
       password: 0p3nNM5
