@@ -3,7 +3,7 @@
 
 dependencies:
   loki:
-    hostname: onms-loki.shared.svc
+    hostname: loki.shared.svc
     port: 3100
   kafka:
     hostname: onms-kafka-bootstrap.shared.svc # Please change it
@@ -40,7 +40,7 @@ opennms:
     replicaCount: 0
 
 sentinel:
-  replicaCount: 2
+  replicaCount: 1
   resources:
     limits:
       cpu: '1'

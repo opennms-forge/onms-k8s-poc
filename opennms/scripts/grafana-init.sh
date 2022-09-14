@@ -16,7 +16,7 @@ export PGHOST=${POSTGRES_HOST}
 export PGPORT=${POSTGRES_PORT}
 export PGUSER=${POSTGRES_USER}
 export PGPASSWORD=${POSTGRES_PASSWORD}
-export PGSSLMODE=require
+export PGSSLMODE=${POSTGRES_SSL_MODE}
 export PGSSLROOTCERT=/etc/java/jks/postgresql-ca.cert
 
 echo "Grafana Database Initialization Script..."
@@ -30,7 +30,7 @@ command -v createuser >/dev/null 2>&1 || { echo >&2 "createuser is required but 
 # Wait for dependencies
 echo "Waiting for postgresql host ${PGHOST}"
 until pg_isready; do
-  printf '.'
+  printf ''
   sleep 5
 done
 echo "Done"

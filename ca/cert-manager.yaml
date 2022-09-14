@@ -28,6 +28,11 @@ spec:
     name: selfsigned-issuer
     kind: ClusterIssuer
     group: cert-manager.io
+  usages:
+  - cert sign
+  - crl sign
+  - server auth
+  - client auth
 
 # For Ingress
 ---

@@ -34,7 +34,7 @@ spec:
     - superuser
     - createdb
   postgresql:
-    version: "13"
+    version: "14"
   spiloFSGroup: 103
   patroni:
     initdb:
@@ -43,3 +43,7 @@ spec:
       data-checksums: "true"
   tls:
     secretName: onms-db-certs
+  enableMasterLoadBalancer: false
+  enableReplicaLoadBalancer: false
+  enableConnectionPooler: false
+  enableReplicaConnectionPooler: false

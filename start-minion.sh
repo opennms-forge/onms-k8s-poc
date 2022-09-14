@@ -1,5 +1,9 @@
-#!env bash
+#!/bin/bash
 # @author Alejandro Galue <agalue@opennms.com>
+
+set -e
+
+type docker >/dev/null 2>&1 || { echo >&2 "docker required but it's not installed; aborting."; exit 1; }
 
 minion_repository="opennms/minion"
 minion_version="29.0.6" # The script won't work with an older version.

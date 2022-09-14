@@ -25,7 +25,6 @@ metadata:
   name: onms
 spec:
   kafka:
-    version: 3.0.0
     replicas: 1
     listeners:
     - name: simple

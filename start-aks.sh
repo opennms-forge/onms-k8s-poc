@@ -1,9 +1,13 @@
-#!env bash
+#!/bin/bash
 # @author Alejandro Galue <agalue@opennms.com>
 #
 # WARNING: For testing purposes only
 
 set -e
+
+for cmd in "az" "kubectl"; do
+  type $cmd >/dev/null 2>&1 || { echo >&2 "$cmd required but it's not installed; aborting."; exit 1; }
+done
 
 if [[ "$SERVICE_PRINCIPAL" == "" ]]; then
   echo "Please create and export an environment variable called SERVICE_PRINCIPAL with the ID of the Service Account to use with AKS"
