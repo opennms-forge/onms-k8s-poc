@@ -58,7 +58,7 @@ kubectl wait pod -l app.kubernetes.io/component=controller --for=condition=Ready
 DNS Entry: 
 ```
 export NGINX_EXTERNAL_IP=$(kubectl get svc ingress-nginx-controller -n ingress-nginx -o jsonpath='{.status.loadBalancer.ingress[0].ip}') 
-az network dns record-set a add-record -g "cloud-ops" -z "<domain1>" -n "*.<subdomain1>" -a $NGINX_EXTERNAL_IP 
+az network dns record-set a add-record -g "<resource_group_containing_your_dns_zone>" -z "<domain1>" -n "*.<subdomain1>" -a $NGINX_EXTERNAL_IP 
 ```
 
 ## Step 3 - Deploy Dependencies 
@@ -95,7 +95,7 @@ In helm-cloud.yaml
   * This gives us a UI.
 
 In dependencies/kafka.yaml, change the following:
-* host: kafka.<sud_domain1>.<domain1>
+* host: kafka.sud_domain1.domain1
 
 ## Step 5 - Deploy OpenNMS Instance
 
@@ -116,7 +116,7 @@ helm install -f helm-cloud.yaml \
 Wait for all pods to come online in namespace apex1.
 
 Test OpenNMS:
-* Go to incognito web browser: https://onms.apex1.<subdomain1>.<domain1>
+* Go to incognito web browser: https://onms.apex1.subdomain1.domain1
   * User: admin
   * PW: 0p3nNM5 # Same as password seen in start-dependencies.sh. For testing purposes only.
 
