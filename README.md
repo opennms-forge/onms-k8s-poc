@@ -300,7 +300,6 @@ Start Minikube:
 
 ```bash
 minikube start --cpus=4 --memory=24g \
-  --cni=calico \
   --addons=ingress \
   --addons=ingress-dns \
   --addons=metrics-server \
