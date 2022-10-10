@@ -336,6 +336,7 @@ For instance, for macOS:
 ```bash
 DOMAIN="k8s.agalue.net"
 
+sudo mkdir -p /etc/resolver
 cat <<EOF | sudo tee /etc/resolver/$DOMAIN
 domain $DOMAIN
 nameserver $(minikube ip)
