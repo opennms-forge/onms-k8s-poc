@@ -120,6 +120,10 @@ For example, when deploying the Helm Chart names `acme` (remember about the rule
 - OpenNMS Core: `onms-core.acme.k8s.agalue.net`
 - Grafana: `grafana.acme.k8s.agalue.net`
 
+If you get a certificate error with Chrome in a local cluster because you don't have a valid certificate, see [thisisunsafe - Bypassing chrome security warnings](https://cybercafe.dev/thisisunsafe-bypassing-chrome-security-warnings/).
+
+If you get a too many redirects error, try putting the path `/opennms/login.jsp` at the end of the OpenNMS UI URL to login. You might be running into problem related to [NMS-13901](https://issues.opennms.org/browse/NMS-13901).
+
 To customize behavior, you could pass custom annotations via `ingress.annotations` when deploying the Helm Chart.
 
 Please note that it is expected to have [cert-manager](https://cert-manager.io/docs/) deployed on your Kubernetes cluster as that would be used to manage the certificates (configured via `ingress.certManager.clusterIssuer`).
