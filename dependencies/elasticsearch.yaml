@@ -29,7 +29,7 @@ spec:
         - name: onms-plugin
           image: busybox
           command: [ sh, -c ]
-          args: [ "wget $(PLUGIN_URL) && unzip elasticsearch-drift-plugin-$(PLUGIN_VERSION).zip -d /plugin/" ]
+          args: [ "wget $(PLUGIN_URL) && unzip -o elasticsearch-drift-plugin-$(PLUGIN_VERSION).zip -d /plugin/" ]
           env:
             - name: PLUGIN_VERSION # Must match the chosen Elasticsearch version
               value: '7.6.2'
