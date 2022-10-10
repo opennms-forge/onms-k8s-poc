@@ -36,7 +36,7 @@ helm upgrade --install cert-manager jetstack/cert-manager \
   --namespace cert-manager --create-namespace --set installCRDs=true --wait
 kubectl apply -f ca -n cert-manager
 
-# Create a namespace for all the dependencies
+# Create a namespace for most of the dependencies except for cert-manager (above), and the postgres and elastic operators (added below).
 kubectl create namespace $NAMESPACE
 
 # Install Grafana Loki

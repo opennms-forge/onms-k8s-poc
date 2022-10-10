@@ -63,7 +63,7 @@ The above doesn't apply when creating an environment without UI instances, meani
   * When Sentinels are present, `Telemetryd` would be disabled on the OpenNMS Core instance.
 
 * [Optional] A custom `StorageClass` for shared content (Google Filestore or Azure Files) to use `ReadWriteMany`.
-  * Only required when having dedicated OpenNMS UI instances; otherwise, the default `StorageClass` is used (for example, for Google Cloud, it would be `standard` based on `kubernetes.io/gce-pd`.)
+  * Only required when having dedicated OpenNMS UI instances or when using the default RRD storage for time series data (not Cortex); otherwise, the default `StorageClass` is used (for example, for Google Cloud, it would be `standard` based on `kubernetes.io/gce-pd`.)
   * Use the same `UID` and `GID` as the OpenNMS image with proper file modes.
   * Due to how Google Filestore works, we need to specify `securityContext.fsGroup` (not required for Azure Files). Check [here](https://github.com/kubernetes-sigs/gcp-filestore-csi-driver/blob/master/docs/kubernetes/fsgroup.md) for more information.
   * Keep in mind that the minimum size of a Google Filestore instance is 1TB.
@@ -156,7 +156,7 @@ All the Docker Images can be customizable via Helm Values. The solution allows y
 
 If you plan to use ALEC or the TSS Cortex plugin, the current solution will download the KAR files from GitHub every time the containers start. If your cluster doesn't have Internet access, you must build custom images with the KAR files.
 
-Also, the Helm Chart assumes that all external dependencies are running somewhere else. None of them would be initialized or maintained here. Those are Loki, PostgreSQL, Elasticsearch, Kafka and Cortex (when applies).
+Also, the Helm Chart assumes that all external dependencies are running somewhere else. None of them would be initialized or maintained here. Those are Loki, PostgreSQL, Elasticsearch, Kafka and Cortex (when applies). There is a script provided to startup a set of dependencies for testing as a part of the same cluster but **this is not intended for production use.**
 
 ## Run in the cloud
 
@@ -173,15 +173,15 @@ gcloud container clusters update CLUSTER_NAME_HERE \
   --update-addons=GcpFilestoreCsiDriver=ENABLED
 ```
 
-Optionally, for testing purposes, use the following script to initialize all the dependencies within Kubernetes (including `cert-manager`):
+It is advised to have the dependencies outside this Kubernetes cluster, but for testing purposes, you can use `start-dependencies.sh` to initialize all the dependencies in Kubernetes with a basic configuration (including `cert-manager`).
+
+If you use `start-dependencies.sh`, you will need to edit `dependencies/kafka.yaml` first and set the bootstrap and broker hostnames for Kafka to match your cluster names. You can then use the following script to initialize the dependencies for testing:
 
 ```bash
 ./start-dependencies.sh
 ```
 
-> It is advised to have the dependencies outside Kubernetes.
-
-If you're planning to have dedicated UI instances, create the Storage Class in Google Cloud, using `onms-share` as the name of the `StorageClass`:
+If you're planning to have dedicated UI instances or are using the default RRD storage for time series (not Cortex), create the Storage Class in Google Cloud, using `onms-share` as the name of the `StorageClass`:
 
 ```bash
 ./create-storageclass.sh gke onms-share
@@ -304,13 +304,15 @@ minikube start --cpus=4 --memory=24g \
   --insecure-registry "10.0.0.0/24"
 ```
 
-Start the test dependencies:
+It is advised to have the dependencies outside this Kubernetes cluster, but for testing purposes, you can use `start-dependencies.sh` to initialize all the dependencies in Kubernetes with a basic configuration (including `cert-manager`).
+
+If you use `start-dependencies.sh`, you will need to edit `dependencies/kafka.yaml` first and set the bootstrap and broker hostnames for Kafka to match your cluster names. You can then use the following script to initialize the dependencies for testing:
 
 ```bash
 ./start-dependencies.sh
 ```
 
-If you're planning to have dedicated UI instances, create the storage class (this must be done once):
+If you're planning to have dedicated UI instances or if you are using the default RRD storage for time series (not Cortex), create the storage class (this must be done once):
 
 ```bash
 ./create-storageclass.sh minikube onms-share
