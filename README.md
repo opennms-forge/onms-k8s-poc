@@ -194,12 +194,12 @@ For Azure, replace `gke` with `aks`. On GKE, please keep in mind that it uses th
 Start the OpenNMS environment on your Kubernetes cluster in the cloud using Helm:
 
 ```bash
-helm install -f helm-cloud.yaml \
+helm upgrade --install -f helm-cloud.yaml \
   --set domain=k8s.agalue.net \
   --set storageClass=onms-share \
   --set ingress.certManager.clusterIssuer=opennms-issuer \
-  --set dependencies.truststore.content=$(cat jks/truststore.jks | base64) \
-  --set dependencies.postgresql.ca_cert=$(cat jks/postgresql-ca.crt | base64) \
+  --set-file dependencies.truststore.content=jks/truststore.jks \
+  --set-file dependencies.postgresql.ca_cert=jks/postgresql-ca.crt \
   --set dependencies.postgresql.hostname=onms-db.shared.svc \
   --set dependencies.kafka.hostname=onms-kafka-bootstrap.shared.svc \
   --set dependencies.elasticsearch.hostname=onms-es-http.shared.svc \
@@ -280,8 +280,8 @@ helm upgrade --install -f helm-cloud.yaml \
   --set domain=k8s.agalue.net \
   --set storageClass=onms-share \
   --set ingress.certManager.clusterIssuer=opennms-issuer \
-  --set dependencies.truststore.content=$(cat jks/truststore.jks | base64) \
-  --set dependencies.postgresql.ca_cert=$(cat jks/postgresql-ca.crt | base64) \
+  --set-file dependencies.truststore.content=jks/truststore.jks \
+  --set-file dependencies.postgresql.ca_cert=jks/postgresql-ca.crt \
   --set dependencies.postgresql.hostname=onms-db.shared.svc \
   --set dependencies.kafka.hostname=onms-kafka-bootstrap.shared.svc \
   --set dependencies.elasticsearch.hostname=onms-es-http.shared.svc \
@@ -318,14 +318,14 @@ If you're planning to have dedicated UI instances, create the storage class (thi
 
 > The custom storage class is ignored if `opennms.uiServers.replicaCount` is equal to `0` (the default behavior).
 
-Start OpenNMS:
+Start OpenNMS with Sentinel and a UI server:
 
 ```bash
-helm install -f helm-minikube.yaml \
+helm upgrade --install -f helm-minikube.yaml \
   --set domain=k8s.agalue.net \
   --set storageClass=onms-share \
-  --set dependencies.truststore.content=$(cat jks/truststore.jks | base64) \
-  --set dependencies.postgresql.ca_cert=$(cat jks/postgresql-ca.crt | base64) \
+  --set-file dependencies.truststore.content=jks/truststore.jks \
+  --set-file dependencies.postgresql.ca_cert=jks/postgresql-ca.crt \
   apex1 ./opennms
 ```
 
@@ -390,8 +390,8 @@ helm upgrade --install -f helm-minikube.yaml \
   --set sentinel.image.pullPolicy=Never \
   --set domain=k8s.agalue.net \
   --set storageClass=onms-share \
-  --set dependencies.truststore.content=$(cat jks/truststore.jks | base64) \
-  --set dependencies.postgresql.ca_cert=$(cat jks/postgresql-ca.crt | base64) \
+  --set-file dependencies.truststore.content=jks/truststore.jks \
+  --set-file dependencies.postgresql.ca_cert=jks/postgresql-ca.crt \
   apex1 ./opennms
 ```
 

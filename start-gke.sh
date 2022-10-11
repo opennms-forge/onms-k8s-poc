@@ -1,9 +1,13 @@
-#!env bash
+#!/bin/bash
 # @author Alejandro Galue <agalue@opennms.com>
 #
 # WARNING: For testing purposes only
 
 set -e
+
+for cmd in "gcloud" "kubectl"; do
+  type $cmd >/dev/null 2>&1 || { echo >&2 "$cmd required but it's not installed; aborting."; exit 1; }
+done
 
 PROJECT_ID="${PROJECT_ID-OpenNMS}"
 COMPUTE_ZONE="${COMPUTE_ZONE-us-east1-b}"

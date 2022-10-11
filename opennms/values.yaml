@@ -63,7 +63,7 @@ dependencies:
 
   # The chosen solution for log aggregation (OpenNMS and Sentinel will forward logs to it via Promtail)
   loki:
-    hostname: onms-loki.shared.svc # IP or FQDN of the external Loki server
+    hostname: loki.shared.svc # IP or FQDN of the external Loki server
     username: ''
     password: ''
     ca_cert: '' # A base64 encoded content of the CA Certificate (assumes HTTPS for Loki's URL)

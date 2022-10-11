@@ -1,7 +1,13 @@
-#!env bash
+#!/bin/bash
 # @author Alejandro Galue <agalue@opennms.com>
 #
 # WARNING: For testing purposes only
+
+set -e
+
+for cmd in "kubectl" "helm" "keytool"; do
+  type $cmd >/dev/null 2>&1 || { echo >&2 "$cmd required but it's not installed; aborting."; exit 1; }
+done
 
 NAMESPACE="shared"
 TARGET_DIR="jks" # Expected location for the JKS Truststores
@@ -19,22 +25,27 @@ CLUSTER_NAME="onms" # Must match the name of the cluster inside dependencies/kaf
 # Patch NGinx to allow SSL Passthrough for Strimzi
 kubectl patch deployment ingress-nginx-controller -n ingress-nginx --type json -p \
   '[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--enable-ssl-passthrough"}]'
-NGINX_POD=$(kubectl get pod -n ingress-nginx -l app.kubernetes.io/component=controller | grep Running | awk '{print $1}')
-kubectl delete pod/$NGINX_POD -n ingress-nginx
+
+# Update Helm Repositories
+helm repo add jetstack https://charts.jetstack.io
+helm repo add grafana https://grafana.github.io/helm-charts
+helm repo update
 
 # Install Cert-Manager
-CMVER=$(curl -s https://api.github.com/repositories/92313258/releases/latest | grep tag_name | cut -d '"' -f 4)
-kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/$CMVER/cert-manager.yaml
-kubectl wait pod -l app.kubernetes.io/instance=cert-manager --for=condition=Ready --timeout=300s -n cert-manager
+helm upgrade --install cert-manager jetstack/cert-manager \
+  --namespace cert-manager --create-namespace --set installCRDs=true --wait
 kubectl apply -f ca -n cert-manager
 
 # Create a namespace for all the dependencies
 kubectl create namespace $NAMESPACE
 
 # Install Grafana Loki
-helm repo add grafana https://grafana.github.io/helm-charts
-helm repo update
-helm upgrade --install onms-loki --namespace=$NAMESPACE \
+helm upgrade --install loki --namespace=$NAMESPACE \
+  --set "fullnameOverride=loki" \
+  --set "gateway.enabled=false" \
+  --set "loki.storage.type=filesystem" \
+  --set "monitoring.selfMonitoring.enabled=false" \
+  --set "monitoring.selfMonitoring.grafanaAgent.installOperator=false" \
   --set "persistence.enabled=true" \
   --set "persistence.accessModes={ReadWriteOnce}" \
   --set "persistence.size=50Gi" \

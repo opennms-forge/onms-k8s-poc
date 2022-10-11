@@ -1,4 +1,4 @@
-#!env bash
+#!/bin/bash
 # @author Alejandro Galue <agalue@opennms.com>
 #
 # A StorageClass is a cluster-level resource. It must be created once.
@@ -17,6 +17,8 @@ if [[ "${storageclass}" == "" ]]; then
   echo "Please specify the name of the storage class"
   exit 1
 fi
+
+type kubectl >/dev/null 2>&1 || { echo >&2 "kubectl required but it's not installed; aborting."; exit 1; }
 
 yaml="/tmp/_opennms.storageclass-$(date +%s).yaml"
 
