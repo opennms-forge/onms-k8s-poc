@@ -1,7 +1,8 @@
 #!/bin/bash
 # @author Alejandro Galue <agalue@opennms.com>
 
-set -e
+set -euo pipefail
+trap 's=$?; echo >&2 "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
 
 type docker >/dev/null 2>&1 || { echo >&2 "docker required but it's not installed; aborting."; exit 1; }
 
