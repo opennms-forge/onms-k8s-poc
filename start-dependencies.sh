@@ -45,6 +45,7 @@ helm upgrade --install loki --namespace=$NAMESPACE \
   --set "fullnameOverride=loki" \
   --set "gateway.enabled=false" \
   --set "loki.storage.type=filesystem" \
+  --set "loki.rulerConfig.storage.type=local" \
   --set "monitoring.selfMonitoring.enabled=false" \
   --set "monitoring.selfMonitoring.grafanaAgent.installOperator=false" \
   --set "persistence.enabled=true" \
