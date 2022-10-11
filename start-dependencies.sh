@@ -40,8 +40,8 @@ kubectl apply -f ca -n cert-manager
 kubectl create namespace $NAMESPACE
 
 # Install Grafana Loki
-helm upgrade --install onms-loki --namespace=$NAMESPACE \
-  --set "fullnameOverride=onms-loki" \
+helm upgrade --install loki --namespace=$NAMESPACE \
+  --set "fullnameOverride=loki" \
   --set "gateway.enabled=false" \
   --set "loki.storage.type=filesystem" \
   --set "monitoring.selfMonitoring.enabled=false" \
