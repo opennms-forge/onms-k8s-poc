@@ -3,7 +3,8 @@
 #
 # A StorageClass is a cluster-level resource. It must be created once.
 
-set -e
+set -euo pipefail
+trap 's=$?; echo >&2 "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
 
 environment=${1}
 storageclass=${2}

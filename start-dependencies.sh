@@ -3,7 +3,8 @@
 #
 # WARNING: For testing purposes only
 
-set -e
+set -euo pipefail
+trap 's=$?; echo >&2 "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
 
 for cmd in "kubectl" "helm" "keytool"; do
   type $cmd >/dev/null 2>&1 || { echo >&2 "$cmd required but it's not installed; aborting."; exit 1; }
@@ -36,7 +37,7 @@ helm upgrade --install cert-manager jetstack/cert-manager \
   --namespace cert-manager --create-namespace --set installCRDs=true --wait
 kubectl apply -f ca -n cert-manager
 
-# Create a namespace for all the dependencies
+# Create a namespace for most of the dependencies except for cert-manager (above), and the postgres and elastic operators (added below).
 kubectl create namespace $NAMESPACE
 
 # Install Grafana Loki
@@ -44,6 +45,7 @@ helm upgrade --install loki --namespace=$NAMESPACE \
   --set "fullnameOverride=loki" \
   --set "gateway.enabled=false" \
   --set "loki.storage.type=filesystem" \
+  --set "loki.rulerConfig.storage.type=local" \
   --set "monitoring.selfMonitoring.enabled=false" \
   --set "monitoring.selfMonitoring.grafanaAgent.installOperator=false" \
   --set "persistence.enabled=true" \
