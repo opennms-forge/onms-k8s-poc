@@ -8,7 +8,7 @@ kind: Elasticsearch
 metadata:
   name: onms
 spec:
-  version: 7.6.2 # Must match an available OpenNMS Plugin version
+  version: 7.17.5 # Must match an available OpenNMS Plugin version
   nodeSets:
   - name: default
     count: 1
@@ -31,10 +31,12 @@ spec:
           command: [ sh, -c ]
           args: [ "wget $(PLUGIN_URL) && unzip -o elasticsearch-drift-plugin-$(PLUGIN_VERSION).zip -d /plugin/" ]
           env:
+            - name: TAG_VERSION # Must match the chosen Elasticsearch tag
+              value: '2.0.3_es-7.6.2%2Ces-7.10.2%2Ces-7.16.2%2Ces-7.16.3%2Ces-7.17.5'
             - name: PLUGIN_VERSION # Must match the chosen Elasticsearch version
-              value: '7.6.2'
+              value: '7.17.5-2.0.3'
             - name: PLUGIN_URL
-              value: https://github.com/OpenNMS/elasticsearch-drift-plugin/releases/download/v$(PLUGIN_VERSION)/elasticsearch-drift-plugin-$(PLUGIN_VERSION).zip
+              value: https://github.com/OpenNMS/elasticsearch-drift-plugin/releases/download/v$(TAG_VERSION)/elasticsearch-drift-plugin-$(PLUGIN_VERSION).zip
           volumeMounts:
           - name: onms-plugin-dir
             mountPath: /plugin

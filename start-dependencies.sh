@@ -67,8 +67,8 @@ kubectl apply -f dependencies/kafka.yaml -n $NAMESPACE
 
 # Install Elasticsearch via ECK
 kubectl create secret generic $CLUSTER_NAME-es-elastic-user --from-literal="$ELASTIC_USER=$ELASTIC_PASSWORD" -n $NAMESPACE
-kubectl create -f https://download.elastic.co/downloads/eck/1.8.0/crds.yaml
-kubectl apply -f https://download.elastic.co/downloads/eck/1.8.0/operator.yaml
+kubectl create -f https://download.elastic.co/downloads/eck/2.4.0/crds.yaml
+kubectl apply -f https://download.elastic.co/downloads/eck/2.4.0/operator.yaml
 kubectl apply -f dependencies/elasticsearch.yaml -n $NAMESPACE
 
 # Wait for the clusters
