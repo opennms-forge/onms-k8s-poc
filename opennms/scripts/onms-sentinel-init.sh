@@ -28,6 +28,9 @@
 # ELASTICSEARCH_REPLICATION_FACTOR
 # NUM_LISTENER_THREADS
 
+set -euo pipefail
+trap 's=$?; echo >&2 "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
+
 umask 002
 
 function wait_for {

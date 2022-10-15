@@ -27,6 +27,9 @@
 # ELASTICSEARCH_PASSWORD
 # ELASTICSEARCH_INDEX_STRATEGY_FLOWS
 
+set -euo pipefail
+trap 's=$?; echo >&2 "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
+
 # Configure the instance ID
 # Required when having multiple OpenNMS backends sharing a Kafka cluster or an Elasticsearch cluster.
 if [[ ${OPENNMS_INSTANCE_ID} ]]; then
