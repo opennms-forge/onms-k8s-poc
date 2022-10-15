@@ -23,7 +23,6 @@ dependencies:
 opennms:
   resources: null
   configuration:
-    enable_alec: true
     storage:
       etc: 1Gi
       rrd: 100Gi

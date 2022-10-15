@@ -85,7 +85,9 @@ The above doesn't apply when creating an environment without UI instances, meani
   * You could manage certificates using LetsEncrypt via `cert-manager`, but we only requires the name of a `ClusterIssuer`.
   * To integrate with Google Cloud DNS managed zones or Azure DNS, we need a wild-card entry for the chosen domain against the IP of the Ingress Controller.
 
-> **Please note that unless you build custom images for OpenNMS, the latest available versions of ALEC and the TSS Cortex Plugin (when enabled) as KAR files will be downloaded directly from Github every time the OpenNMS Core container starts, as those binaries are not part of the current Docker Image for OpenNMS.**
+> **Please note that unless you build custom images for OpenNMS, the latest available version of the TSS Cortex Plugin (when enabled) as a KAR file will be downloaded directly from GitHub every time the OpenNMS Core container starts, as those binaries are not part of the current Docker image for OpenNMS.**
+
+> **For the ALEC KAR plugin, the latest release will be fetched from GitHub like the TSS Cortex Plugin above unless `alecImage` is set, in which case it will be loaded from the specified Docker image.** See [alec/README.md](alec/README.md) for information on the Docker container.
 
 ### External Dependencies
 
@@ -158,7 +160,9 @@ The current OpenNMS instances are not friendly when accessing log files. The Hel
 
 All the Docker Images can be customizable via Helm Values. The solution allows you to configure custom Docker Registries to access your custom images, or when all the images you're planning to use won't be in Docker Hub or your Kubernetes cluster won't have Internet Access. Please keep in mind that your custom images should be based on those currently in use.
 
-If you plan to use ALEC or the TSS Cortex plugin, the current solution will download the KAR files from GitHub every time the containers start. If your cluster doesn't have Internet access, you must build custom images with the KAR files.
+If you plan to use the TSS Cortex plugin, the current solution will download the KAR file from GitHub every time the containers start. If your cluster doesn't have Internet access, you must build custom images with the KAR file.
+
+For the ALEC KAR plugin, the latest release will be fetched from GitHub like the TSS Cortex Plugin above unless `alecImage` is set, in which case it will be loaded from the specified Docker image.
 
 Also, the Helm Chart assumes that all external dependencies are running somewhere else. None of them would be initialized or maintained here. Those are Loki, PostgreSQL, Elasticsearch, Kafka and Cortex (when applies). There is a script provided to startup a set of dependencies for testing as a part of the same cluster but **this is not intended for production use.**
 

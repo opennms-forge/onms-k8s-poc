@@ -32,7 +32,6 @@ opennms:
       cpu: '2'
       memory: 4Gi
   configuration:
-    enable_alec: true
     storage:
       etc: 1Gi
       rrd: 100Gi

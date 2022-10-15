@@ -96,7 +96,7 @@ opennms:
       cpu: '2'
       memory: 4Gi
   configuration:
-    enable_alec: true    # Downloads KAR from Github when the container starts if it doesn't exist on the image
+    enable_alec: true    # See alecImage below for how the KAR is retrieved
     enable_cortex: false # Downloads KAR from Github when the container starts if it doesn't exist on the image
     enable_acls: false
     rras: # To optionally replace the RRDtool aggregations (pass [] to keep defaults). Affects Pollerd and Collectd
@@ -105,10 +105,11 @@ opennms:
     - RRA:AVERAGE:0.5:288:366
     - RRA:MAX:0.5:288:366
     - RRA:MIN:0.5:288:366
-    alecImage:
-      repository: opennms/alec
-      pullPolicy: IfNotPresent
-      tag: v1.1.1
+    # If alecImage is specified, the KAR is retrieved from the specified Docker image used as an initContainer, otherwise the latest release in GitHub is retrieved
+    alecImage: {}
+#      repository: opennms/alec
+#      pullPolicy: IfNotPresent
+#      tag: v1.1.1
     database: # Access to the OpenNMS database
       username: opennms
       password: 0p3nNM5
