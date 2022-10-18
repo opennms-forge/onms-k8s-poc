@@ -38,15 +38,15 @@ opennms:
   uiServers:
     replicaCount: 0
 
-sentinel:
-  replicaCount: 1
-  resources:
-    limits:
-      cpu: '1'
-      memory: 4Gi
-    requests:
-      cpu: '1'
-      memory: 2Gi
+#sentinel:
+#  replicaCount: 1
+#  resources:
+#    limits:
+#      cpu: '1'
+#      memory: 4Gi
+#    requests:
+#      cpu: '1'
+#      memory: 2Gi
 
 grafana:
   replicaCount: 2
