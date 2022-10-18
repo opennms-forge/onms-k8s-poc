@@ -9,6 +9,9 @@
 # GRAFANA_SERVER
 # GF_SECURITY_ADMIN_PASSWORD
 
+set -euo pipefail
+trap 's=$?; echo >&2 "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
+
 function wait_for {
   echo "Waiting for $1"
   IFS=':' read -a data <<< $1
@@ -28,7 +31,7 @@ command -v jq >/dev/null 2>&1   || { echo >&2 "jq is required but it's not insta
 wait_for ${OPENNMS_SERVER}:8980
 
 # Configure Grafana Endpoint for Reports
-ID=$(curl -u admin:admin http://${OPENNMS_SERVER}:8980/opennms/rest/endpoints/grafana 2>/dev/null | jq ".[] | select(.uid=\"$(hostname)\") | .id")
+ID=$(curl -u admin:admin http://${OPENNMS_SERVER}:8980/opennms/rest/endpoints/grafana 2>/dev/null | jq ".[] | select(.uid=\"$(hostname)\") | .id") || true
 if [[ $ID == "" ]]; then
   GRAFANA_KEY=$(curl -u "admin:${GF_SECURITY_ADMIN_PASSWORD}" -X POST -H "Content-Type: application/json" -d "{\"name\":\"$(hostname)\",\"role\": \"Viewer\"}" "http://${GRAFANA_SERVER}:3000/api/auth/keys" 2>/dev/null | jq .key - | sed 's/"//g')
   if [[ ${GRAFANA_KEY} == "null" ]]; then

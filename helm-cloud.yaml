@@ -2,9 +2,9 @@
 # Example content for the Helm Chart values with modest resources for a Cloud Deployment
 
 dependencies:
-  loki:
-    hostname: loki.shared.svc
-    port: 3100
+#  loki:
+#    hostname: loki.shared.svc
+#    port: 3100
   kafka:
     hostname: onms-kafka-bootstrap.shared.svc # Please change it
     port: 9093
@@ -32,22 +32,21 @@ opennms:
       cpu: '2'
       memory: 4Gi
   configuration:
-    enable_alec: true
     storage:
       etc: 1Gi
       rrd: 100Gi
   uiServers:
     replicaCount: 0
 
-sentinel:
-  replicaCount: 1
-  resources:
-    limits:
-      cpu: '1'
-      memory: 4Gi
-    requests:
-      cpu: '1'
-      memory: 2Gi
+#sentinel:
+#  replicaCount: 1
+#  resources:
+#    limits:
+#      cpu: '1'
+#      memory: 4Gi
+#    requests:
+#      cpu: '1'
+#      memory: 2Gi
 
 grafana:
   replicaCount: 2

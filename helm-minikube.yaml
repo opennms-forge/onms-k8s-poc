@@ -2,9 +2,9 @@
 # Default values for minikube (for testing purposes only)
 
 dependencies:
-  loki:
-    hostname: loki.shared.svc
-    port: 3100
+#  loki:
+#    hostname: loki.shared.svc
+#    port: 3100
   kafka:
     hostname: onms-kafka-bootstrap.shared.svc
     port: 9093
@@ -23,16 +23,15 @@ dependencies:
 opennms:
   resources: null
   configuration:
-    enable_alec: true
     storage:
       etc: 1Gi
       rrd: 100Gi
   uiServers:
     replicaCount: 1
 
-sentinel:
-  replicaCount: 1
-  resources: null
+#sentinel:
+#  replicaCount: 1
+#  resources: null
 
 grafana:
   replicaCount: 1

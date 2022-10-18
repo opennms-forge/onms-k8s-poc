@@ -18,6 +18,9 @@
 # KAFKA_SASL_MECHANISM
 # KAFKA_SECURITY_PROTOCOL
 
+set -euo pipefail
+trap 's=$?; echo >&2 "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
+
 umask 002
 
 function wait_for {
@@ -41,7 +44,6 @@ echo "OpenNMS Core Configuration Script..."
 
 # Requirements
 command -v rsync >/dev/null 2>&1 || { echo >&2 "rsync is required but it's not installed. Aborting."; exit 1; }
-command -v rpm   >/dev/null 2>&1 || { echo >&2 "rpm is required but it's not installed. Aborting."; exit 1; }
 if [[ ! -e /scripts/onms-common-init.sh ]]; then
   echo >&2 "onms-common-init.sh required but it's not present. Aborting."; exit 1;
 fi
@@ -51,10 +53,36 @@ OPENNMS_DATABASE_CONNECTION_MAXPOOL=${OPENNMS_DATABASE_CONNECTION_MAXPOOL-50}
 KAFKA_SASL_MECHANISM=${KAFKA_SASL_MECHANISM-PLAIN}
 KAFKA_SECURITY_PROTOCOL=${KAFKA_SECURITY_PROTOCOL-SASL_PLAINTEXT}
 
-# Parse OpenNMS version
-PKG=$(rpm -qa | egrep '(meridian|opennms)-core')
-VERSION=$(rpm -q --queryformat '%{VERSION}' $PKG)
+# See if we can get the OpenNMS package name and version from the package manager
+if command -v rpm   >/dev/null 2>&1; then
+  PKG=$(rpm -qa | egrep '(meridian|opennms)-core')
+  VERSION=$(rpm -q --queryformat '%{VERSION}' $PKG)
+elif command -v dpkg-query >/dev/null 2>&1; then
+  if PKG=$(dpkg-query -f '${Package}\n' -W | grep -Fx -e opennms-common -e meridian-common); then
+    VERSION=$(dpkg-query -f '${Version}\n' -W "${PKG}")
+  else
+    PKG="unknown"
+  fi
+else
+  PKG="unknown"
+fi
+
+if [[ "${PKG}" == "unknown" ]]; then
+  if [[ ! -e jetty-webapps/opennms/WEB-INF/version.properties ]]; then
+    echo >&2 "Couldn't determine version number from package manager (which is normal for newer containers) and jetty-webapps/opennms/WEB-INF/version.properties does not exist. Aborting."; exit 1;
+  fi
+  VERSION=$(grep '^version\.display=' jetty-webapps/opennms/WEB-INF/version.properties | sed -e 's/^version.display=//' -e 's/#.*//')
+  if [[ "$VERSION" == 20?? ]]; then
+    PKG=meridian-assumed
+  else
+    PKG=horizon-assumed
+  fi
+fi
+
 MAJOR=${VERSION%%.*}
+echo "Package: ${PKG}"
+echo "Version: ${VERSION}"
+echo "Major: ${MAJOR}"
 
 # Verify if Twin API is available
 USE_TWIN="false"

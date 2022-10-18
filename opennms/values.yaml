@@ -6,7 +6,7 @@
 timezone: America/New_York
 domain: example.com # The common domain for the Ingress resource.
 storageClass: onms-share # The name of the StorageClass that allows ReadWriteMany for RRDs and Core configuration (when using dedicated UI instances).
-opennmsVersion: '29.0.11'
+opennmsVersion: '30.0.4'
 
 # Optionally specify an array of imagePullSecrets.
 # Secrets must be manually created in the namespace.
@@ -63,7 +63,7 @@ dependencies:
 
   # The chosen solution for log aggregation (OpenNMS and Sentinel will forward logs to it via Promtail)
   loki:
-    hostname: loki.shared.svc # IP or FQDN of the external Loki server
+    hostname: '' # IP or FQDN of the external Loki server; '' to disable; e.g.: loki.shared.svc
     username: ''
     password: ''
     ca_cert: '' # A base64 encoded content of the CA Certificate (assumes HTTPS for Loki's URL)
@@ -96,7 +96,7 @@ opennms:
       cpu: '2'
       memory: 4Gi
   configuration:
-    enable_alec: true    # Downloads KAR from Github when the container starts if it doesn't exist on the image
+    enable_alec: true    # See alecImage below for how the KAR is retrieved
     enable_cortex: false # Downloads KAR from Github when the container starts if it doesn't exist on the image
     enable_acls: false
     rras: # To optionally replace the RRDtool aggregations (pass [] to keep defaults). Affects Pollerd and Collectd
@@ -105,10 +105,11 @@ opennms:
     - RRA:AVERAGE:0.5:288:366
     - RRA:MAX:0.5:288:366
     - RRA:MIN:0.5:288:366
-    alecImage:
-      repository: opennms/alec
-      pullPolicy: IfNotPresent
-      tag: v1.1.1
+    # If alecImage is specified, the KAR is retrieved from the specified Docker image used as an initContainer, otherwise the latest release in GitHub is retrieved
+    alecImage: {}
+#      repository: opennms/alec
+#      pullPolicy: IfNotPresent
+#      tag: v1.1.1
     database: # Access to the OpenNMS database
       username: opennms
       password: 0p3nNM5
@@ -136,7 +137,7 @@ opennms:
 
 # OpenNMS Sentinel for flow processing (Optional)
 sentinel:
-  replicaCount: 2 # Use 0 to disable
+  replicaCount: 0 # Use 0 to disable
   terminationGracePeriodSeconds: 60
   image:
     repository: opennms/sentinel

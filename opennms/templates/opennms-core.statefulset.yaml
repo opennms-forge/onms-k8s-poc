@@ -33,7 +33,7 @@ spec:
         {{- end }}
       {{- end }}
       initContainers:
-      {{- if .Values.opennms.configuration.enable_alec }}
+      {{- if and (.Values.opennms.configuration.enable_alec) (.Values.opennms.configuration.alecImage) }}
       - name: alec
         image: {{ .Values.opennms.configuration.alecImage.repository }}:{{ .Values.opennms.configuration.alecImage.tag }}
         imagePullPolicy: {{ .Values.opennms.configuration.alecImage.imagePullPolicy }}
