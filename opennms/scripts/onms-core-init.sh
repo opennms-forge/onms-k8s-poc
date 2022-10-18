@@ -72,6 +72,11 @@ if [[ "${PKG}" == "unknown" ]]; then
     echo >&2 "Couldn't determine version number from package manager (which is normal for newer containers) and jetty-webapps/opennms/WEB-INF/version.properties does not exist. Aborting."; exit 1;
   fi
   VERSION=$(grep '^version\.display=' jetty-webapps/opennms/WEB-INF/version.properties | sed -e 's/^version.display=//' -e 's/#.*//')
+  if [[ "$VERSION" == 20?? ]]; then
+    PKG=meridian-assumed
+  else
+    PKG=horizon-assumed
+  fi
 fi
 
 MAJOR=${VERSION%%.*}
