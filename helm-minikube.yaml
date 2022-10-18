@@ -2,9 +2,9 @@
 # Default values for minikube (for testing purposes only)
 
 dependencies:
-  loki:
-    hostname: loki.shared.svc
-    port: 3100
+#  loki:
+#    hostname: loki.shared.svc
+#    port: 3100
   kafka:
     hostname: onms-kafka-bootstrap.shared.svc
     port: 9093
