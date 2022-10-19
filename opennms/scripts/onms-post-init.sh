@@ -6,6 +6,7 @@
 # OPENNMS_HTTP_USER
 # OPENNMS_HTTP_PASS
 # OPENNMS_ADMIN_PASS
+# ENABLE_GRAFANA
 # GRAFANA_SERVER
 # GF_SECURITY_ADMIN_PASSWORD
 
@@ -30,21 +31,24 @@ command -v jq >/dev/null 2>&1   || { echo >&2 "jq is required but it's not insta
 # Wait for dependencies
 wait_for ${OPENNMS_SERVER}:8980
 
-# Configure Grafana Endpoint for Reports
-ID=$(curl -u admin:admin http://${OPENNMS_SERVER}:8980/opennms/rest/endpoints/grafana 2>/dev/null | jq ".[] | select(.uid=\"$(hostname)\") | .id") || true
-if [[ $ID == "" ]]; then
-  GRAFANA_KEY=$(curl -u "admin:${GF_SECURITY_ADMIN_PASSWORD}" -X POST -H "Content-Type: application/json" -d "{\"name\":\"$(hostname)\",\"role\": \"Viewer\"}" "http://${GRAFANA_SERVER}:3000/api/auth/keys" 2>/dev/null | jq .key - | sed 's/"//g')
-  if [[ ${GRAFANA_KEY} == "null" ]]; then
-    echo "WARNING: cannot get Grafana Key"
+if [[ ${ENABLE_GRAFANA} == "true" ]]; then
+  # Configure Grafana Endpoint for Reports
+  ID=$(curl -u admin:admin http://${OPENNMS_SERVER}:8980/opennms/rest/endpoints/grafana 2>/dev/null | jq ".[] | select(.uid=\"$(hostname)\") | .id") || true
+  if [[ $ID == "" ]]; then
+    GRAFANA_KEY=$(curl -u "admin:${GF_SECURITY_ADMIN_PASSWORD}" -X POST -H "Content-Type: application/json" -d "{\"name\":\"$(hostname)\",\"role\": \"Viewer\"}" "http://${GRAFANA_SERVER}:3000/api/auth/keys" 2>/dev/null | jq .key - | sed 's/"//g')
+    if [[ ${GRAFANA_KEY} == "null" ]]; then
+      echo "WARNING: cannot get Grafana Key"
+    else
+      echo "Configuring Grafana Endpoint..."
+      curl -u  admin:admin -v -X POST \
+        -H 'Content-Type: application/json' \
+        -d "{\"uid\":\"$(hostname)\",\"apiKey\":\"${GRAFANA_KEY}\",\"url\":\"http://${GRAFANA_SERVER}:3000\"}" \
+        "http://${OPENNMS_SERVER}:8980/opennms/rest/endpoints/grafana"
+    fi
   else
-    echo "Configuring Grafana Endpoint..."
-    curl -u  admin:admin -v -X POST \
-      -H 'Content-Type: application/json' \
-      -d "{\"uid\":\"$(hostname)\",\"apiKey\":\"${GRAFANA_KEY}\",\"url\":\"http://${GRAFANA_SERVER}:3000\"}" \
-      "http://${OPENNMS_SERVER}:8980/opennms/rest/endpoints/grafana"
+    echo "WARNING: Grafana Endpoint already configured"
   fi
-else
-  echo "WARNING: Grafana Endpoint already configured"
+  echo "Grafana is not enabled, not configuration Grafana Endpoint"
 fi
 
 # Add user to access ReST API for Grafana, Sentinels and Minions

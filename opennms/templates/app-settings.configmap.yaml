@@ -19,6 +19,7 @@ data:
   ENABLE_ACLS: {{ ((.Values.opennms).configuration).enable_acls | default "false" | quote }}
   ENABLE_TELEMETRYD: {{ if gt ((.Values.sentinel).replicaCount|int) 0 }}"true"{{ else }}"false"{{ end }}
   ENABLE_CORTEX: {{ ((.Values.opennms).configuration).enable_cortex | quote }}
+  ENABLE_GRAFANA: {{ if gt ((.Values.grafana).replicaCount|int) 0 }}"true"{{ else }}"false"{{ end }}
   OPENNMS_INSTANCE_ID: {{ .Release.Name | quote }}
   OPENNMS_SERVER: {{ printf "onms-core.%s.svc" .Release.Name | quote }}
   OPENNMS_DBNAME: {{ printf "%s_opennms" .Release.Name | quote }}

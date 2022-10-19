@@ -11,6 +11,7 @@
 # ENABLE_ALEC
 # ENABLE_TELEMETRYD
 # ENABLE_CORTEX
+# ENABLE_GRAFANA
 # CORTEX_BASE_URL
 # KAFKA_BOOTSTRAP_SERVER
 # KAFKA_SASL_USERNAME
@@ -323,9 +324,13 @@ rm -f ${CONFIG_DIR}/foreign-sources/pending/*.xml.*
 # Force to execute runjava and the install script
 touch ${CONFIG_DIR}/do-upgrade
 
-# Configure Grafana
-if [[ -e /scripts/onms-grafana-init.sh ]]; then
-  source /scripts/onms-grafana-init.sh
+if [[ ${ENABLE_GRAFANA} == "true" ]]; then
+  # Configure Grafana
+  if [[ -e /scripts/onms-grafana-init.sh ]]; then
+    source /scripts/onms-grafana-init.sh
+  else
+    echo "Warning: cannot find onms-grafana-init.sh"
+  fi
 else
-  echo "Warning: cannot find onms-grafana-init.sh"
+  echo "Grafana is not enabled, not running onms-grafana-init.sh"
 fi

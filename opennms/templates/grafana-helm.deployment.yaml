@@ -1,5 +1,6 @@
 {{- /* @author Alejandro Galue <agalue@opennms.com> */}}
 
+{{- if gt ((.Values.grafana).replicaCount|int) 0 }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -110,3 +111,4 @@ spec:
       - name: jks
         secret:
           secretName: app-jks
+{{- end }}
