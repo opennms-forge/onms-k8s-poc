@@ -319,6 +319,16 @@ If you use `start-dependencies.sh`, you will need to edit `dependencies/kafka.ya
 ./start-dependencies.sh
 ```
 
+By default, all dependencies are installed except for Elastic, but you can turn them on/off if desired, either by editing the file or setting the environment variables to false before you run the script:
+```
+# Optional dependencies
+INSTALL_ELASTIC=${INSTALL_ELASTIC:-false} # needed for Flow processing
+INSTALL_LOKI=${INSTALL_LOKI:-true} # needed for log aggregation together with promtail in containers; make sure dependencies.loki.hostname='' for the helm chart if this is disabled
+
+# Required dependencies (if you don't install them here, they need to be running somewhere else)
+INSTALL_POSTGRESQL=${INSTALL_POSTGRESQL:-true}
+```
+
 If you want to run PostgreSQL locally on your development system instead of in the Kubernetes cluster, you can start it as suggested in [this tip in the OpenNMS build from source documentation](https://docs.opennms.com/horizon/latest/development/build-from-source.html#run-your-build-locally). This is particularly useful on M1 Macs until the spilo PostgreSQL image and postgres-operator images are published for arm64 (see [this issue](https://github.com/zalando/spilo/pull/790) and [this issue](https://github.com/zalando/postgres-operator/issues/2030)). In this case, you'll want to run `start-dependencies.sh` like this:
 ```
 INSTALL_POSTGRESQL=false ./start-dependencies.sh

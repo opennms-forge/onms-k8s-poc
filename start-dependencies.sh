@@ -11,11 +11,11 @@ for cmd in "kubectl" "helm" "keytool"; do
 done
 
 # Optional dependencies
-INSTALL_ELASTIC=false # needed for Flow processing
-INSTALL_LOKI=true # needed for log aggregation together with promtail in containers; make sure dependencies.loki.hostname='' for the helm chart if this is disabled
+INSTALL_ELASTIC=${INSTALL_ELASTIC:-false} # needed for Flow processing
+INSTALL_LOKI=${INSTALL_LOKI:-true} # needed for log aggregation together with promtail in containers; make sure dependencies.loki.hostname='' for the helm chart if this is disabled
 
 # Required dependencies (if you don't install them here, they need to be running somewhere else)
-INSTALL_POSTGRESQL=true
+INSTALL_POSTGRESQL=${INSTALL_POSTGRESQL:-true}
 
 NAMESPACE="shared"
 TARGET_DIR="jks" # Expected location for the JKS Truststores
