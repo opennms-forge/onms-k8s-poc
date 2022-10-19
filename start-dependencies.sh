@@ -11,7 +11,7 @@ for cmd in "kubectl" "helm" "keytool"; do
 done
 
 INSTALL_ELASTIC=false # needed for Flow processing
-INSTALL_LOKI=false # needed for log aggregation together with promtail in containers; make sure dependencies.loki.hostname='' for the helm chart if this is disabled
+INSTALL_LOKI=true # needed for log aggregation together with promtail in containers; make sure dependencies.loki.hostname='' for the helm chart if this is disabled
 
 NAMESPACE="shared"
 TARGET_DIR="jks" # Expected location for the JKS Truststores
@@ -51,6 +51,9 @@ if [ "$INSTALL_LOKI" == "true" ]; then
     --set "loki.storage.type=filesystem" \
     --set "loki.rulerConfig.storage.type=local" \
     --set "loki.auth_enabled=false" \
+    --set "loki.commonConfig.replication_factor=1" \
+    --set "loki.commonConfig.ring.instance_addr=127.0.0.1" \
+    --set "loki.commonConfig.ring.kvstore.store=inmemory" \
     --set "monitoring.selfMonitoring.enabled=false" \
     --set "monitoring.selfMonitoring.grafanaAgent.installOperator=false" \
     --set "persistence.enabled=true" \

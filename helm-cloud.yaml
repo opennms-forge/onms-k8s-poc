@@ -2,9 +2,9 @@
 # Example content for the Helm Chart values with modest resources for a Cloud Deployment
 
 dependencies:
-#  loki:
-#    hostname: loki.shared.svc
-#    port: 3100
+  loki:
+    hostname: loki.shared.svc
+    port: 3100
   kafka:
     hostname: onms-kafka-bootstrap.shared.svc # Please change it
     port: 9093
