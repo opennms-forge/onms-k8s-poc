@@ -330,7 +330,7 @@ If you're planning to have dedicated UI instances or if you are using the defaul
 Start OpenNMS with Sentinel and a UI server:
 
 ```bash
-helm upgrade --install -f helm-minikube.yaml \
+helm upgrade --install -f minimal-resources.yaml \
   --set domain=k8s.agalue.net \
   --set storageClass=onms-share \
   --set-file dependencies.truststore.content=jks/truststore.jks \
@@ -391,7 +391,7 @@ $ curl http://localhost:5000/v2/_catalog
 Finally, install Meridian via Helm:
 
 ```
-helm upgrade --install -f helm-minikube.yaml \
+helm upgrade --install -f minimal-resources.yaml \
   --set opennms.image.repository=localhost:5000/meridian \
   --set opennms.image.tag=M2021 \
   --set opennms.image.pullPolicy=Never \

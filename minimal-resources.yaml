@@ -1,0 +1,17 @@
+# @author Alejandro Galue <agalue@opennms.com>
+# Default values for minimal resource consumption, e.g.: minikube (for testing purposes only)
+
+opennms:
+  resources: null
+  configuration:
+    storage:
+      rrd: 100Gi
+  uiServers:
+    replicaCount: 1
+
+grafana:
+  replicaCount: 1
+  resources: null
+  imageRenderer:
+    replicaCount: 1
+    resources: null
