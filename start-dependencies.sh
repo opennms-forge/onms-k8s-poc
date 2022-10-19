@@ -61,6 +61,11 @@ if [ "$INSTALL_LOKI" == "true" ]; then
     --set "loki.commonConfig.ring.kvstore.store=inmemory" \
     --set "monitoring.selfMonitoring.enabled=false" \
     --set "monitoring.selfMonitoring.grafanaAgent.installOperator=false" \
+    --set "monitoring.selfMonitoring.lokiCanary.enabled=false" \
+    --set "monitoring.serviceMonitor.enabled=false" \
+    --set "monitoring.dashboards.enabled=false" \
+    --set "monitoring.rules.enabled=false" \
+    --set "monitoring.alerts.enabled=false" \
     --set "persistence.enabled=true" \
     --set "persistence.accessModes={ReadWriteOnce}" \
     --set "persistence.size=50Gi" \
