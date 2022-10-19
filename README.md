@@ -345,7 +345,7 @@ If you're planning to have dedicated UI instances or if you are using the defaul
 
 > The custom storage class is only used if `opennms.uiServers.replicaCount` is greater than `0` (the default is `0`) or RRD files are used (this is the default).
 
-Start OpenNMS with Sentinel and a UI server:
+Start OpenNMS with Grafana and a UI server:
 
 ```bash
 helm upgrade --install -f minimal-resources.yaml \
@@ -356,7 +356,10 @@ helm upgrade --install -f minimal-resources.yaml \
   apex1 ./opennms
 ```
 
-If you want to test connecting to Kafka with plain authentication (no SASL) and no TLS, you can add `-f kafka-plain.yaml` when you run Helm.
+There are some additional Helm values files that might make life easier in some cases. You can include one or more of these as `-f` options to Helm (note that ordering matters: you generally want to include these after `minimal-resources.yaml`, for example):
+* `kafka-plain.yaml`: If you want to test connecting to Kafka with plain authentication (no SASL) and no TLS.
+* `minikube-host-postgresql.yaml`: connect to a locally-running PostgreSQL on your development system (outside of Minikube, often in Docker; see above).
+* `bare-bones.yaml`: when you want an absolutely basic setup in Kubernetes--just the OpenNMS core instance and nothing extra.
 
 Take a look at the documentation of [ingress-dns](https://github.com/kubernetes/minikube/tree/master/deploy/addons/ingress-dns) for more information about how to use it, to avoid messing with `/etc/hosts`.
 

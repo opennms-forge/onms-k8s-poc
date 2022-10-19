@@ -1,0 +1,17 @@
+dependencies:
+  loki:
+    hostname: ''
+  kafka:
+    hostname: ''
+  elasticsearch:
+    hostname: ''
+
+opennms:
+  uiServers:
+    replicaCount: 0
+
+sentinel:
+  replicaCount: 0
+
+grafana:
+  replicaCount: 0
