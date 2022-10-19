@@ -41,7 +41,7 @@ dependencies:
   # For TLS with private CA, use the common Truststore.
   kafka:
     hostname: onms-kafka-bootstrap.shared.svc # IP or FQDN of the external Kafka server
-    port: 9092
+    port: 9093
     username: opennms # Pass empty username when using sasl_mechanism=PLAIN
     password: 0p3nNM5 # Pass empty password when using sasl_mechanism=PLAIN
     configuration:
@@ -63,7 +63,7 @@ dependencies:
 
   # The chosen solution for log aggregation (OpenNMS and Sentinel will forward logs to it via Promtail)
   loki:
-    hostname: '' # IP or FQDN of the external Loki server; '' to disable; e.g.: loki.shared.svc
+    hostname: loki.shared.svc # IP or FQDN of the external Loki server; '' to disable
     username: ''
     password: ''
     ca_cert: '' # A base64 encoded content of the CA Certificate (assumes HTTPS for Loki's URL)

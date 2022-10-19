@@ -5,6 +5,7 @@
 # Designed for Horizon 29 or Meridian 2021 and 2022. Newer or older versions are not supported.
 #
 # External environment variables used by this script:
+# ENABLE_GRAFANA
 # OPENNMS_SERVER
 # OPENNMS_DATABASE_CONNECTION_MAXPOOL
 
@@ -161,7 +162,11 @@ cp /opt/opennms/jetty-webapps/opennms/WEB-INF/web.xml ${WEB_CONFIG}
 sed -r -i '/[<][!]--/{$!{N;s/[<][!]--\n  ([<]filter-mapping)/\1/}}' ${WEB_CONFIG}
 sed -r -i '/nrt/{$!{N;N;s/(nrt.*\n  [<]\/filter-mapping[>])\n  --[>]/\1/}}' ${WEB_CONFIG}
 
-# Configure Grafana
-if [[ -e /scripts/onms-grafana-init.sh ]]; then
-  source /scripts/onms-grafana-init.sh
+if [[ ${ENABLE_GRAFANA} == "true" ]]; then
+  # Configure Grafana
+  if [[ -e /scripts/onms-grafana-init.sh ]]; then
+    source /scripts/onms-grafana-init.sh
+  fi
+else
+  echo "Grafana is not enabled, not running onms-grafana-init.sh"
 fi

@@ -66,15 +66,13 @@ Define custom content for JVM_OPTS to conditionally handle Truststores
 */}}
 {{- define "opennms.jvmOptions" -}}
   {{- $common := "-XX:+AlwaysPreTouch -XX:+UseG1GC -XX:+UseStringDeduplication" }}
-  {{- if .Values.dependencies.truststore }}
+  {{- if and .Values.dependencies.truststore .Values.dependencies.truststore.content }}
+    {{- $truststore := "-Djavax.net.ssl.trustStore=/etc/java/jks/truststore.jks" }}
     {{- $password := "" }}
     {{- if .Values.dependencies.truststore.password }}
       {{- $password = "-Djavax.net.ssl.trustStorePassword=$(TRUSTSTORE_PASSWORD)" }}
     {{- end }}
-    {{- $truststore := "-Djavax.net.ssl.trustStore=/etc/java/jks/truststore.jks" }}
-    {{- if and .Values.dependencies.truststore.content }}
-      {{- printf "%s %s %s" $common $truststore $password }}
-    {{- end }}
+    {{- printf "%s %s %s" $common $truststore $password }}
   {{- else -}}
     {{- $common }}
   {{- end }}

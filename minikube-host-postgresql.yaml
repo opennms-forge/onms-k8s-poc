@@ -1,0 +1,15 @@
+#
+# Use this for PostgreSQL running on the Minikube host system
+# with no authentication (the "trust" authentication that is
+# normally used with OpenNMS instances along with a local database).
+#
+
+dependencies:
+  postgresql:
+    hostname: host.minikube.internal
+    sslmode: disable
+
+grafana:
+  configuration:
+    database:
+      sslmode: disable

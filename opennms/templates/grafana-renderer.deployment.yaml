@@ -1,6 +1,6 @@
 {{- /* @author Alejandro Galue <agalue@opennms.com> */}}
 
-{{- if gt (((.Values.grafana).imageRenderer).replicaCount|int) 0 }}
+{{- if and (gt ((.Values.grafana).replicaCount|int) 0) (gt (((.Values.grafana).imageRenderer).replicaCount|int) 0) }}
 ---
 apiVersion: apps/v1
 kind: Deployment

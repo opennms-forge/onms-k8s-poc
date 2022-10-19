@@ -11,6 +11,7 @@
 # ENABLE_ALEC
 # ENABLE_TELEMETRYD
 # ENABLE_CORTEX
+# ENABLE_GRAFANA
 # CORTEX_BASE_URL
 # KAFKA_BOOTSTRAP_SERVER
 # KAFKA_SASL_USERNAME
@@ -101,7 +102,7 @@ echo "Twin API Available? $USE_TWIN"
 
 # Wait for dependencies
 wait_for ${POSTGRES_HOST}:${POSTGRES_PORT}
-if [[ ${KAFKA_BOOTSTRAP_SERVER} ]]; then
+if [[ -v KAFKA_BOOTSTRAP_SERVER ]]; then
   wait_for ${KAFKA_BOOTSTRAP_SERVER}
 fi
 
@@ -210,7 +211,7 @@ EOF
 fi
 
 # Configure Sink and RPC to use Kafka, and the Kafka Producer.
-if [[ ${KAFKA_BOOTSTRAP_SERVER} ]]; then
+if [[ -v KAFKA_BOOTSTRAP_SERVER ]]; then
   if [[ ${OPENNMS_INSTANCE_ID} == "" ]]; then
     echo >&2 "OPENNMS_INSTANCE_ID cannot be empty. Aborting."
     exit 1
@@ -274,10 +275,11 @@ EOF
 org.opennms.core.ipc.$module.kafka.security.protocol=${KAFKA_SECURITY_PROTOCOL}
 org.opennms.core.ipc.$module.kafka.sasl.mechanism=${KAFKA_SASL_MECHANISM}
 EOF
-    if [[ ${KAFKA_SASL_USERNAME} && ${KAFKA_SASL_PASSWORD} ]]; then
-      JAAS_CLASS="org.apache.kafka.common.security.plain.PlainLoginModule"
-      if [[ "${KAFKA_SASL_MECHANISM}" == *"SCRAM"* ]]; then
+    if [[ -v KAFKA_SASL_USERNAME ]] &&  [[ -v KAFKA_SASL_PASSWORD ]]; then
+      if [[ -v KAFKA_SASL_MECHANISM ]] && [[ "${KAFKA_SASL_MECHANISM}" == *"SCRAM"* ]]; then
         JAAS_CLASS="org.apache.kafka.common.security.scram.ScramLoginModule"
+      else
+        JAAS_CLASS="org.apache.kafka.common.security.plain.PlainLoginModule"
       fi
       cat <<EOF >> ${CONFIG_DIR_OVERLAY}/opennms.properties.d/kafka.properties
 org.opennms.core.ipc.$module.kafka.sasl.jaas.config=${JAAS_CLASS} required username="${KAFKA_SASL_USERNAME}" password="${KAFKA_SASL_PASSWORD}";
@@ -287,7 +289,7 @@ EOF
 fi
 
 # Configure RRAs
-if [[ ${OPENNMS_RRAS} ]]; then
+if [[ -v OPENNMS_RRAS ]]; then
   echo "Configuring RRAs..."
   IFS=';' read -a RRAS <<< ${OPENNMS_RRAS}
   RRACFG=""
@@ -322,9 +324,13 @@ rm -f ${CONFIG_DIR}/foreign-sources/pending/*.xml.*
 # Force to execute runjava and the install script
 touch ${CONFIG_DIR}/do-upgrade
 
-# Configure Grafana
-if [[ -e /scripts/onms-grafana-init.sh ]]; then
-  source /scripts/onms-grafana-init.sh
+if [[ ${ENABLE_GRAFANA} == "true" ]]; then
+  # Configure Grafana
+  if [[ -e /scripts/onms-grafana-init.sh ]]; then
+    source /scripts/onms-grafana-init.sh
+  else
+    echo "Warning: cannot find onms-grafana-init.sh"
+  fi
 else
-  echo "Warning: cannot find onms-grafana-init.sh"
+  echo "Grafana is not enabled, not running onms-grafana-init.sh"
 fi

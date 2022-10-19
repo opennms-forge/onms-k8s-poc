@@ -1,0 +1,14 @@
+#
+# Use this for plaintext connections with no authentication to Kafka
+#
+
+dependencies:
+  kafka:
+    hostname: onms-kafka-bootstrap.shared.svc
+    port: 9095
+    username: ''
+    password: ''
+    configuration:
+      sasl_mechanism: PLAIN
+      security_protocol: PLAINTEXT
+

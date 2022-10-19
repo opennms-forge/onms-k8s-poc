@@ -10,8 +10,13 @@ for cmd in "kubectl" "helm" "keytool"; do
   type $cmd >/dev/null 2>&1 || { echo >&2 "$cmd required but it's not installed; aborting."; exit 1; }
 done
 
-INSTALL_ELASTIC=false # needed for Flow processing
-INSTALL_LOKI=false # needed for log aggregation together with promtail in containers; make sure dependencies.loki.hostname='' for the helm chart if this is disabled
+# Optional dependencies
+INSTALL_ELASTIC=${INSTALL_ELASTIC:-false} # needed for Flow processing
+INSTALL_KAFKA=${INSTALL_KAFKA:-false} # needed for Sentinel and Minion support
+INSTALL_LOKI=${INSTALL_LOKI:-true} # needed for log aggregation together with promtail in containers; make sure dependencies.loki.hostname='' for the helm chart if this is disabled
+
+# Required dependencies (if you don't install them here, they need to be running somewhere else)
+INSTALL_POSTGRESQL=${INSTALL_POSTGRESQL:-true}
 
 NAMESPACE="shared"
 TARGET_DIR="jks" # Expected location for the JKS Truststores
@@ -51,8 +56,16 @@ if [ "$INSTALL_LOKI" == "true" ]; then
     --set "loki.storage.type=filesystem" \
     --set "loki.rulerConfig.storage.type=local" \
     --set "loki.auth_enabled=false" \
+    --set "loki.commonConfig.replication_factor=1" \
+    --set "loki.commonConfig.ring.instance_addr=127.0.0.1" \
+    --set "loki.commonConfig.ring.kvstore.store=inmemory" \
     --set "monitoring.selfMonitoring.enabled=false" \
     --set "monitoring.selfMonitoring.grafanaAgent.installOperator=false" \
+    --set "monitoring.selfMonitoring.lokiCanary.enabled=false" \
+    --set "monitoring.serviceMonitor.enabled=false" \
+    --set "monitoring.dashboards.enabled=false" \
+    --set "monitoring.rules.enabled=false" \
+    --set "monitoring.alerts.enabled=false" \
     --set "persistence.enabled=true" \
     --set "persistence.accessModes={ReadWriteOnce}" \
     --set "persistence.size=50Gi" \
@@ -60,16 +73,20 @@ if [ "$INSTALL_LOKI" == "true" ]; then
 fi
 
 # Install PostgreSQL
-kubectl apply -f https://raw.githubusercontent.com/zalando/postgres-operator/master/manifests/postgresql.crd.yaml
-kubectl apply -k github.com/zalando/postgres-operator/manifests
-kubectl create secret generic $PG_USER.onms-db.credentials.postgresql.acid.zalan.do --from-literal="username=$PG_USER" --from-literal="password=$PG_PASSWORD" -n $NAMESPACE
-kubectl create secret generic $PG_ONMS_USER.onms-db.credentials.postgresql.acid.zalan.do --from-literal="username=$PG_ONMS_USER" --from-literal="password=$PG_ONMS_PASSWORD" -n $NAMESPACE
-kubectl apply -f dependencies/postgresql.yaml -n $NAMESPACE
+if [ "$INSTALL_POSTGRESQL" == "true" ]; then
+  kubectl apply -f https://raw.githubusercontent.com/zalando/postgres-operator/master/manifests/postgresql.crd.yaml
+  kubectl apply -k github.com/zalando/postgres-operator/manifests
+  kubectl create secret generic $PG_USER.onms-db.credentials.postgresql.acid.zalan.do --from-literal="username=$PG_USER" --from-literal="password=$PG_PASSWORD" -n $NAMESPACE
+  kubectl create secret generic $PG_ONMS_USER.onms-db.credentials.postgresql.acid.zalan.do --from-literal="username=$PG_ONMS_USER" --from-literal="password=$PG_ONMS_PASSWORD" -n $NAMESPACE
+  kubectl apply -f dependencies/postgresql.yaml -n $NAMESPACE
+fi
 
-# Install Kafka via Strimzi
-kubectl create secret generic kafka-user-credentials --from-literal="$KAFKA_USER=$KAFKA_PASSWORD" -n $NAMESPACE
-kubectl apply -f "https://strimzi.io/install/latest?namespace=$NAMESPACE" -n $NAMESPACE
-kubectl apply -f dependencies/kafka.yaml -n $NAMESPACE
+if [ "$INSTALL_KAFKA" == "true" ]; then
+  # Install Kafka via Strimzi
+  kubectl create secret generic kafka-user-credentials --from-literal="$KAFKA_USER=$KAFKA_PASSWORD" -n $NAMESPACE
+  kubectl apply -f "https://strimzi.io/install/latest?namespace=$NAMESPACE" -n $NAMESPACE
+  kubectl apply -f dependencies/kafka.yaml -n $NAMESPACE
+fi
 
 if [ "$INSTALL_ELASTIC" == "true" ]; then
   # Install Elasticsearch via ECK
@@ -80,7 +97,9 @@ if [ "$INSTALL_ELASTIC" == "true" ]; then
 fi
 
 # Wait for the clusters
-kubectl wait kafka/$CLUSTER_NAME --for=condition=Ready --timeout=300s -n $NAMESPACE
+if [ "$INSTALL_KAFKA" == "true" ]; then
+  kubectl wait kafka/$CLUSTER_NAME --for=condition=Ready --timeout=300s -n $NAMESPACE
+fi
 if [ "$INSTALL_ELASTIC" == "true" ]; then
   kubectl wait pod -l elasticsearch.k8s.elastic.co/cluster-name=$CLUSTER_NAME --for=condition=Ready --timeout=300s -n $NAMESPACE
 fi
@@ -89,10 +108,12 @@ fi
 mkdir -p $TARGET_DIR
 TRUSTSTORE_TEMP="/tmp/ca.truststore.$(date +%s)"
 
-# Add OpenNMS CA (used for PostgreSQL) to the Truststore
-CERT_FILE_PATH="$TARGET_DIR/postgresql-ca.crt"
-kubectl get secret onms-ca -n cert-manager -o go-template='{{index .data "ca.crt" | base64decode }}' > $CERT_FILE_PATH
-keytool -import -trustcacerts -alias postgresql-ca -file $CERT_FILE_PATH -keystore $TRUSTSTORE_TEMP -storepass "$TRUSTSTORE_PASSWORD" -noprompt
+if [ "$INSTALL_POSTGRESQL" == "true" ]; then
+  # Add OpenNMS CA (used for PostgreSQL) to the Truststore
+  CERT_FILE_PATH="$TARGET_DIR/postgresql-ca.crt"
+  kubectl get secret onms-ca -n cert-manager -o go-template='{{index .data "ca.crt" | base64decode }}' > $CERT_FILE_PATH
+  keytool -import -trustcacerts -alias postgresql-ca -file $CERT_FILE_PATH -keystore $TRUSTSTORE_TEMP -storepass "$TRUSTSTORE_PASSWORD" -noprompt
+fi
 
 if [ "$INSTALL_ELASTIC" == "true" ]; then
   # Add Elasticsearch CA to the Truststore
@@ -101,13 +122,17 @@ if [ "$INSTALL_ELASTIC" == "true" ]; then
   keytool -import -trustcacerts -alias elasticsearch-ca -file $CERT_FILE_PATH -keystore $TRUSTSTORE_TEMP -storepass "$TRUSTSTORE_PASSWORD" -noprompt
 fi
 
-# Add Kafka CA to the Truststore
-CERT_FILE_PATH="$TARGET_DIR/kafka-ca.crt"
-kubectl get secret $CLUSTER_NAME-cluster-ca-cert -n $NAMESPACE -o go-template='{{index .data "ca.crt" | base64decode }}' > $CERT_FILE_PATH
-keytool -import -trustcacerts -alias kafka-ca -file $CERT_FILE_PATH -keystore $TRUSTSTORE_TEMP -storepass "$TRUSTSTORE_PASSWORD" -noprompt
+if [ "$INSTALL_KAFKA" == "true" ]; then
+  # Add Kafka CA to the Truststore
+  CERT_FILE_PATH="$TARGET_DIR/kafka-ca.crt"
+  kubectl get secret $CLUSTER_NAME-cluster-ca-cert -n $NAMESPACE -o go-template='{{index .data "ca.crt" | base64decode }}' > $CERT_FILE_PATH
+  keytool -import -trustcacerts -alias kafka-ca -file $CERT_FILE_PATH -keystore $TRUSTSTORE_TEMP -storepass "$TRUSTSTORE_PASSWORD" -noprompt
+fi
 
 # Move Truststore to the target location
-mv -f $TRUSTSTORE_TEMP $TARGET_DIR/truststore.jks
+if [ -e $TRUSTSTORE_TEMP ]; then
+  mv -f $TRUSTSTORE_TEMP $TARGET_DIR/truststore.jks
+fi
 
 # Show all resources
 kubectl get all -n $NAMESPACE
