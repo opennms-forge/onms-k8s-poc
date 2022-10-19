@@ -319,13 +319,20 @@ If you use `start-dependencies.sh`, you will need to edit `dependencies/kafka.ya
 ./start-dependencies.sh
 ```
 
+If you want to run PostgreSQL locally on your development system instead of in the Kubernetes cluster, you can start it as suggested in [this tip in the OpenNMS build from source documentation](https://docs.opennms.com/horizon/latest/development/build-from-source.html#run-your-build-locally). This is particularly useful on M1 Macs until the spilo PostgreSQL image and postgres-operator images are published for arm64 (see [this issue](https://github.com/zalando/spilo/pull/790) and [this issue](https://github.com/zalando/postgres-operator/issues/2030)). In this case, you'll want to run `start-dependencies.sh` like this:
+```
+INSTALL_POSTGRESQL=false ./start-dependencies.sh
+```
+And add `-f minikube-host-postgresql.yaml` when you run Helm below.
+
+
 If you're planning to have dedicated UI instances or if you are using the default RRD storage for time series (not Cortex), create the storage class (this must be done once):
 
 ```bash
 ./create-storageclass.sh minikube onms-share
 ```
 
-> The custom storage class is ignored if `opennms.uiServers.replicaCount` is equal to `0` (the default behavior).
+> The custom storage class is only used if `opennms.uiServers.replicaCount` is greater than `0` (the default is `0`) or RRD files are used (this is the default).
 
 Start OpenNMS with Sentinel and a UI server:
 
@@ -337,6 +344,8 @@ helm upgrade --install -f minimal-resources.yaml \
   --set-file dependencies.postgresql.ca_cert=jks/postgresql-ca.crt \
   apex1 ./opennms
 ```
+
+If you want to test connecting to Kafka with plain authentication (no SASL) and no TLS, you can add `-f kafka-plain.yaml` when you run Helm.
 
 Take a look at the documentation of [ingress-dns](https://github.com/kubernetes/minikube/tree/master/deploy/addons/ingress-dns) for more information about how to use it, to avoid messing with `/etc/hosts`.
 
