@@ -41,7 +41,7 @@ dependencies:
   # For TLS with private CA, use the common Truststore.
   kafka:
     hostname: onms-kafka-bootstrap.shared.svc # IP or FQDN of the external Kafka server
-    port: 9092
+    port: 9093
     username: opennms # Pass empty username when using sasl_mechanism=PLAIN
     password: 0p3nNM5 # Pass empty password when using sasl_mechanism=PLAIN
     configuration:
