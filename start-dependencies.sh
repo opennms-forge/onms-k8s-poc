@@ -12,6 +12,7 @@ done
 
 # Optional dependencies
 INSTALL_ELASTIC=${INSTALL_ELASTIC:-false} # needed for Flow processing
+INSTALL_KAFKA=${INSTALL_KAFKA:-false} # needed for Sentinel and Minion support
 INSTALL_LOKI=${INSTALL_LOKI:-true} # needed for log aggregation together with promtail in containers; make sure dependencies.loki.hostname='' for the helm chart if this is disabled
 
 # Required dependencies (if you don't install them here, they need to be running somewhere else)
@@ -75,10 +76,12 @@ if [ "$INSTALL_POSTGRESQL" == "true" ]; then
   kubectl apply -f dependencies/postgresql.yaml -n $NAMESPACE
 fi
 
-# Install Kafka via Strimzi
-kubectl create secret generic kafka-user-credentials --from-literal="$KAFKA_USER=$KAFKA_PASSWORD" -n $NAMESPACE
-kubectl apply -f "https://strimzi.io/install/latest?namespace=$NAMESPACE" -n $NAMESPACE
-kubectl apply -f dependencies/kafka.yaml -n $NAMESPACE
+if [ "$INSTALL_KAFKA" == "true" ]; then
+  # Install Kafka via Strimzi
+  kubectl create secret generic kafka-user-credentials --from-literal="$KAFKA_USER=$KAFKA_PASSWORD" -n $NAMESPACE
+  kubectl apply -f "https://strimzi.io/install/latest?namespace=$NAMESPACE" -n $NAMESPACE
+  kubectl apply -f dependencies/kafka.yaml -n $NAMESPACE
+fi
 
 if [ "$INSTALL_ELASTIC" == "true" ]; then
   # Install Elasticsearch via ECK
@@ -89,7 +92,9 @@ if [ "$INSTALL_ELASTIC" == "true" ]; then
 fi
 
 # Wait for the clusters
-kubectl wait kafka/$CLUSTER_NAME --for=condition=Ready --timeout=300s -n $NAMESPACE
+if [ "$INSTALL_KAFKA" == "true" ]; then
+  kubectl wait kafka/$CLUSTER_NAME --for=condition=Ready --timeout=300s -n $NAMESPACE
+fi
 if [ "$INSTALL_ELASTIC" == "true" ]; then
   kubectl wait pod -l elasticsearch.k8s.elastic.co/cluster-name=$CLUSTER_NAME --for=condition=Ready --timeout=300s -n $NAMESPACE
 fi
@@ -112,13 +117,17 @@ if [ "$INSTALL_ELASTIC" == "true" ]; then
   keytool -import -trustcacerts -alias elasticsearch-ca -file $CERT_FILE_PATH -keystore $TRUSTSTORE_TEMP -storepass "$TRUSTSTORE_PASSWORD" -noprompt
 fi
 
-# Add Kafka CA to the Truststore
-CERT_FILE_PATH="$TARGET_DIR/kafka-ca.crt"
-kubectl get secret $CLUSTER_NAME-cluster-ca-cert -n $NAMESPACE -o go-template='{{index .data "ca.crt" | base64decode }}' > $CERT_FILE_PATH
-keytool -import -trustcacerts -alias kafka-ca -file $CERT_FILE_PATH -keystore $TRUSTSTORE_TEMP -storepass "$TRUSTSTORE_PASSWORD" -noprompt
+if [ "$INSTALL_KAFKA" == "true" ]; then
+  # Add Kafka CA to the Truststore
+  CERT_FILE_PATH="$TARGET_DIR/kafka-ca.crt"
+  kubectl get secret $CLUSTER_NAME-cluster-ca-cert -n $NAMESPACE -o go-template='{{index .data "ca.crt" | base64decode }}' > $CERT_FILE_PATH
+  keytool -import -trustcacerts -alias kafka-ca -file $CERT_FILE_PATH -keystore $TRUSTSTORE_TEMP -storepass "$TRUSTSTORE_PASSWORD" -noprompt
+fi
 
 # Move Truststore to the target location
-mv -f $TRUSTSTORE_TEMP $TARGET_DIR/truststore.jks
+if [ -e $TRUSTSTORE_TEMP ]; then
+  mv -f $TRUSTSTORE_TEMP $TARGET_DIR/truststore.jks
+fi
 
 # Show all resources
 kubectl get all -n $NAMESPACE
