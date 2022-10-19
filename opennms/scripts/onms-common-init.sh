@@ -18,7 +18,6 @@
 # OPENNMS_DBUSER
 # OPENNMS_DBPASS
 # OPENNMS_INSTANCE_ID
-# OPENNMS_RRAS
 # ENABLE_ACLS
 # ENABLE_CORTEX
 # CORTEX_BASE_URL
@@ -130,7 +129,7 @@ org.opennms.web.defaultGraphPeriod=last_2_hour
 EOF
 
 # Configure Elasticsearch to allow Helm/Grafana to access Flow data
-if [[ ${ELASTICSEARCH_SERVER} ]]; then
+if [[ -v ELASTICSEARCH_SERVER ]]; then
   echo "Configuring Elasticsearch for Flows..."
   PREFIX=$(echo ${OPENNMS_INSTANCE_ID} | tr '[:upper:]' '[:lower:]')-
   cat <<EOF > ${CONFIG_DIR_OVERLAY}/org.opennms.features.flows.persistence.elastic.cfg

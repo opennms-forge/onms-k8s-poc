@@ -54,10 +54,10 @@ ELASTICSEARCH_REPLICATION_FACTOR=${ELASTICSEARCH_REPLICATION_FACTOR-2}
 ELASTICSEARCH_NUM_SHARDS=${ELASTICSEARCH_NUM_SHARDS-6}
 
 # Wait for Dependencies
-if [[ ${ELASTICSEARCH_SERVER} ]]; then
+if [[ -v ELASTICSEARCH_SERVER ]]; then
   wait_for ${ELASTICSEARCH_SERVER}
 fi
-if [[ ${KAFKA_BOOTSTRAP_SERVER} ]]; then
+if [[ -v KAFKA_BOOTSTRAP_SERVER ]]; then
   wait_for ${KAFKA_BOOTSTRAP_SERVER}
 fi
 wait_for ${POSTGRES_HOST}:${POSTGRES_PORT}
@@ -95,7 +95,7 @@ sentinel-jsonstore-postgres
 sentinel-blobstore-noop
 EOF
 
-if [[ ${ELASTICSEARCH_SERVER} ]]; then
+if [[ -v ELASTICSEARCH_SERVER ]]; then
   echo "Configuring Elasticsearch and Flows..."
 
   cat <<EOF > ${FEATURES_DIR}/flows.boot
@@ -136,7 +136,7 @@ settings.index.number_of_replicas=${ELASTICSEARCH_REPLICATION_FACTOR}
 EOF
 fi
 
-if [[ ${KAFKA_BOOTSTRAP_SERVER} ]]; then
+if [[ -v KAFKA_BOOTSTRAP_SERVER ]]; then
   echo "Configuring Kafka for Flows..."
 
   FILE_PREFIX="${OVERLAY_DIR}/org.opennms.core.ipc.sink.kafka"
@@ -161,10 +161,11 @@ EOF
 security.protocol=${KAFKA_SECURITY_PROTOCOL}
 sasl.mechanism=${KAFKA_SASL_MECHANISM}
 EOF
-    if [[ ${KAFKA_SASL_USERNAME} && ${KAFKA_SASL_PASSWORD} ]]; then
-      JAAS_CLASS="org.apache.kafka.common.security.plain.PlainLoginModule"
-      if [[ "${KAFKA_SASL_MECHANISM}" == *"SCRAM"* ]]; then
+    if [[ -v KAFKA_SASL_USERNAME ]] &&  [[ -v KAFKA_SASL_PASSWORD ]]; then
+      if [[ -v KAFKA_SASL_MECHANISM ]] && [[ "${KAFKA_SASL_MECHANISM}" == *"SCRAM"* ]]; then
         JAAS_CLASS="org.apache.kafka.common.security.scram.ScramLoginModule"
+      else
+        JAAS_CLASS="org.apache.kafka.common.security.plain.PlainLoginModule"
       fi
       cat <<EOF >> $f
 sasl.jaas.config=${JAAS_CLASS} required username="${KAFKA_SASL_USERNAME}" password="${KAFKA_SASL_PASSWORD}";
