@@ -303,7 +303,7 @@ helm upgrade --install -f helm-cloud.yaml \
 Start Minikube:
 
 ```bash
-minikube start --cpus=4 --memory=24g \
+minikube start --cpus=5 --memory=24g \
   --addons=ingress \
   --addons=ingress-dns \
   --addons=metrics-server \
