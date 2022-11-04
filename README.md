@@ -360,6 +360,7 @@ There are some additional Helm values files that might make life easier in some 
 * `kafka-plain.yaml`: If you want to test connecting to Kafka with plain authentication (no SASL) and no TLS.
 * `minikube-host-postgresql.yaml`: connect to a locally-running PostgreSQL on your development system (outside of Minikube, often in Docker; see above).
 * `bare-bones.yaml`: when you want an absolutely basic setup in Kubernetes--just the OpenNMS core instance and nothing extra.
+* `kill-it-with-fire.yaml`: reduces terminationGracePeriodSeconds for OpenNMS and the UI from 120 seconds to 5. Only use this when testing and you don't care about corruption.
 
 Take a look at the documentation of [ingress-dns](https://github.com/kubernetes/minikube/tree/master/deploy/addons/ingress-dns) for more information about how to use it, to avoid messing with `/etc/hosts`.
 

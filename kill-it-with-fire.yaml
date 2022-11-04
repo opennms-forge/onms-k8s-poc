@@ -1,0 +1,4 @@
+opennms:
+  terminationGracePeriodSeconds: 5
+  uiServers:
+    terminationGracePeriodSeconds: 5
