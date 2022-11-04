@@ -134,6 +134,8 @@ opennms:
       requests:
         cpu: '2'
         memory: 4Gi
+  postConfigJob:
+    ttlSecondsAfterFinished: 300
 
 # OpenNMS Sentinel for flow processing (Optional)
 sentinel:
