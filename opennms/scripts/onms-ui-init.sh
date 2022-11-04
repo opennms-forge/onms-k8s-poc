@@ -47,9 +47,6 @@ TEMPLATES_DIR_OVERLAY=${WEB_DIR_OVERLAY}/templates
 mkdir -p ${TEMPLATES_DIR_OVERLAY}
 mkdir -p ${CONFIG_DIR_OVERLAY}/opennms.properties.d/
 
-# Ensure the install script won't be executed
-touch ${CONFIG_DIR_OVERLAY}/configured
-
 # Apply common OpenNMS configuration settings
 source /scripts/onms-common-init.sh
 
