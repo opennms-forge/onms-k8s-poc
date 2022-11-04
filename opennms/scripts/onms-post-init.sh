@@ -13,6 +13,9 @@
 set -euo pipefail
 trap 's=$?; echo >&2 "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
 
+trap 'echo "Received SIGHUP: exiting."; exit 2' HUP
+trap 'echo "Received SIGTERM: exiting."; exit 2' TERM
+
 function wait_for {
   echo "Waiting for $1"
   IFS=':' read -a data <<< $1
