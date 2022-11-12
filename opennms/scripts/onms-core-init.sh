@@ -129,9 +129,20 @@ KARAF_FILES=( \
 echo "Configuration directory:"
 ls -ld ${CONFIG_DIR}
 
-# Initialize configuration directory
+### Initialize etc directory
+
+# First, we need to handle updates from older Helm charts before we do anything else.
+# Older charts (0.3.0 and before) didn't use helm-chart-configured, but only used
+# OpenNMS' configured file. If configured exists, but no helm-chart-configured exists,
+# assume we are updating from an older Helm chart and create helm-chart-configured.
+if [ -f ${CONFIG_DIR}/configured ] && [ ! -f ${CONFIG_DIR}/helm-chart-configured ]; then
+  echo "Upgrading from older Helm chart that has already been configured: creating helm-chart-configured file."
+  touch ${CONFIG_DIR}/helm-chart-configured
+  echo "version not stored previously" > ${CONFIG_DIR}/helm-chart-opennms-version
+fi
+
 # Include all the configuration files that must be added once but could change after the first run
-if [ ! -f ${CONFIG_DIR}/configured ]; then
+if [ ! -f ${CONFIG_DIR}/helm-chart-configured ]; then
   echo "Initializing configuration directory for the first time ..."
   rsync -arO --no-perms --no-owner --no-group ${BACKUP_ETC}/ ${CONFIG_DIR}/
 
@@ -168,9 +179,26 @@ if [ ! -f ${CONFIG_DIR}/configured ]; then
   </policies>
 </foreign-source>
 EOF
+  touch ${CONFIG_DIR}/helm-chart-configured
 else
   echo "Previous configuration found. Synchronizing only new files..."
   rsync -aruO --no-perms --no-owner --no-group ${BACKUP_ETC}/ ${CONFIG_DIR}/
+fi
+
+# See if we are on a fresh install or a different version of OpenNMS and remove
+# the "configured" file so the installer runs.
+if [ ! -f ${CONFIG_DIR}/helm-chart-opennms-version ]; then
+  previous_opennms="new Helm chart install"
+else
+  previous_opennms="$(<${CONFIG_DIR}/helm-chart-opennms-version)"
+fi
+current_opennms="${PKG}-${VERSION}"
+if [ "${previous_opennms}" != "${current_opennms}" ]; then
+  echo "OpenNMS version change detected from '${previous_opennms}' to '${current_opennms}': triggering installer to run by removing configured file."
+  rm -f ${CONFIG_DIR}/configured # it might not already exist
+  echo "${current_opennms}" > ${CONFIG_DIR}/helm-chart-opennms-version
+else
+  echo "No OpenNMS version change detected: still on '${current_opennms}'"
 fi
 
 # Guard against application upgrades
@@ -320,9 +348,6 @@ fi
 # Cleanup temporary requisition files
 rm -f ${CONFIG_DIR}/imports/pending/*.xml.*
 rm -f ${CONFIG_DIR}/foreign-sources/pending/*.xml.*
-
-# Force to execute runjava and the install script
-touch ${CONFIG_DIR}/do-upgrade
 
 if [[ ${ENABLE_GRAFANA} == "true" ]]; then
   # Configure Grafana

@@ -11,7 +11,7 @@ metadata:
     app: onms-core
     {{- include "opennms.labels" . | nindent 4 }}
 spec:
-  ttlSecondsAfterFinished: 300
+  ttlSecondsAfterFinished: {{ (.Values.opennms.postConfigJob.ttlSecondsAfterFinished | default "300") }}
   template:
     spec:
       restartPolicy: Never
