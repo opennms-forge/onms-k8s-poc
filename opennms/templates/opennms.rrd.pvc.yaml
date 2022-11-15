@@ -1,6 +1,6 @@
 {{- /* @author Alejandro Galue <agalue@opennms.com> */}}
 
-{{- if not .Values.opennms.enable_cortex }}
+{{- if not .Values.opennms.configuration.enable_cortex }}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim

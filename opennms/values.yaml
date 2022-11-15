@@ -72,7 +72,7 @@ dependencies:
   # The metrics persistence layer as an alternative to RRDtool.
   # Not production-ready - use for test/dev purposes only.
   cortex:
-    baseUrl: '' # Used only when opennms.enable_cortex=true
+    baseUrl: '' # Used only when opennms.configuration.enable_cortex=true
 
 # The Ingress to expose the OpenNMS and Grafana.
 ingress:
