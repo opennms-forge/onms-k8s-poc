@@ -26,8 +26,8 @@ data:
   {{- if ((.Values.opennms).configuration).rras }}
   OPENNMS_RRAS: {{ join ";" .Values.opennms.configuration.rras }}
   {{- end }}
-  {{- if ((.Values.dependencies).cortex).cortex }}
-  CORTEX_BASE_URL: {{ .Values.dependencies.cortex.cortex | quote }}
+  {{- if ((.Values.opennms).configuration).enable_cortex }}
+  CORTEX_BASE_URL: {{ .Values.dependencies.cortex.baseUrl | quote }}
   {{- end }}
   {{- if ((.Values.dependencies).elasticsearch).hostname }}
   ELASTICSEARCH_SERVER: {{ printf "%s:%d" .Values.dependencies.elasticsearch.hostname (.Values.dependencies.elasticsearch.port | int) | quote }}
