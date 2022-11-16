@@ -85,9 +85,9 @@ The above doesn't apply when creating an environment without UI instances, meani
   * You could manage certificates using LetsEncrypt via `cert-manager`, but we only requires the name of a `ClusterIssuer`.
   * To integrate with Google Cloud DNS managed zones or Azure DNS, we need a wild-card entry for the chosen domain against the IP of the Ingress Controller.
 
-> **Please note that unless you build custom images for OpenNMS, the latest available version of the TSS Cortex Plugin (when enabled) as a KAR file will be downloaded directly from GitHub every time the OpenNMS Core container starts, as those binaries are not part of the current Docker image for OpenNMS.**
+> **Please note that unless you build custom KAR images for OpenNMS, the latest available version of the ALEC and TSS Cortex KAR plugins (when enabled) will be downloaded directly from GitHub every time the OpenNMS Core container starts, as those binaries are not part of the current Docker image for OpenNMS.**
 
-> **For the ALEC KAR plugin, the latest release will be fetched from GitHub like the TSS Cortex Plugin above unless `alecImage` is set, in which case it will be loaded from the specified Docker image.** See [alec/README.md](alec/README.md) for information on the Docker container.
+> **To get KAR plugins from Docker to avoid contacting GitHub, set `alecImage` and/or `cortexTssImage` values as appropriate.** See [kar-containers/README.md](kar-containers/README.md) for information on the Docker containers.
 
 ### External Dependencies
 

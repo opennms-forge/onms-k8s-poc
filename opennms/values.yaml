@@ -6,7 +6,7 @@
 timezone: America/New_York
 domain: example.com # The common domain for the Ingress resource.
 storageClass: onms-share # The name of the StorageClass that allows ReadWriteMany for RRDs and Core configuration (when using dedicated UI instances).
-opennmsVersion: '30.0.4'
+opennmsVersion: '31.0.1'
 
 # Optionally specify an array of imagePullSecrets.
 # Secrets must be manually created in the namespace.
@@ -105,7 +105,7 @@ opennms:
       memory: 4Gi
   configuration:
     enable_alec: true    # See alecImage below for how the KAR is retrieved
-    enable_cortex: false # Downloads KAR from Github when the container starts if it doesn't exist on the image
+    enable_cortex: false # See cortexTssImage below for how the KAR is retrieved
     enable_acls: false
     rras: # To optionally replace the RRDtool aggregations (pass [] to keep defaults). Affects Pollerd and Collectd
     - RRA:AVERAGE:0.5:1:2016
@@ -117,7 +117,12 @@ opennms:
     alecImage: {}
 #      repository: opennms/alec
 #      pullPolicy: IfNotPresent
-#      tag: v1.1.1
+#      tag: v2.0.0
+    # If cortexTssImage is specified, the KAR is retrieved from the specified Docker image used as an initContainer, otherwise the latest release in GitHub is retrieved
+    cortexTssImage: {}
+#      repository: opennms/opennms-cortex-tss-plugin
+#      pullPolicy: IfNotPresent
+#      tag: v2.0.1
     database: # Access to the OpenNMS database
       username: opennms
       password: 0p3nNM5
