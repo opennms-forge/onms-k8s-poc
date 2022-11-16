@@ -102,7 +102,7 @@ if [ "$INSTALL_MIMIR" == "true" ]; then
     --from-literal="S3_ACCESS_KEY=opennms" \
     --from-literal="S3_SECRET_KEY=0p3nNM5Rul3s" \
     --dry-run=client -o yaml | kubectl apply -f -
-  helm upgrade --install mimir grafana/mimir-distributed --namespace $NAMESPACE \
+  helm upgrade --install cortex grafana/mimir-distributed --namespace $NAMESPACE \
     -f dependencies/values-mimir.yaml
 fi
 

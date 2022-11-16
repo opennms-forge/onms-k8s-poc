@@ -57,7 +57,7 @@ mimir:
     blocks_storage:
       backend: s3
       s3: # Internal MinIO (assumes namespace=shared)
-        endpoint: mimir-minio.shared.svc.cluster.local:9000
+        endpoint: cortex-minio.shared.svc.cluster.local:9000
         bucket_name: mimir-tsdb
         access_key_id: grafana-mimir
         secret_access_key: supersecret
