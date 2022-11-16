@@ -6,7 +6,7 @@
 timezone: America/New_York
 domain: example.com # The common domain for the Ingress resource.
 storageClass: onms-share # The name of the StorageClass that allows ReadWriteMany for RRDs and Core configuration (when using dedicated UI instances).
-opennmsVersion: '30.0.4'
+opennmsVersion: '31.0.1'
 
 # Optionally specify an array of imagePullSecrets.
 # Secrets must be manually created in the namespace.
@@ -70,9 +70,17 @@ dependencies:
     port: 3100
 
   # The metrics persistence layer as an alternative to RRDtool.
-  # Not production-ready - use for test/dev purposes only.
   cortex:
-    baseUrl: '' # Used only when opennms.configuration.enable_cortex=true
+    # Used only when opennms.configuration.enable_cortex=true
+    # See: https://github.com/OpenNMS/opennms-cortex-tss-plugin/blob/master/plugin/src/main/resources/OSGI-INF/blueprint/blueprint.xml
+    writeUrl: http://cortex-distributor.shared.svc.cluster.local:8080/api/v1/push
+    readUrl: http://cortex-query-frontend.shared.svc.cluster.local:8080/prometheus/api/v1
+    maxConcurrentHttpConnections: 100
+    writeTimeoutInMs: 1000
+    readTimeoutInMs: 1000
+    metricCacheSize: 1000
+    externalTagsCacheSize: 1000
+    bulkheadMaxWaitDuration: '9223372036854775807' # this is set as a string so it doesn't end up in scientific notation along the way which causes problems later
 
 # The Ingress to expose the OpenNMS and Grafana.
 ingress:
@@ -97,7 +105,7 @@ opennms:
       memory: 4Gi
   configuration:
     enable_alec: true    # See alecImage below for how the KAR is retrieved
-    enable_cortex: false # Downloads KAR from Github when the container starts if it doesn't exist on the image
+    enable_cortex: false # See cortexTssImage below for how the KAR is retrieved
     enable_acls: false
     rras: # To optionally replace the RRDtool aggregations (pass [] to keep defaults). Affects Pollerd and Collectd
     - RRA:AVERAGE:0.5:1:2016
@@ -109,7 +117,12 @@ opennms:
     alecImage: {}
 #      repository: opennms/alec
 #      pullPolicy: IfNotPresent
-#      tag: v1.1.1
+#      tag: v2.0.0
+    # If cortexTssImage is specified, the KAR is retrieved from the specified Docker image used as an initContainer, otherwise the latest release in GitHub is retrieved
+    cortexTssImage: {}
+#      repository: opennms/opennms-cortex-tss-plugin
+#      pullPolicy: IfNotPresent
+#      tag: v2.0.1
     database: # Access to the OpenNMS database
       username: opennms
       password: 0p3nNM5

@@ -1,0 +1,193 @@
+#
+# This is based on the minimal configuration of Mimir from TSaaS
+#
+---
+global:
+#  extraEnv:
+#    - name: JAEGER_ENDPOINT
+#      value: 'http://tempo-distributor.observability.svc.cluster.local:14268/api/traces'
+#    - name: JAEGER_SAMPLER_TYPE
+#      value: 'const'
+#    - name: JAEGER_SAMPLER_PARAM
+#      value: '1'
+  extraEnvFrom:
+    - secretRef:
+        name: minio-credentials
+
+fullnameOverride: cortex # For backward compatibility with existing deployments
+
+serviceAccount: # There is no way to set an account per component
+  name: cortex-sa
+
+rbac:
+  create: false
+
+mimir:
+  structuredConfig:
+    usage_stats:
+      enabled: false
+    server:
+      log_level: debug
+      grpc_server_max_concurrent_streams: 200
+    distributor:
+      instance_limits:
+        max_ingestion_rate: 10000 # Per-distributor rate limit
+        max_inflight_push_requests: 250
+    ingester:
+      ring:
+        num_tokens: 512
+        unregister_on_shutdown: false
+        replication_factor: 1
+    frontend:
+      log_queries_longer_than: 1m
+      split_queries_by_interval: 1h # For testing purposes
+      max_outstanding_per_tenant: 2000 # See https://issues.opennms.org/browse/SRE-38
+    querier:
+      query_ingesters_within: 2h10m # For testing purposes
+      query_store_after: 2h # For testing purposes
+    limits:
+      ingestion_rate: 10000 # Per-user rate limit
+      max_global_series_per_user: 600000 # To accomodate one big tenant
+      max_global_series_per_metric: 60000
+      compactor_blocks_retention_period: 7d
+      # Allow ingestion of out-of-order samples up to 5 minutes since the latest received sample for the series.
+      # https://grafana.com/docs/mimir/latest/operators-guide/configure/configure-out-of-order-samples-ingestion/
+      out_of_order_time_window: 5m
+      max_cache_freshness: 5m
+    blocks_storage:
+      backend: s3
+      s3: # Internal MinIO (assumes namespace=shared)
+        endpoint: cortex-minio.shared.svc.cluster.local:9000
+        bucket_name: mimir-tsdb
+        access_key_id: grafana-mimir
+        secret_access_key: supersecret
+        insecure: true
+      tsdb:
+        block_ranges_period: [30m] # For testing purposes
+        retention_period: 2h # For testing purposes
+        close_idle_tsdb_timeout: 4h # For testing purposes
+      bucket_store:
+        ignore_blocks_within: 0 # For testing purposes
+
+runtimeConfig:
+  ingester_limits:
+    max_inflight_push_requests: 250
+    max_ingestion_rate: 10000
+    max_series: 600000
+
+minio:
+  enabled: true
+  resources:
+    requests:
+      memory: 512Mi
+
+nginx:
+  enabled: false
+
+alertmanager:
+  enabled: false
+
+ruler:
+  enabled: false
+
+distributor:
+  replicas: 1
+  podAnnotations:
+    config.linkerd.io/proxy-cpu-request: 20m # Required by HPA
+  resources: null
+  affinity: null
+
+ingester:
+  replicas: 1
+  persistentVolume:
+    size: 10Gi
+  resources: null
+  affinity: null
+
+compactor:
+  replicas: 1
+  persistentVolume:
+    size: 10Gi
+  resources: null
+  affinity: null
+
+querier:
+  replicas: 1
+  resources: null
+  affinity: null
+  initContainers:
+    - name: wait
+      image: busybox
+      imagePullPolicy: IfNotPresent
+      command: ['sh', '-c', 'until nslookup cortex-metadata-cache.shared.svc.cluster.local; do echo waiting for memcached; sleep 2; done']
+
+query_frontend:
+  replicas: 1
+  resources: null
+  affinity: null
+  initContainers:
+    - name: wait
+      image: busybox
+      imagePullPolicy: IfNotPresent
+      command: ['sh', '-c', 'until nslookup cortex-results-cache.shared.svc.cluster.local; do echo waiting for memcached; sleep 2; done']
+
+query_scheduler:
+  enabled: false
+
+store_gateway:
+  replicas: 1
+  persistentVolume:
+    size: 10Gi
+  resources: null
+  affinity: null
+  initContainers:
+    - name: wait
+      image: busybox
+      imagePullPolicy: IfNotPresent
+      command: ['sh', '-c', 'until nslookup cortex-metadata-cache.shared.svc.cluster.local; do echo waiting for memcached; sleep 2; done']
+
+chunks-cache:
+  enabled: true
+  replicas: 1
+  allocatedMemory: 256
+  resources:
+    requests:
+      cpu: 25m
+  affinity: null
+
+index-cache:
+  enabled: true
+  replicas: 1
+  allocatedMemory: 128
+  resources:
+    requests:
+      cpu: 25m
+  affinity: null
+
+metadata-cache:
+  enabled: true
+  replicas: 1
+  allocatedMemory: 64
+  resources:
+    requests:
+      cpu: 25m
+  affinity: null
+
+results-cache:
+  enabled: true
+  replicas: 1
+  allocatedMemory: 128
+  resources:
+    requests:
+      cpu: 25m
+  affinity: null
+
+metaMonitoring:
+  serviceMonitor:
+    enabled: true
+    clusterLabel: null
+    labels:
+      release: monitor
+
+overrides_exporter:
+  resources: null

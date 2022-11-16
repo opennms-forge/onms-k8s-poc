@@ -20,7 +20,14 @@
 # OPENNMS_INSTANCE_ID
 # ENABLE_ACLS
 # ENABLE_CORTEX
-# CORTEX_BASE_URL
+# CORTEX_WRITE_URL
+# CORTEX_READ_URL
+# CORTEX_MAX_CONCURRENT_HTTP_CONNECTIONS
+# CORTEX_WRITE_TIMEOUT
+# CORTEX_READ_TIMEOUT
+# CORTEX_METRIC_CACHE_SIZE
+# CORTEX_EXTERNAL_TAGS_CACHE_SIZE
+# CORTEX_BULKHEAD_MAX_WAIT_DURATION
 # ELASTICSEARCH_SERVER
 # ELASTICSEARCH_USER
 # ELASTICSEARCH_PASSWORD
@@ -87,9 +94,9 @@ EOF
 # Configure Timeseries for Cortex if enabled
 if [[ ${ENABLE_CORTEX} == "true" ]]; then
   if [[ ! -e /opt/opennms/deploy/opennms-cortex-tss-plugin.kar ]]; then
-    KAR_VER=$(curl -s https://api.github.com/repos/OpenNMS/opennms-cortex-tss-plugin/releases/latest | grep tag_name | cut -d '"' -f 4)
+    KAR_VER=$(curl -sSf https://api.github.com/repos/OpenNMS/opennms-cortex-tss-plugin/releases/latest | grep tag_name | cut -d '"' -f 4)
     KAR_URL="https://github.com/OpenNMS/opennms-cortex-tss-plugin/releases/download/${KAR_VER}/opennms-cortex-tss-plugin.kar"
-    curl -LJ -o ${DEPLOY_DIR}/opennms-cortex-tss-plugin.kar ${KAR_URL} 2>/dev/null
+    curl -sSf -LJ -o ${DEPLOY_DIR}/opennms-cortex-tss-plugin.kar ${KAR_URL}
   fi
 
   cat <<EOF > ${CONFIG_DIR_OVERLAY}/opennms.properties.d/timeseries.properties
@@ -102,19 +109,27 @@ org.opennms.timeseries.tin.metatags.tag.label=\${resource:label}
 EOF
 
   cat <<EOF > ${CONFIG_DIR_OVERLAY}/org.opennms.plugins.tss.cortex.cfg
-writeUrl=${CORTEX_BASE_URL}/api/prom/push
-readUrl=${CORTEX_BASE_URL}/prometheus/api/v1
-maxConcurrentHttpConnections=100
-writeTimeoutInMs=1000
-readTimeoutInMs=1000
-metricCacheSize=1000
-bulkheadMaxWaitDurationInMs=9223372036854775807
+writeUrl=${CORTEX_WRITE_URL}
+readUrl=${CORTEX_READ_URL}
+maxConcurrentHttpConnections=${CORTEX_MAX_CONCURRENT_HTTP_CONNECTIONS}
+writeTimeoutInMs=${CORTEX_WRITE_TIMEOUT}
+readTimeoutInMs=${CORTEX_READ_TIMEOUT}
+metricCacheSize=${CORTEX_METRIC_CACHE_SIZE}
+externalTagsCacheSize=${CORTEX_EXTERNAL_TAGS_CACHE_SIZE}
+bulkheadMaxWaitDuration=${CORTEX_BULKHEAD_MAX_WAIT_DURATION}
+organizationId=${OPENNMS_INSTANCE_ID}
 EOF
+
+  # Needed for UI container
+  mkdir -p ${CONFIG_DIR_OVERLAY}/featuresBoot.d
 
   cat <<EOF > ${CONFIG_DIR_OVERLAY}/featuresBoot.d/cortex.boot
 opennms-plugins-cortex-tss wait-for-kar=opennms-cortex-tss-plugin
 EOF
 fi
+
+  # Needed for UI container
+  mkdir -p ${CONFIG_DIR_OVERLAY}/opennms.properties.d
 
 # Enable ACLs
 cat <<EOF > ${CONFIG_DIR_OVERLAY}/opennms.properties.d/acl.properties

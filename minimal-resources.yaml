@@ -6,8 +6,6 @@ opennms:
   configuration:
     storage:
       rrd: 100Gi
-  uiServers:
-    replicaCount: 1
 
 grafana:
   replicaCount: 1

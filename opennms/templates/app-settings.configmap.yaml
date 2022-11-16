@@ -27,7 +27,14 @@ data:
   OPENNMS_RRAS: {{ join ";" .Values.opennms.configuration.rras }}
   {{- end }}
   {{- if ((.Values.opennms).configuration).enable_cortex }}
-  CORTEX_BASE_URL: {{ .Values.dependencies.cortex.baseUrl | quote }}
+  CORTEX_WRITE_URL: {{ .Values.dependencies.cortex.writeUrl | quote }}
+  CORTEX_READ_URL: {{ .Values.dependencies.cortex.readUrl | quote }}
+  CORTEX_MAX_CONCURRENT_HTTP_CONNECTIONS: {{ .Values.dependencies.cortex.maxConcurrentHttpConnections | quote }}
+  CORTEX_WRITE_TIMEOUT: {{ .Values.dependencies.cortex.writeTimeoutInMs | quote }}
+  CORTEX_READ_TIMEOUT: {{ .Values.dependencies.cortex.readTimeoutInMs | quote }}
+  CORTEX_METRIC_CACHE_SIZE: {{ .Values.dependencies.cortex.metricCacheSize | quote }}
+  CORTEX_EXTERNAL_TAGS_CACHE_SIZE: {{ .Values.dependencies.cortex.externalTagsCacheSize | quote }}
+  CORTEX_BULKHEAD_MAX_WAIT_DURATION: {{ .Values.dependencies.cortex.bulkheadMaxWaitDuration | quote }}
   {{- end }}
   {{- if ((.Values.dependencies).elasticsearch).hostname }}
   ELASTICSEARCH_SERVER: {{ printf "%s:%d" .Values.dependencies.elasticsearch.hostname (.Values.dependencies.elasticsearch.port | int) | quote }}
