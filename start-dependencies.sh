@@ -13,6 +13,7 @@ done
 # Optional dependencies
 INSTALL_ELASTIC=${INSTALL_ELASTIC:-false} # needed for Flow processing
 INSTALL_KAFKA=${INSTALL_KAFKA:-false} # needed for Sentinel and Minion support
+INSTALL_MIMIR=${INSTALL_MIMIR:-false} # needed for Cortex testing
 INSTALL_LOKI=${INSTALL_LOKI:-true} # needed for log aggregation together with promtail in containers; make sure dependencies.loki.hostname='' for the helm chart if this is disabled
 
 # Required dependencies (if you don't install them here, they need to be running somewhere else)
@@ -94,6 +95,15 @@ if [ "$INSTALL_ELASTIC" == "true" ]; then
   kubectl create -f https://download.elastic.co/downloads/eck/2.4.0/crds.yaml --dry-run=client -o yaml | kubectl apply -f -
   kubectl apply -f https://download.elastic.co/downloads/eck/2.4.0/operator.yaml
   kubectl apply -f dependencies/elasticsearch.yaml -n $NAMESPACE
+fi
+
+if [ "$INSTALL_MIMIR" == "true" ]; then
+  kubectl create secret generic minio-credentials -n $NAMESPACE \
+    --from-literal="S3_ACCESS_KEY=opennms" \
+    --from-literal="S3_SECRET_KEY=0p3nNM5Rul3s" \
+    --dry-run=client -o yaml | kubectl apply -f -
+  helm upgrade --install mimir grafana/mimir-distributed --namespace $NAMESPACE \
+    -f dependencies/values-mimir.yaml
 fi
 
 # Wait for the clusters
