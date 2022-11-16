@@ -46,7 +46,7 @@ helm upgrade --install cert-manager jetstack/cert-manager \
 kubectl apply -f ca -n cert-manager
 
 # Create a namespace for most of the dependencies except for cert-manager (above), and the postgres and elastic operators (added below).
-kubectl create namespace $NAMESPACE
+kubectl create namespace $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
 
 # Install Grafana Loki
 if [ "$INSTALL_LOKI" == "true" ]; then
@@ -76,22 +76,22 @@ fi
 if [ "$INSTALL_POSTGRESQL" == "true" ]; then
   kubectl apply -f https://raw.githubusercontent.com/zalando/postgres-operator/master/manifests/postgresql.crd.yaml
   kubectl apply -k github.com/zalando/postgres-operator/manifests
-  kubectl create secret generic $PG_USER.onms-db.credentials.postgresql.acid.zalan.do --from-literal="username=$PG_USER" --from-literal="password=$PG_PASSWORD" -n $NAMESPACE
-  kubectl create secret generic $PG_ONMS_USER.onms-db.credentials.postgresql.acid.zalan.do --from-literal="username=$PG_ONMS_USER" --from-literal="password=$PG_ONMS_PASSWORD" -n $NAMESPACE
+  kubectl create secret generic $PG_USER.onms-db.credentials.postgresql.acid.zalan.do --from-literal="username=$PG_USER" --from-literal="password=$PG_PASSWORD" -n $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
+  kubectl create secret generic $PG_ONMS_USER.onms-db.credentials.postgresql.acid.zalan.do --from-literal="username=$PG_ONMS_USER" --from-literal="password=$PG_ONMS_PASSWORD" -n $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
   kubectl apply -f dependencies/postgresql.yaml -n $NAMESPACE
 fi
 
 if [ "$INSTALL_KAFKA" == "true" ]; then
   # Install Kafka via Strimzi
-  kubectl create secret generic kafka-user-credentials --from-literal="$KAFKA_USER=$KAFKA_PASSWORD" -n $NAMESPACE
+  kubectl create secret generic kafka-user-credentials --from-literal="$KAFKA_USER=$KAFKA_PASSWORD" -n $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
   kubectl apply -f "https://strimzi.io/install/latest?namespace=$NAMESPACE" -n $NAMESPACE
   kubectl apply -f dependencies/kafka.yaml -n $NAMESPACE
 fi
 
 if [ "$INSTALL_ELASTIC" == "true" ]; then
   # Install Elasticsearch via ECK
-  kubectl create secret generic $CLUSTER_NAME-es-elastic-user --from-literal="$ELASTIC_USER=$ELASTIC_PASSWORD" -n $NAMESPACE
-  kubectl create -f https://download.elastic.co/downloads/eck/2.4.0/crds.yaml
+  kubectl create secret generic $CLUSTER_NAME-es-elastic-user --from-literal="$ELASTIC_USER=$ELASTIC_PASSWORD" -n $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
+  kubectl create -f https://download.elastic.co/downloads/eck/2.4.0/crds.yaml --dry-run=client -o yaml | kubectl apply -f -
   kubectl apply -f https://download.elastic.co/downloads/eck/2.4.0/operator.yaml
   kubectl apply -f dependencies/elasticsearch.yaml -n $NAMESPACE
 fi
