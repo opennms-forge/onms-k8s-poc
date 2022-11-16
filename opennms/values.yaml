@@ -70,9 +70,17 @@ dependencies:
     port: 3100
 
   # The metrics persistence layer as an alternative to RRDtool.
-  # Not production-ready - use for test/dev purposes only.
   cortex:
-    baseUrl: '' # Used only when opennms.configuration.enable_cortex=true
+    # Used only when opennms.configuration.enable_cortex=true
+    # See: https://github.com/OpenNMS/opennms-cortex-tss-plugin/blob/master/plugin/src/main/resources/OSGI-INF/blueprint/blueprint.xml
+    writeUrl: http://cortex-distributor.shared.svc.cluster.local:8080/api/v1/push
+    readUrl: http://cortex-query-frontend.shared.svc.cluster.local:8080/prometheus/api/v1
+    maxConcurrentHttpConnections: 100
+    writeTimeoutInMs: 1000
+    readTimeoutInMs: 1000
+    metricCacheSize: 1000
+    externalTagsCacheSize: 1000
+    bulkheadMaxWaitDuration: '9223372036854775807' # this is set as a string so it doesn't end up in scientific notation along the way which causes problems later
 
 # The Ingress to expose the OpenNMS and Grafana.
 ingress:
