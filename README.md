@@ -360,7 +360,7 @@ There are some additional Helm values files that might make life easier in some 
 * `kafka-plain.yaml`: If you want to test connecting to Kafka with plain authentication (no SASL) and no TLS.
 * `minikube-host-postgresql.yaml`: connect to a locally-running PostgreSQL on your development system (outside of Minikube, often in Docker; see above).
 * `bare-bones.yaml`: when you want an absolutely basic setup in Kubernetes--just the OpenNMS core instance and nothing extra.
-* `kill-it-with-fire.yaml`: reduces terminationGracePeriodSeconds for OpenNMS and the UI from 120 seconds to 5. Only use this when testing and you don't care about corruption.
+* `kill-it-with-fire.yaml`: reduces terminationGracePeriodSeconds for OpenNMS and the UI from 120 seconds to 5 and reduces ttlSecondsAfterFinished for the post configuration job from 300 seconds to 5 seconds. Only use this when testing and you don't care about corruption.
 
 Take a look at the documentation of [ingress-dns](https://github.com/kubernetes/minikube/tree/master/deploy/addons/ingress-dns) for more information about how to use it, to avoid messing with `/etc/hosts`.
 
@@ -502,3 +502,13 @@ opennms:stress-metrics -r 60 -n 1500 -f 20 -g 1 -a 50 -s 2 -t 100 -i 300 -x RRA:
 Google's Metric Explorer showed that Filestore writes were around 120 MiB/sec on average while the files were being created. After that, it decreased to about ten times less the initial throughput.
 
 Note that at 5 minutes collection interval, persisting 5000 metrics per second implies having 1.5 million unique metrics.
+
+# Debugging
+
+## `Error: UPGRADE FAILED: cannot patch "onms-post-config" with kind Job`
+
+If you get the message above with a huge long error message, it's because you are trying to upgrade a Helm release that still has the onms-post-config job around.
+Either the job never started (if the release is still coming up, or there was a problem leaving the release stuck), it is running, or it finished but hasn't been purged yet.
+You can delete the job with `kubectl delete job onms-post-config -n <namespace>` (make sure to substitute in the right namespace) and re-run the helm upgrade and you should be fine.
+The default timeout is 300 seconds but it can be tweaked by setting `opennms.postConfigJob.ttlSecondsAfterFinished.
+For testing, you can also add the `kill-it-with-fire.yaml` values file when you run Helm to significantly reduce the time the job is left around after completing (note that it tweaks other things, too, see the comments in this file).
