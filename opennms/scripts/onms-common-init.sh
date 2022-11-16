@@ -94,9 +94,9 @@ EOF
 # Configure Timeseries for Cortex if enabled
 if [[ ${ENABLE_CORTEX} == "true" ]]; then
   if [[ ! -e /opt/opennms/deploy/opennms-cortex-tss-plugin.kar ]]; then
-    KAR_VER=$(curl -s https://api.github.com/repos/OpenNMS/opennms-cortex-tss-plugin/releases/latest | grep tag_name | cut -d '"' -f 4)
+    KAR_VER=$(curl -sSf https://api.github.com/repos/OpenNMS/opennms-cortex-tss-plugin/releases/latest | grep tag_name | cut -d '"' -f 4)
     KAR_URL="https://github.com/OpenNMS/opennms-cortex-tss-plugin/releases/download/${KAR_VER}/opennms-cortex-tss-plugin.kar"
-    curl -LJ -o ${DEPLOY_DIR}/opennms-cortex-tss-plugin.kar ${KAR_URL} 2>/dev/null
+    curl -sSf -LJ -o ${DEPLOY_DIR}/opennms-cortex-tss-plugin.kar ${KAR_URL}
   fi
 
   cat <<EOF > ${CONFIG_DIR_OVERLAY}/opennms.properties.d/timeseries.properties
@@ -120,10 +120,16 @@ bulkheadMaxWaitDuration=${CORTEX_BULKHEAD_MAX_WAIT_DURATION}
 organizationId=${OPENNMS_INSTANCE_ID}
 EOF
 
+  # Needed for UI container
+  mkdir -p ${CONFIG_DIR_OVERLAY}/featuresBoot.d
+
   cat <<EOF > ${CONFIG_DIR_OVERLAY}/featuresBoot.d/cortex.boot
 opennms-plugins-cortex-tss wait-for-kar=opennms-cortex-tss-plugin
 EOF
 fi
+
+  # Needed for UI container
+  mkdir -p ${CONFIG_DIR_OVERLAY}/opennms.properties.d
 
 # Enable ACLs
 cat <<EOF > ${CONFIG_DIR_OVERLAY}/opennms.properties.d/acl.properties
