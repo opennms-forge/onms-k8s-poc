@@ -82,7 +82,7 @@ Define custom content for JVM_OPTS to conditionally handle Truststores
 Define whether RRD is enabled
 */}}
 {{- define "opennms.enable_tss_rrd" -}}
-  {{ not .Values.opennms.configuration.enable_cortex -}}
+  {{ or (not .Values.opennms.configuration.enable_cortex) .Values.opennms.configuration.enable_tss_dual_write -}}
 {{- end }}
 
 {{/*
