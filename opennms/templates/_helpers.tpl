@@ -79,6 +79,13 @@ Define custom content for JVM_OPTS to conditionally handle Truststores
 {{- end }}
 
 {{/*
+Define whether RRD is enabled
+*/}}
+{{- define "opennms.enable_tss_rrd" -}}
+  {{ not .Values.opennms.configuration.enable_cortex -}}
+{{- end }}
+
+{{/*
 Define common content for Grafana Promtail
 */}}
 {{- define "opennms.promtailBaseConfig" -}}

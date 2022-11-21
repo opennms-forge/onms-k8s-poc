@@ -66,7 +66,7 @@ spec:
         - secretRef:
             name: app-credentials
         volumeMounts:
-        {{- if not .Values.opennms.configuration.enable_cortex }}
+        {{- if (include "opennms.enable_tss_rrd" .) }}
         - name: rrd-core
           mountPath: /opennms-data/rrd
         {{- end }}
@@ -161,7 +161,7 @@ spec:
         persistentVolumeClaim:
           claimName: onms-etc-pvc
           readOnly: true
-      {{- if not .Values.opennms.configuration.enable_cortex }}
+      {{- if (include "opennms.enable_tss_rrd" .) }}
       - name: rrd-core
         persistentVolumeClaim:
           claimName: onms-rrd-pvc
