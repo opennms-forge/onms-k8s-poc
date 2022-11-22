@@ -28,6 +28,7 @@
 # CORTEX_METRIC_CACHE_SIZE
 # CORTEX_EXTERNAL_TAGS_CACHE_SIZE
 # CORTEX_BULKHEAD_MAX_WAIT_DURATION
+# ENABLE_TSS_DUAL_WRITE
 # ELASTICSEARCH_SERVER
 # ELASTICSEARCH_USER
 # ELASTICSEARCH_PASSWORD
@@ -99,8 +100,16 @@ if [[ ${ENABLE_CORTEX} == "true" ]]; then
     curl -sSf -LJ -o ${DEPLOY_DIR}/opennms-cortex-tss-plugin.kar ${KAR_URL}
   fi
 
-  cat <<EOF > ${CONFIG_DIR_OVERLAY}/opennms.properties.d/timeseries.properties
+  if [[ ${ENABLE_TSS_DUAL_WRITE} == "true" ]]; then
+    # Do *not* set org.opennms.timeseries.strategy=integration but do make sure the file exists and is empty for later
+    echo -n > ${CONFIG_DIR_OVERLAY}/opennms.properties.d/timeseries.properties
+  else
+    cat <<EOF > ${CONFIG_DIR_OVERLAY}/opennms.properties.d/timeseries.properties
 org.opennms.timeseries.strategy=integration
+EOF
+  fi
+
+  cat <<EOF >> ${CONFIG_DIR_OVERLAY}/opennms.properties.d/timeseries.properties
 org.opennms.timeseries.tin.metatags.tag.node=\${node:label}
 org.opennms.timeseries.tin.metatags.tag.location=\${node:location}
 org.opennms.timeseries.tin.metatags.tag.geohash=\${node:geohash}
@@ -126,6 +135,12 @@ EOF
   cat <<EOF > ${CONFIG_DIR_OVERLAY}/featuresBoot.d/cortex.boot
 opennms-plugins-cortex-tss wait-for-kar=opennms-cortex-tss-plugin
 EOF
+
+  if [[ ${ENABLE_TSS_DUAL_WRITE} == "true" ]]; then
+    cat <<EOF > ${CONFIG_DIR_OVERLAY}/featuresBoot.d/timeseries.boot
+opennms-timeseries-api
+EOF
+  fi
 fi
 
   # Needed for UI container

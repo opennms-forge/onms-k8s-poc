@@ -106,6 +106,7 @@ opennms:
   configuration:
     enable_alec: true    # See alecImage below for how the KAR is retrieved
     enable_cortex: false # See cortexTssImage below for how the KAR is retrieved
+    enable_tss_dual_write: false
     enable_acls: false
     rras: # To optionally replace the RRDtool aggregations (pass [] to keep defaults). Affects Pollerd and Collectd
     - RRA:AVERAGE:0.5:1:2016

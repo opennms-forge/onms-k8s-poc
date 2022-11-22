@@ -1,6 +1,6 @@
 {{- /* @author Alejandro Galue <agalue@opennms.com> */}}
 
-{{- if not .Values.opennms.configuration.enable_cortex }}
+{{- if (include "opennms.enable_tss_rrd" .) }}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
