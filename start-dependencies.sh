@@ -60,6 +60,7 @@ if [ "$INSTALL_LOKI" == "true" ]; then
     --set "loki.commonConfig.replication_factor=1" \
     --set "loki.commonConfig.ring.instance_addr=127.0.0.1" \
     --set "loki.commonConfig.ring.kvstore.store=inmemory" \
+    --set "test.enabled=false" \
     --set "monitoring.selfMonitoring.enabled=false" \
     --set "monitoring.selfMonitoring.grafanaAgent.installOperator=false" \
     --set "monitoring.selfMonitoring.lokiCanary.enabled=false" \
