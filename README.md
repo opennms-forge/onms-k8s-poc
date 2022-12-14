@@ -304,12 +304,15 @@ Start Minikube:
 
 ```bash
 minikube start --cpus=5 --memory=24g \
+  --container-runtime=containerd \
   --addons=ingress \
   --addons=ingress-dns \
   --addons=metrics-server \
   --addons=registry \
   --insecure-registry "10.0.0.0/24"
 ```
+
+(note: containerd runtime is used to avoid https://github.com/kubernetes/minikube/issues/14806)
 
 It is advised to have the dependencies outside this Kubernetes cluster, but for testing purposes, you can use `start-dependencies.sh` to initialize all the dependencies in Kubernetes with a basic configuration (including `cert-manager`).
 
