@@ -42,7 +42,7 @@ helm repo add grafana https://grafana.github.io/helm-charts
 helm repo update
 
 # Install Cert-Manager
-helm upgrade --install cert-manager jetstack/cert-manager \
+helm upgrade --install cert-manager jetstack/cert-manager --version v1.10.1 \
   --namespace cert-manager --create-namespace --set installCRDs=true --wait
 kubectl apply -f ca -n cert-manager
 
@@ -51,7 +51,7 @@ kubectl create namespace $NAMESPACE --dry-run=client -o yaml | kubectl apply -f 
 
 # Install Grafana Loki
 if [ "$INSTALL_LOKI" == "true" ]; then
-  helm upgrade --install loki --namespace=$NAMESPACE \
+  helm upgrade --install loki --version 3.7.0 --namespace=$NAMESPACE \
     --set "fullnameOverride=loki" \
     --set "gateway.enabled=false" \
     --set "loki.storage.type=filesystem" \
@@ -103,7 +103,7 @@ if [ "$INSTALL_MIMIR" == "true" ]; then
     --from-literal="S3_ACCESS_KEY=opennms" \
     --from-literal="S3_SECRET_KEY=0p3nNM5Rul3s" \
     --dry-run=client -o yaml | kubectl apply -f -
-  helm upgrade --install cortex grafana/mimir-distributed --namespace $NAMESPACE \
+  helm upgrade --install cortex grafana/mimir-distributed --version 3.3.0 --namespace $NAMESPACE \
     -f dependencies/values-mimir.yaml
 fi
 
