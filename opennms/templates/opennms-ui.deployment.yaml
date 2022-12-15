@@ -70,6 +70,10 @@ spec:
         - name: rrd-core
           mountPath: /opennms-data/rrd
         {{- end }}
+        {{- if .Values.opennms.configuration.storage.mibs }}
+        - name: mibs-core
+          mountPath: /opt/opennms/share/mibs
+        {{- end }}
         - name: etc-core
           mountPath: /opennms-core/etc # Must match CORE_CONFIG_DIR from onms-ui-init.sh
         - name: overlay
@@ -165,6 +169,12 @@ spec:
       - name: rrd-core
         persistentVolumeClaim:
           claimName: onms-rrd-pvc
+          readOnly: true
+      {{- end }}
+      {{- if .Values.opennms.configuration.storage.mibs }}
+      - name: mibs-core
+        persistentVolumeClaim:
+          claimName: onms-mibs-pvc
           readOnly: true
       {{- end }}
 {{- end }}
