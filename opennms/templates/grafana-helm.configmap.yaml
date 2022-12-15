@@ -14,6 +14,7 @@ secureJsonData:
   basicAuthPassword: {{ .Values.opennms.configuration.http.rest_password }}
 {{- end }}
 
+{{- if gt ((.Values.grafana).replicaCount|int) 0 }}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -41,3 +42,5 @@ data:
     - name: OpenNMS-Flow
       type: opennms-helm-flow-datasource
       {{- include "opennms.grafanaDSOptions" . | nindent 6 }}
+
+{{- end }}

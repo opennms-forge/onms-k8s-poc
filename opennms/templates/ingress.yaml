@@ -28,7 +28,9 @@ spec:
         - onms.{{ include "opennms.domain" . }}
         {{- end }}
         - onms-core.{{ include "opennms.domain" . }}
+        {{- if gt ((.Values.grafana).replicaCount|int) 0 }}
         - grafana.{{ include "opennms.domain" . }}
+        {{- end }}
   rules:
     {{- if $use_ui }}
     - host: onms.{{ include "opennms.domain" . }}
@@ -59,6 +61,7 @@ spec:
                 name: onms-core
                 port:
                   number: 8980
+    {{- if gt ((.Values.grafana).replicaCount|int) 0 }}
     - host: grafana.{{ include "opennms.domain" . }}
       http:
         paths:
@@ -69,3 +72,4 @@ spec:
                 name: grafana
                 port:
                   number: 3000
+    {{- end }}

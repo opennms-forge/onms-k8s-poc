@@ -184,7 +184,7 @@ results-cache:
 
 metaMonitoring:
   serviceMonitor:
-    enabled: true
+    enabled: false
     clusterLabel: null
     labels:
       release: monitor

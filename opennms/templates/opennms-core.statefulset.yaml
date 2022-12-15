@@ -101,6 +101,10 @@ spec:
         - name: rrd
           mountPath: /opennms-data/rrd
         {{- end }}
+        {{- if .Values.opennms.configuration.storage.mibs }}
+        - name: mibs
+          mountPath: /opt/opennms/share/mibs
+        {{- end }}
         - name: etc
           mountPath: /opt/opennms/etc
         - name: deploy
@@ -198,5 +202,11 @@ spec:
       - name: rrd
         persistentVolumeClaim:
           claimName: onms-rrd-pvc
+          readOnly: false
+      {{- end }}
+      {{- if .Values.opennms.configuration.storage.mibs }}
+      - name: mibs
+        persistentVolumeClaim:
+          claimName: onms-mibs-pvc
           readOnly: false
       {{- end }}
