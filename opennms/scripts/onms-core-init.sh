@@ -5,6 +5,7 @@
 # Designed for Horizon 29 or Meridian 2021 and 2022. Newer or older versions are not supported.
 #
 # External environment variables used by this script:
+# OPENNMS_ADMIN_PASS
 # OPENNMS_INSTANCE_ID (initialized by onms-common-init.sh)
 # OPENNMS_DATABASE_CONNECTION_MAXPOOL
 # OPENNMS_RRAS
@@ -225,10 +226,10 @@ EOF
 # Enable ALEC standalone
 if [[ ${ENABLE_ALEC} == "true" ]]; then
   if [[ ! -e /opt/opennms/deploy/opennms-alec-plugin.kar ]] && [[ ! -e ${DEPLOY_DIR}/opennms-alec-plugin.kar ]]; then
-    KAR_VER=$(curl -s https://api.github.com/repos/OpenNMS/alec/releases/latest | grep tag_name | cut -d '"' -f 4)
+    KAR_VER=$(curl -sSf https://api.github.com/repos/OpenNMS/alec/releases/latest | grep tag_name | cut -d '"' -f 4)
     KAR_URL="https://github.com/OpenNMS/alec/releases/download/${KAR_VER}/opennms-alec-plugin.kar"
     echo "Downloading ALEC $KAR_VER from GitHub..."
-    curl -LJ -o ${DEPLOY_DIR}/opennms-alec-plugin.kar ${KAR_URL} 2>/dev/null
+    curl -sSf -LJ -o ${DEPLOY_DIR}/opennms-alec-plugin.kar ${KAR_URL}
   fi
 
   cat <<EOF > ${CONFIG_DIR_OVERLAY}/featuresBoot.d/alec.boot
@@ -357,3 +358,6 @@ if [[ ${ENABLE_GRAFANA} == "true" ]]; then
 else
   echo "Grafana is not enabled, not running onms-grafana-init.sh"
 fi
+
+echo "Updating admin password"
+perl /scripts/onms-set-admin-password.pl ${CONFIG_DIR}/users.xml admin "${OPENNMS_ADMIN_PASS}"

@@ -22,6 +22,8 @@ spec:
       labels:
         app: onms-core
         {{- include "opennms.selectorLabels" . | nindent 8 }}
+      annotations:
+        rollme: {{ randAlphaNum 5 | quote }}
     spec:
       securityContext:
         fsGroup: 10001 # Required for Google Fileshare (might impact performance)
