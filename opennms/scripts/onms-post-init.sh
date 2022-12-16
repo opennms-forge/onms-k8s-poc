@@ -34,7 +34,7 @@ command -v jq >/dev/null 2>&1   || { echo >&2 "jq is required but it's not insta
 # Wait for dependencies
 wait_for ${OPENNMS_SERVER}:8980
 
-ONMS_AUTH="admin:admin"
+ONMS_AUTH="admin:${OPENNMS_ADMIN_PASS}"
 
 if [[ ${ENABLE_GRAFANA} == "true" ]]; then
   # Configure Grafana Endpoint for Reports
@@ -62,13 +62,3 @@ curl -sSf -u "${ONMS_AUTH}" -X POST \
   -H "Content-Type: application/xml" \
   -d "<user><user-id>${OPENNMS_HTTP_USER}</user-id><password>${OPENNMS_HTTP_PASS}</password><role>ROLE_REST</role><role>ROLE_MINION</role></user>" \
   "http://${OPENNMS_SERVER}:8980/opennms/rest/users?hashPassword=true"
-
-# Change password for the admin account
-if [[ ${OPENNMS_ADMIN_PASS} != "" ]]; then
-  echo "Updating admin password"
-  curl -u "${ONMS_AUTH}" -v -X PUT \
-    -d "password=${OPENNMS_ADMIN_PASS}" \
-    "http://${OPENNMS_SERVER}:8980/opennms/rest/users/admin?hashPassword=true"
-else
-  echo "WARNING: missing admin password"
-fi

@@ -5,6 +5,7 @@
 # Designed for Horizon 29 or Meridian 2021 and 2022. Newer or older versions are not supported.
 #
 # External environment variables used by this script:
+# OPENNMS_ADMIN_PASS
 # OPENNMS_INSTANCE_ID (initialized by onms-common-init.sh)
 # OPENNMS_DATABASE_CONNECTION_MAXPOOL
 # OPENNMS_RRAS
@@ -357,3 +358,6 @@ if [[ ${ENABLE_GRAFANA} == "true" ]]; then
 else
   echo "Grafana is not enabled, not running onms-grafana-init.sh"
 fi
+
+echo "Updating admin password"
+perl /scripts/onms-set-admin-password.pl ${CONFIG_DIR}/users.xml admin "${OPENNMS_ADMIN_PASS}"
