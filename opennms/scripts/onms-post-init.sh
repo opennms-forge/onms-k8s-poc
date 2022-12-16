@@ -40,7 +40,7 @@ if [[ ${ENABLE_GRAFANA} == "true" ]]; then
   # Configure Grafana Endpoint for Reports
   ID=$(curl -sSf -u "${ONMS_AUTH}" http://${OPENNMS_SERVER}:8980/opennms/rest/endpoints/grafana | jq ".[] | select(.uid=\"$(hostname)\") | .id") || true
   if [[ $ID == "" ]]; then
-    GRAFANA_KEY=$(curl -sSf -u "${ONMS_AUTH}" -X POST -H "Content-Type: application/json" -d "{\"name\":\"$(hostname)\",\"role\": \"Viewer\"}" "http://${GRAFANA_SERVER}:3000/api/auth/keys" | jq .key - | sed 's/"//g')
+    GRAFANA_KEY=$(curl -sSf -u "${ONMS_AUTH}" -X POST -H "Content-Type: application/json" -d "{\"name\":\"$(hostname)\",\"role\": \"Viewer\"}" "http://${GRAFANA_SERVER}:3000/api/auth/keys" | jq -r .key)
     if [[ ${GRAFANA_KEY} == "null" ]]; then
       echo "WARNING: cannot get Grafana Key"
     else

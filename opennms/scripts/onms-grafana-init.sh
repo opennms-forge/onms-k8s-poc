@@ -37,7 +37,7 @@ wait_for ${GRAFANA_SERVER}:3000
 GRAFANA_AUTH="admin:${GF_SECURITY_ADMIN_PASSWORD}"
 
 # Configure Flow Dashboard Link
-FLOW_DASHBOARD=$(curl -sSf -u "${GRAFANA_AUTH}" "http://${GRAFANA_SERVER}:3000/api/search?query=flow" | jq '.[0].url' | sed 's/"//g')
+FLOW_DASHBOARD=$(curl -sSf -u "${GRAFANA_AUTH}" "http://${GRAFANA_SERVER}:3000/api/search?query=flow" | jq -r '.[0].url')
 echo "Flow Dashboard: ${FLOW_DASHBOARD}"
 if [ "${FLOW_DASHBOARD}" == "null" ]; then
   echo "WARNING: cannot get Dashboard URL for the Deep Dive Tool"
@@ -56,7 +56,7 @@ if [ "${KEY_ID}" != "" ]; then
 fi
 
 # Create Grafana API Key and configure Grafana Box
-GRAFANA_KEY=$(curl -sSf -u "${GRAFANA_AUTH}" -X POST -H "Content-Type: application/json" -d "{\"name\":\"$(hostname)\",\"role\": \"Viewer\"}" "http://${GRAFANA_SERVER}:3000/api/auth/keys" | jq .key - | sed 's/"//g')
+GRAFANA_KEY=$(curl -sSf -u "${GRAFANA_AUTH}" -X POST -H "Content-Type: application/json" -d "{\"name\":\"$(hostname)\",\"role\": \"Viewer\"}" "http://${GRAFANA_SERVER}:3000/api/auth/keys" | jq -r .key)
 if [ "${GRAFANA_KEY}" == "null" ]; then
   echo "WARNING: cannot get Grafana Key for $(hostname)"
 else
