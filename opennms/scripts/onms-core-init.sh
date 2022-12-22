@@ -143,7 +143,7 @@ fi
 # Include all the configuration files that must be added once but could change after the first run
 if [ ! -f ${CONFIG_DIR}/helm-chart-configured ]; then
   echo "Initializing configuration directory for the first time ..."
-  rsync -arO --no-perms --no-owner --no-group ${BACKUP_ETC}/ ${CONFIG_DIR}/
+  rsync -arO --no-perms --no-owner --no-group --out-format="%n %C" ${BACKUP_ETC}/ ${CONFIG_DIR}/
 
   echo "Initialize default foreign source definition"
   cat <<EOF > ${CONFIG_DIR}/default-foreign-source.xml
@@ -185,10 +185,10 @@ else
      echo "Not updating etc files"
   elif [ "${OPENNMS_ETC_UPDATE_POLICY}" == "newer" ]; then
      echo "Synchronizing only newer files..."
-     rsync -aruO --no-perms --no-owner --no-group ${BACKUP_ETC}/ ${CONFIG_DIR}/
+     rsync -aruO --no-perms --no-owner --no-group --out-format="%n %C" ${BACKUP_ETC}/ ${CONFIG_DIR}/
   elif [ "${OPENNMS_ETC_UPDATE_POLICY}" == "new" ]; then
      echo "Synchronizing only new files..."
-     rsync -arO --ignore-existing --no-perms --no-owner --no-group ${BACKUP_ETC}/ ${CONFIG_DIR}/
+     rsync -arO --ignore-existing --no-perms --no-owner --no-group --out-format="%n %C" ${BACKUP_ETC}/ ${CONFIG_DIR}/
   else
      echo "Unsupported update policy '${OPENNMS_ETC_UPDATE_POLICY}'. Exiting." >&2
      exit 1
@@ -220,7 +220,7 @@ for file in "${KARAF_FILES[@]}"; do
 done
 # WARNING: if the volume behind CONFIG_DIR doesn't have the right permissions, the following fails
 echo "Overriding mandatory files from ${MANDATORY}..."
-rsync -aO --no-perms --no-owner --no-group ${MANDATORY}/ ${CONFIG_DIR}/
+rsync -aO --no-perms --no-owner --no-group --out-format="%n %C" ${MANDATORY}/ ${CONFIG_DIR}/
 
 # Initialize overlay
 mkdir -p ${CONFIG_DIR_OVERLAY}/opennms.properties.d ${CONFIG_DIR_OVERLAY}/featuresBoot.d
