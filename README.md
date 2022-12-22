@@ -515,3 +515,34 @@ Either the job never started (if the release is still coming up, or there was a 
 You can delete the job with `kubectl delete job onms-post-config -n <namespace>` (make sure to substitute in the right namespace) and re-run the helm upgrade and you should be fine.
 The default timeout is 300 seconds but it can be tweaked by setting `opennms.postConfigJob.ttlSecondsAfterFinished.
 For testing, you can also add the `kill-it-with-fire.yaml` values file when you run Helm to significantly reduce the time the job is left around after completing (note that it tweaks other things, too, see the comments in this file).
+
+# Useful tools and commands
+
+## k9s
+https://k9scli.io/
+
+## kubectl
+Tail logs (leave off `-f` to see all logs):
+```
+kubectl logs -n <namespace> -f -c onms pods/onms-core-0
+```
+
+Get a shell:
+```
+kubectl exec -it -n <namespace> pods/onms-core-0 -c onms -- /bin/bash
+```
+
+Restart OpenNMS:
+```
+kubectl rollout restart -n <namespace> statefulset/onms-core
+```
+
+Stop OpenNMS:
+```
+kubectl scale -n <namespace> --replicas=0 statefulset/onms-core
+```
+
+Start OpenNMS:
+```
+kubectl scale -n <namespace> --replicas=1 statefulset/onms-core
+```
