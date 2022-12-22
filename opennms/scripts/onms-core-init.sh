@@ -180,8 +180,19 @@ if [ ! -f ${CONFIG_DIR}/helm-chart-configured ]; then
 EOF
   touch ${CONFIG_DIR}/helm-chart-configured
 else
-  echo "Previous configuration found. Synchronizing only new files..."
-  rsync -aruO --no-perms --no-owner --no-group ${BACKUP_ETC}/ ${CONFIG_DIR}/
+  echo -n "Previous configuration found. Updating per policy opennms.configuration.etcUpdatePolicy == ${OPENNMS_ETC_UPDATE_POLICY}. "
+  if [ "${OPENNMS_ETC_UPDATE_POLICY}" == "never" ]; then
+     echo "Not updating etc files"
+  elif [ "${OPENNMS_ETC_UPDATE_POLICY}" == "newer" ]; then
+     echo "Synchronizing only newer files..."
+     rsync -aruO --no-perms --no-owner --no-group ${BACKUP_ETC}/ ${CONFIG_DIR}/
+  elif [ "${OPENNMS_ETC_UPDATE_POLICY}" == "new" ]; then
+     echo "Synchronizing only new files..."
+     rsync -arO --ignore-existing --no-perms --no-owner --no-group ${BACKUP_ETC}/ ${CONFIG_DIR}/
+  else
+     echo "Unsupported update policy '${OPENNMS_ETC_UPDATE_POLICY}'. Exiting." >&2
+     exit 1
+  fi
 fi
 
 # See if we are on a fresh install or a different version of OpenNMS and remove
