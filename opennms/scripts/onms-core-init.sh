@@ -140,10 +140,18 @@ if [ -f ${CONFIG_DIR}/configured ] && [ ! -f ${CONFIG_DIR}/helm-chart-configured
   echo "version not stored previously" > ${CONFIG_DIR}/helm-chart-opennms-version
 fi
 
+if [ ! -f ${CONFIG_DIR}/helm-chart-configured ] && [ -z "$(find ${CONFIG_DIR} -maxdepth 0 -empty)" ]; then
+  echo "ERROR: ${CONFIG_DIR}/helm-chart-configured does not exist but ${CONFIG_DIR} is not empty. Will exit." >&2
+  echo "Contents of ${CONFIG_DIR} follows:" >&2
+  ls -lR ${CONFIG_DIR} >&2
+  echo "Exiting..." >&2
+  exit 1
+fi
+
 # Include all the configuration files that must be added once but could change after the first run
 if [ ! -f ${CONFIG_DIR}/helm-chart-configured ]; then
   echo "Initializing configuration directory for the first time ..."
-  rsync -arO --no-perms --no-owner --no-group ${BACKUP_ETC}/ ${CONFIG_DIR}/
+  rsync -arO --no-perms --no-owner --no-group --out-format="%n %C" ${BACKUP_ETC}/ ${CONFIG_DIR}/
 
   echo "Initialize default foreign source definition"
   cat <<EOF > ${CONFIG_DIR}/default-foreign-source.xml
@@ -180,8 +188,19 @@ if [ ! -f ${CONFIG_DIR}/helm-chart-configured ]; then
 EOF
   touch ${CONFIG_DIR}/helm-chart-configured
 else
-  echo "Previous configuration found. Synchronizing only new files..."
-  rsync -aruO --no-perms --no-owner --no-group ${BACKUP_ETC}/ ${CONFIG_DIR}/
+  echo -n "Previous configuration found. Updating per policy opennms.configuration.etcUpdatePolicy == ${OPENNMS_ETC_UPDATE_POLICY}. "
+  if [ "${OPENNMS_ETC_UPDATE_POLICY}" == "never" ]; then
+     echo "Not updating etc files"
+  elif [ "${OPENNMS_ETC_UPDATE_POLICY}" == "newer" ]; then
+     echo "Synchronizing only newer files..."
+     rsync -aruO --no-perms --no-owner --no-group --out-format="%n %C" ${BACKUP_ETC}/ ${CONFIG_DIR}/
+  elif [ "${OPENNMS_ETC_UPDATE_POLICY}" == "new" ]; then
+     echo "Synchronizing only new files..."
+     rsync -arO --ignore-existing --no-perms --no-owner --no-group --out-format="%n %C" ${BACKUP_ETC}/ ${CONFIG_DIR}/
+  else
+     echo "Unsupported update policy '${OPENNMS_ETC_UPDATE_POLICY}'. Exiting." >&2
+     exit 1
+  fi
 fi
 
 # See if we are on a fresh install or a different version of OpenNMS and remove
@@ -209,7 +228,7 @@ for file in "${KARAF_FILES[@]}"; do
 done
 # WARNING: if the volume behind CONFIG_DIR doesn't have the right permissions, the following fails
 echo "Overriding mandatory files from ${MANDATORY}..."
-rsync -aO --no-perms --no-owner --no-group ${MANDATORY}/ ${CONFIG_DIR}/
+rsync -aO --no-perms --no-owner --no-group --out-format="%n %C" ${MANDATORY}/ ${CONFIG_DIR}/
 
 # Initialize overlay
 mkdir -p ${CONFIG_DIR_OVERLAY}/opennms.properties.d ${CONFIG_DIR_OVERLAY}/featuresBoot.d

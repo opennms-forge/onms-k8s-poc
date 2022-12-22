@@ -136,6 +136,7 @@ opennms:
       rest_username: opennms # ReST user for Grafana/Helm, Sentinel and Minions (when Twin API is not available)
       rest_password: 0p3nNM5
       admin_password: 0p3nNM5 # Password for the default admin account
+    etcUpdatePolicy: newer # Experimental: options: never (don't update any files), newer (only newer timestamps), new (only brand new files)
   uiServers: # Optional
     replicaCount: 0 # Disabled by default. Requires using ReadWriteMany volumes
     terminationGracePeriodSeconds: 120

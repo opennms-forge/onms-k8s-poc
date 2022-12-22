@@ -27,6 +27,7 @@ data:
   {{- if ((.Values.opennms).configuration).rras }}
   OPENNMS_RRAS: {{ join ";" .Values.opennms.configuration.rras }}
   {{- end }}
+  OPENNMS_ETC_UPDATE_POLICY: {{ .Values.opennms.configuration.etcUpdatePolicy }}
   {{- if ((.Values.opennms).configuration).enable_cortex }}
   CORTEX_WRITE_URL: {{ .Values.dependencies.cortex.writeUrl | quote }}
   CORTEX_READ_URL: {{ .Values.dependencies.cortex.readUrl | quote }}
