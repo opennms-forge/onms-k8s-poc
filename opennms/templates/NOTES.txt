@@ -12,10 +12,12 @@ Your release is named "{{ .Release.Name }}", used for:
 Resources URLs:
 
 {{- if gt (((.Values.opennms).uiServers).replicaCount|int) 0 }}
-OpenNMS UI (read-only): https://onms.{{ include "opennms.domain" . }}/opennms/
+OpenNMS UI (read-only): https://onms.{{ include "opennms.domain" . }}/opennms/login.jsp
 {{- end }}
-OpenNMS Core: https://onms-core.{{ include "opennms.domain" . }}/openns/
+OpenNMS Core: https://onms-core.{{ include "opennms.domain" . }}/opennms/login.jsp
+{{- if gt ((.Values.grafana).replicaCount|int) 0 }}
 Grafana: https://grafana.{{ include "opennms.domain" . }}/
+{{- end }}
 
 To learn more about the release, try:
 

@@ -7,6 +7,8 @@ dependencies:
     hostname: ''
 
 opennms:
+  configuration:
+    enable-alec: false
   uiServers:
     replicaCount: 0
 
