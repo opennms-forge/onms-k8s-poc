@@ -14,7 +14,11 @@ Resources URLs:
 {{- if gt (((.Values.opennms).uiServers).replicaCount|int) 0 }}
 OpenNMS UI (read-only): https://onms.{{ include "opennms.domain" . }}/opennms/login.jsp
 {{- end }}
-OpenNMS Core: https://onms-core.{{ include "opennms.domain" . }}/opennms/login.jsp
+
+{{- if eq (((.Values.opennms).uiServers).replicaCount|int) 0 }}
+OpenNMS Core: https://onms-core.{{ include "opennms.domain" . }}/opennms/index.jsp
+{{- end }}
+
 {{- if gt ((.Values.grafana).replicaCount|int) 0 }}
 Grafana: https://grafana.{{ include "opennms.domain" . }}/
 {{- end }}
