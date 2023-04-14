@@ -2,6 +2,11 @@ Installing kubectl/minikube/helm on Debian 11.6
 
 If virtualized, make sure virtual cpu extensions are passed through to guest
 
+!!! With Debian, if your host system is configured for DHCP, be aware that an automatic entry in /etc/hosts with the hostname resolving to
+!!! 127.0.1.1 is created. This might cause some things to fail if that IP address isn't expected to resolve this hostname, for example
+!!! DHCP MAC address reservation to assign a specific IP address.
+!!! For more info, see https://www.debian.org/doc/manuals/debian-reference/ch05.en.html#_the_hostname_resolution
+
 Configure your user account to be a sudoer
 Log on as root [somehow] and run:
 usermod -aG sudo youraccount
