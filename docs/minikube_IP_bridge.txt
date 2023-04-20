@@ -1,0 +1,83 @@
+# Make sure minikube is stopped
+minikube stop
+
+# Debian - Network Manager - Must specify mac address for bridge if you don't want a random mac address, duplicating the mac address for the interface being used as the bridge is fine
+# enp1s0 is the main network interface that will be used to make a bridge interface, change to whatever the main interface is for the system
+sudo nmcli connection add type bridge con-name bridge0 ifname bridge0 bridge.mac-addres a1:b2:c3:d4:e5:f6
+sudo nmcli connection add type ethernet slave-type bridge con-name bridge0-port1 ifname enp1s0 master bridge0
+nmcli con del Wired\ connection\ 1;nmcli con reload bridge0&
+
+Ubuntu/Netplan - /etc/netplan/00-installer-config.yaml
+Before
+# This is the network config written by 'subiquity'
+network:
+  ethernets:
+    enp1s0:
+      dhcp4: true
+  version: 2
+
+After - Must specify mac address for bridge if you don't want a random mac address, duplicating the mac address for the interface being used as the bridge is fine 
+# This is the network config written by 'subiquity'
+network:
+  ethernets:
+    enp1s0:
+      dhcp4: false
+  bridges:
+      br0:
+          macaddress: a1:b2:c3:d4:e5:f6
+          dhcp4: true
+          interfaces: [enp1s0]
+  version: 2
+
+# RHEL9/Rocky9/Alma9 - Network Manager - No need to specify mac address for the bridge since the bridge will duplicate the mac address of the interface being used
+# enp1s0 is the main network interface that will be used to make a bridge interface, change to whatever the main interface is for the system
+sudo nmcli connection add type bridge con-name bridge0 ifname bridge0
+sudo nmcli connection add type ethernet slave-type bridge con-name bridge0-port1 ifname enp1s0 master bridge0
+sudo nmcli con del enp1s0;sudo nmcli con reload bridge0&
+
+# Add the bridge interface to the minikube vm, take note of the mac address that is created
+sudo virt-xml minikube --add-device --network bridge,model=virtio
+
+# Re-Add the bridge interface to the minikube vm after doing a minikube upgrade which resets the bridge network interface. If the same mac address is needed again, it can be specified.
+sudo virt-xml minikube --add-device --network bridge,model=virtio,mac=a1:b2:c3:d4:e5:f6
+
+# Maybe don't remove secondary network interface even though the bridge replaces it?
+# sudo virt-xml minikube --remove-device --network 2
+
+# Start the minikube instance with whatever ram and # of cpus
+minikube start --memory=#### --cpus=#
+
+# Verify IP addresses with minikube ssh [eth2 is the bridged interface]
+minikube ssh ip a
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
+    link/ether 52:54:00:f9:db:36 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.39.243/24 brd 192.168.39.255 scope global dynamic eth0
+       valid_lft 2149sec preferred_lft 2149sec
+3: eth1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
+    link/ether 52:54:00:58:fa:e9 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.122.32/24 brd 192.168.122.255 scope global dynamic eth1
+       valid_lft 2169sec preferred_lft 2169sec
+4: eth2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
+    link/ether 52:54:00:bc:39:f3 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.10.200/24 brd 192.168.10.255 scope global dynamic eth2
+       valid_lft 5959sec preferred_lft 5959sec
+5: sit0@NONE: <NOARP> mtu 1480 qdisc noop state DOWN group default qlen 1000
+    link/sit 0.0.0.0 brd 0.0.0.0
+6: docker0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN group default
+    link/ether 02:42:ae:30:11:68 brd ff:ff:ff:ff:ff:ff
+    inet 172.17.0.1/16 brd 172.17.255.255 scope global docker0
+       valid_lft forever preferred_lft forever
+7: bridge: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default qlen 1000
+    link/ether a6:92:66:ce:f7:3f brd ff:ff:ff:ff:ff:ff
+    inet 10.244.0.1/16 brd 10.244.255.255 scope global bridge
+       valid_lft forever preferred_lft forever
+8: veth2b8281cb@if4: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master bridge state UP group default
+    link/ether 3e:b0:43:19:3f:b0 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+15: veth06261a0e@if4: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master bridge state UP group default
+    link/ether b6:c7:0d:74:65:fd brd ff:ff:ff:ff:ff:ff link-netnsid 4
+16: veth0edb528f@if4: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master bridge state UP group default
+    link/ether 4a:4c:bd:53:ec:ad brd ff:ff:ff:ff:ff:ff link-netnsid 2

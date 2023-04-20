@@ -1,0 +1,29 @@
+#If minimal install, need a GUI
+sudo dnf group install "Server with GUI"
+
+# Install tigervnc server and avahi
+sudo dnf install tigervnc-server avahi
+
+# Edit vncserver defaults file to set resolution and any other settings
+sudo vi /etc/tigervnc/vncserver-config-defaults
+
+# Edit vncserver.users to add user to vnc
+sudo vi /etc/tigervnc/vncserver.users
+
+# Create vnc password for the account
+vncpasswd
+
+# Enable both vncserver for the user specified and avahi daemon
+sudo systemctl enable --now vncserver@:1.service
+sudo systemctl enable --now avahi-daemon
+
+# Info to add to avahi daemon at /etc/avahi/services.rfb.service, port number must match user account :1 = 5901
+sudo vi /etc/avahi/services/rfb.servie
+<?xml version="1.0" standalone='no'?>
+<!DOCTYPE service-group SYSTEM "avahi-service.dtd">
+<service-group>
+  <name replace-wildcards="yes">%h</name>
+  <service>
+    <type>_rfb._tcp</type><port>5901</port>
+  </service>
+</service-group>
