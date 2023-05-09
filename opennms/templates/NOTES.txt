@@ -28,3 +28,10 @@ To learn more about the release, try:
 $ helm status {{ .Release.Name }}
 $ helm get all {{ .Release.Name }}
 $ kubectl get all -n {{ .Release.Name }}
+
+{{- if not .Values.opennms.configuration.alwaysRollDeployment }}
+
+If OpenNMS needs to be restarted to apply configuration changes, you'll need to restart it, e.g.:
+    kubectl rollout restart -n {{ .Release.Name }} statefulset/onms-core
+{{- end }}
+

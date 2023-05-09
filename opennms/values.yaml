@@ -104,6 +104,7 @@ opennms:
       cpu: '2'
       memory: 4Gi
   configuration:
+    alwaysRollDeployment: true
     enable_alec: true    # See alecImage below for how the KAR is retrieved
     enable_cortex: false # See cortexTssImage below for how the KAR is retrieved
     enable_tss_dual_write: false
