@@ -23,7 +23,9 @@ spec:
         app: onms-core
         {{- include "opennms.selectorLabels" . | nindent 8 }}
       annotations:
+      {{- if .Values.opennms.configuration.alwaysRollDeployment }}
         rollme: {{ randAlphaNum 5 | quote }}
+      {{- end }}
     spec:
       securityContext:
         fsGroup: 10001 # Required for Google Fileshare (might impact performance)
