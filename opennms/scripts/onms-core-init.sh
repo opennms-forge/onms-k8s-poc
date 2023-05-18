@@ -140,14 +140,6 @@ if [ -f ${CONFIG_DIR}/configured ] && [ ! -f ${CONFIG_DIR}/helm-chart-configured
   echo "version not stored previously" > ${CONFIG_DIR}/helm-chart-opennms-version
 fi
 
-if [ ! -f ${CONFIG_DIR}/helm-chart-configured ] && [ -z "$(find ${CONFIG_DIR} -maxdepth 0 -empty)" ]; then
-  echo "ERROR: ${CONFIG_DIR}/helm-chart-configured does not exist but ${CONFIG_DIR} is not empty. Will exit." >&2
-  echo "Contents of ${CONFIG_DIR} follows:" >&2
-  ls -lR ${CONFIG_DIR} >&2
-  echo "Exiting..." >&2
-  exit 1
-fi
-
 # Include all the configuration files that must be added once but could change after the first run
 if [ ! -f ${CONFIG_DIR}/helm-chart-configured ]; then
   echo "Initializing configuration directory for the first time ..."
