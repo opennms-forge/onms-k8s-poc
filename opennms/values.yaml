@@ -91,6 +91,8 @@ ingress:
 
 # OpenNMS Core and UI Instances.
 opennms:
+  inspector: 
+    enabled: false
   terminationGracePeriodSeconds: 120
   image:
     repository: opennms/horizon

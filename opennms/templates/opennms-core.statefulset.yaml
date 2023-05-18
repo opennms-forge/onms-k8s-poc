@@ -12,7 +12,11 @@ metadata:
     {{- include "opennms.labels" . | nindent 4 }}
 spec:
   serviceName: onms-core
+  {{- if .Values.opennms.inspector.enabled }}
+  replicas: 0
+  {{- else }}
   replicas: 1 # DO NOT CHANGE. The solution only allows 1 instance
+  {{- end }}
   selector:
     matchLabels:
       app: onms-core

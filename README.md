@@ -546,3 +546,30 @@ Start OpenNMS:
 ```
 kubectl scale -n <namespace> --replicas=1 statefulset/onms-core
 ```
+
+# Inspector pod
+This can be used to cleanly shutdown OpenNMS but have a way to edit configuration files, inspect files before a backup or after a restore, etc.
+
+Enable Inspector pod (shutdown OpenNMS):
+```
+helm upgrade --reuse-values --set opennms.inspector.enabled=true <namespace> ./opennms
+```
+
+How to connect:
+```
+kubectl exec -it -n <namespace> pods/inspector -- /bin/bash
+```
+
+Examples:
+```
+# Run configuration tester
+./bin/config-tester -a
+
+# Forcing the installer to re-run 
+rm etc/configured
+```
+
+Disable Inspector pod (start OpenNMS):
+```
+helm upgrade --reuse-values --set opennms.inspector.enabled=false <namespace> ./opennms
+```
