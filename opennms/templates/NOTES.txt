@@ -32,6 +32,17 @@ $ kubectl get all -n {{ .Release.Name }}
 {{- if not .Values.opennms.configuration.alwaysRollDeployment }}
 
 If OpenNMS needs to be restarted to apply configuration changes, you'll need to restart it, e.g.:
-    kubectl rollout restart -n {{ .Release.Name }} statefulset/onms-core
+
+$ kubectl rollout restart -n {{ .Release.Name }} statefulset/onms-core
 {{- end }}
+
+{{- if .Values.opennms.inspector.enabled }}
+The inspector pod is enabled and OpenNMS pod is not running.
+
+This is how you can connect to the inspector pod:
+
+$ kubectl exec -it -n {{ .Release.Name }} pods/inspector -- /bin/bash
+{{- end }}
+
+
 
