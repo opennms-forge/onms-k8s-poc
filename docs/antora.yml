@@ -1,0 +1,5 @@
+name: opennmshelmcharts
+version: '1.0.0-SNAPSHOT'
+title: OpenNMS Helm Charts
+nav:
+  - modules/ROOT/nav.adoc

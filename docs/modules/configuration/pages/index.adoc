@@ -1,0 +1,6 @@
+= User's Guide to the _OpenNMS Helm Charts_
+:imagesdir: ../assets/images
+:!sectids:
+
+This project is to serve as a reference to implement [OpenNMS](https://www.opennms.com/) running in [Kubernetes](https://kubernetes.io/), deployed via [Helm](https://helm.sh/).
+
