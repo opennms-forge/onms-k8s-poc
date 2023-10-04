@@ -79,7 +79,8 @@ cat <<EOF > ${CONFIG_DIR_OVERLAY}/opennms-datasources.xml
 
   <jdbc-data-source name="opennms-admin" 
                     database-name="template1" 
-                    class-name="jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/template1?sslmode=${POSTGRES_SSL_MODE}&amp;sslfactory=${POSTGRES_SSL_FACTORY}"
+                    class-name="org.postgresql.Driver"
+                    url="jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/template1?sslmode=${POSTGRES_SSL_MODE}&amp;sslfactory=${POSTGRES_SSL_FACTORY}"
                     user-name="${POSTGRES_USER}"
                     password="${POSTGRES_PASSWORD}">
     <connection-pool idleTimeout="600"
