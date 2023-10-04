@@ -70,19 +70,35 @@ cat <<EOF > ${CONFIG_DIR_OVERLAY}/opennms-datasources.xml
     maxPool="50"
     maxSize="${OPENNMS_DATABASE_CONNECTION_MAXPOOL}" />
 
-  <jdbc-data-source name="opennms"
-                    database-name="${OPENNMS_DBNAME}"
-                    class-name="org.postgresql.Driver"
+  <jdbc-data-source name="opennms" 
+                    database-name="${OPENNMS_DBNAME}" 
+                    class-name="org.postgresql.Driver" 
                     url="jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${OPENNMS_DBNAME}?sslmode=${POSTGRES_SSL_MODE}&amp;sslfactory=${POSTGRES_SSL_FACTORY}"
                     user-name="${OPENNMS_DBUSER}"
                     password="${OPENNMS_DBPASS}" />
 
-  <jdbc-data-source name="opennms-admin"
-                    database-name="template1"
-                    class-name="org.postgresql.Driver"
-                    url="jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/template1?sslmode=${POSTGRES_SSL_MODE}&amp;sslfactory=${POSTGRES_SSL_FACTORY}"
+  <jdbc-data-source name="opennms-admin" 
+                    database-name="template1" 
+                    class-name="jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/template1?sslmode=${POSTGRES_SSL_MODE}&amp;sslfactory=${POSTGRES_SSL_FACTORY}"
                     user-name="${POSTGRES_USER}"
-                    password="${POSTGRES_PASSWORD}"/>
+                    password="${POSTGRES_PASSWORD}">
+    <connection-pool idleTimeout="600"
+                     minPool="0"
+                     maxPool="10"
+                     maxSize="${OPENNMS_DATABASE_CONNECTION_MAXPOOL}" />
+  </jdbc-data-source>
+  
+  <jdbc-data-source name="opennms-monitor" 
+                    database-name="postgres" 
+                    class-name="org.postgresql.Driver" 
+                    url="jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/postgres?sslmode=${POSTGRES_SSL_MODE}&amp;sslfactory=${POSTGRES_SSL_FACTORY}"
+                    user-name="${POSTGRES_USER}"
+                    password="${POSTGRES_PASSWORD}">
+    <connection-pool idleTimeout="600"
+                     minPool="0"
+                     maxPool="10"
+                     maxSize="${OPENNMS_DATABASE_CONNECTION_MAXPOOL}" />
+  </jdbc-data-source>
 </datasource-configuration>
 EOF
 
