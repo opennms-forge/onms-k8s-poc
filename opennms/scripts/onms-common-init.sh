@@ -66,7 +66,7 @@ cat <<EOF > ${CONFIG_DIR_OVERLAY}/opennms-datasources.xml
   <connection-pool factory="org.opennms.core.db.HikariCPConnectionFactory"
     idleTimeout="600"
     loginTimeout="3"
-    minPool="50"
+    minPool="25"
     maxPool="50"
     maxSize="${OPENNMS_DATABASE_CONNECTION_MAXPOOL}" />
 
