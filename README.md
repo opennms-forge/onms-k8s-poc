@@ -1,4 +1,7 @@
-# OpenNMS K8s PoC
+> [!IMPORTANT]
+> This repo is being archived and replaced with our official Helm Charts available at https://github.com/opennms/helm-charts
+
+## OpenNMS K8s Proof of Concept
 
 The objective of this project is to serve as a reference to implement [OpenNMS](https://www.opennms.com/) running in [Kubernetes](https://kubernetes.io/), deployed via [Helm](https://helm.sh/).
 
